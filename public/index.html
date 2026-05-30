@@ -1347,7 +1347,7 @@ async function loadUsers(){
     <span class="role-pill ${u.role==="admin"?"role-admin":"role-user"}">${u.role==="admin"?"Yönetici":"Personel"}</span>
     <div style="display:flex;gap:6px">
       <button class="btn btn-blue btn-sm" onclick="openResetPass(${u.id},'${u.full_name.replace(/'/g,"\\'")}')"><i class="ti ti-key" aria-hidden="true"></i></button>
-      ${u.username!==localStorage.getItem("nb_name")?`<button class="btn btn-red btn-sm" onclick="delUser(${u.id})"><i class="ti ti-trash" aria-hidden="true"></i></button>`:""}
+      ${u.full_name!==UNAME?`<button class="btn btn-red btn-sm" onclick="delUser(${u.id})"><i class="ti ti-trash" aria-hidden="true"></i></button>`:""}
     </div>
   </div>`).join("")||`<div style="color:var(--txt3);font-size:13px">Kullanıcı yok.</div>`;
 }
