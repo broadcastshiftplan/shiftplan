@@ -10,19 +10,22 @@
 :root{
   --navy:#1F3864;--blue:#2E75B6;--blue2:#17375E;--sec:#3D3D3D;--bot:#2E4057;
   --sabah-b:#FAEEDA;--sabah-f:#412402;--sabah-d:#FAC775;
-  --araci-b:#E6F1FB;--araci-f:#042C53;--araci-d:#85B7EB;
+  --prime-b:#E8F5E0;--prime-f:#1A5C00;--prime-d:#6DB33F;
   --aksam-b:#EEEDFE;--aksam-f:#26215C;--aksam-d:#AFA9EC;
   --gece-b:#2C3E50;--gece-f:#D3D1C7;--gece-d:#5F5E5A;
   --dis-b:#E1F5EE;--dis-f:#04342C;--dis-d:#5DCAA5;
   --izin-b:#FFF2E0;--izin-f:#7F3A00;--izin-d:#FFBB78;
   --yillik-b:#FAE8E8;--yillik-f:#7B1818;--yillik-d:#F0A0A0;
   --dogum-b:#FCE4FC;--dogum-f:#5B0A5B;--dogum-d:#D07ED0;
+  --ki-b:#EDE8FF;--ki-f:#3D1D8A;--ki-d:#9B7EEB;
   --warn-b:#F7C1C1;--warn-f:#501313;--ok-b:#C0DD97;--ok-f:#274E13;
   --bd:#D8E4F0;--bd2:#B0C8E0;--txt:#1A1A1A;--txt2:#555;--txt3:#999;
   --bg:#EFF3FB;--srf:#FFF;--alt:#F4F7FB;--r:8px;
 }
 body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--txt);font-size:13px}
-/* ── Login ── */
+@keyframes flash{0%,100%{background:var(--warn-b);color:var(--warn-f)}50%{background:#A32D2D;color:#fff}}
+.flash-warn{animation:flash 1s infinite;border:2px solid #A32D2D!important;font-weight:700!important}
+.app{display:flex;flex-direction:column;height:100vh;overflow:hidden}
 .login-wrap{position:fixed;inset:0;background:linear-gradient(135deg,#1F3864,#2E75B6);display:flex;align-items:center;justify-content:center;z-index:1000}
 .login-box{background:#fff;border-radius:16px;padding:40px 44px;width:400px;max-width:96vw;box-shadow:0 20px 60px rgba(0,0,0,.25)}
 .login-logo{text-align:center;margin-bottom:28px}
@@ -30,8 +33,6 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--txt
 .login-logo h1{font-size:20px;font-weight:600;color:var(--navy);margin-top:8px}
 .login-logo p{font-size:12px;color:var(--txt3);margin-top:4px}
 .login-err{color:#A32D2D;font-size:12px;text-align:center;margin-top:10px;min-height:16px}
-/* ── App ── */
-.app{display:flex;flex-direction:column;height:100vh;overflow:hidden}
 .topbar{background:var(--navy);color:#fff;padding:8px 16px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;gap:8px;flex-wrap:wrap}
 .t-logo{font-size:14px;font-weight:600;display:flex;align-items:center;gap:7px}
 .t-sub{font-size:11px;opacity:.6;margin-top:1px}
@@ -40,51 +41,50 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--txt
 .btn:hover{filter:brightness(1.12)}.btn:active{filter:brightness(.93)}
 .btn-blue{background:#185FA5;color:#fff}.btn-green{background:#2E7D32;color:#fff}
 .btn-red{background:#A32D2D;color:#fff}.btn-ghost{background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.28)}
-.btn-sm{padding:3px 8px;font-size:11px}
-.dot{width:7px;height:7px;border-radius:50%;background:#5DCAA5;display:inline-block;margin-right:3px;transition:background .3s}
+.btn-sm{padding:3px 8px;font-size:11px}.btn-xs{padding:2px 6px;font-size:10px}
+.dot{width:7px;height:7px;border-radius:50%;background:#5DCAA5;display:inline-block;margin-right:3px}
 .dot.saving{background:#FAC775}
 .badge{background:#A32D2D;color:#fff;border-radius:10px;padding:0 5px;font-size:10px;font-weight:700;min-width:16px;text-align:center}
 .user-chip{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:500;background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.25)}
 .tabs{background:var(--srf);border-bottom:1.5px solid var(--bd);display:flex;flex-shrink:0;overflow-x:auto}
-.tab{padding:9px 14px;border:none;background:none;cursor:pointer;font-size:12px;font-weight:500;color:var(--txt2);border-bottom:2.5px solid transparent;margin-bottom:-1.5px;display:flex;align-items:center;gap:5px;white-space:nowrap;font-family:inherit}
+.tab{padding:9px 13px;border:none;background:none;cursor:pointer;font-size:12px;font-weight:500;color:var(--txt2);border-bottom:2.5px solid transparent;margin-bottom:-1.5px;display:flex;align-items:center;gap:5px;white-space:nowrap;font-family:inherit}
 .tab.active{color:var(--navy);border-bottom-color:var(--navy)}.tab:hover:not(.active){background:var(--bg)}
 .main{flex:1;overflow:auto;padding:14px 16px 32px}
-/* Table */
 .wbar{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
 .wsel{padding:6px 10px;border:1px solid var(--bd2);border-radius:var(--r);font-size:13px;font-family:inherit;background:#fff;color:var(--txt);min-width:220px}
 .sw{overflow-x:auto;border:1px solid var(--bd);border-radius:10px;background:var(--srf);box-shadow:0 1px 4px rgba(0,0,0,.06)}
-.st{border-collapse:collapse;table-layout:fixed;min-width:1080px;width:100%}
+.st{border-collapse:collapse;table-layout:fixed;min-width:1060px;width:100%}
 .st th,.st td{border:1px solid var(--bd);vertical-align:middle}
-.th-pos{background:var(--sec);color:#fff;font-weight:600;padding:8px 10px;font-size:11px;text-align:left;min-width:118px}
+.th-pos{background:var(--sec);color:#fff;font-weight:600;padding:8px 10px;font-size:11px;text-align:left;min-width:110px}
 .th-saat{background:var(--blue2);color:#fff;font-weight:600;padding:8px;font-size:11px;text-align:center;min-width:130px}
-.th-day{background:var(--blue);color:#fff;font-weight:600;font-size:11px;text-align:center;padding:6px 4px;min-width:120px;line-height:1.5}
+.th-day{background:var(--blue);color:#fff;font-weight:600;font-size:11px;text-align:center;padding:6px 4px;min-width:115px;line-height:1.5}
+.th-day.holiday{background:#2E7D32}
 .sr td{background:var(--sec);color:#fff;font-weight:500;font-size:10.5px;letter-spacing:.5px;padding:5px 10px}
 .sr.bot td{background:var(--bot)}.sr.div td{background:var(--blue2);padding:3px;font-size:9px;letter-spacing:2px;color:rgba(255,255,255,.55);text-align:center}
+.sr.dyn td{background:var(--sec)}
 .td-b{padding:5px 8px;font-size:10.5px;text-align:left}
-.td-s{padding:5px 7px;font-size:11px;font-weight:600;text-align:center;border-left-width:3px!important;white-space:nowrap}
+.td-s{padding:4px 6px;font-size:11px;font-weight:600;text-align:center;border-left-width:3px!important;white-space:nowrap}
 .td-c{padding:3px;text-align:center}
 select.sel{width:100%;box-sizing:border-box;border-radius:5px;padding:4px 3px;font-size:11px;font-weight:500;cursor:pointer;outline:none;font-family:inherit}
-select.sel:focus{box-shadow:0 0 0 2px rgba(30,90,150,.25)}
+select.shift-sel{width:100%;font-size:10px;border-radius:4px;padding:2px 3px;font-family:inherit;cursor:pointer}
 .s-empty{background:#fff;color:#aaa;border:1px solid #e0e0e0}
 .s-sabah{background:var(--sabah-b);color:var(--sabah-f);border:1px solid var(--sabah-d)}
-.s-araci{background:var(--araci-b);color:var(--araci-f);border:1px solid var(--araci-d)}
+.s-prime{background:var(--prime-b);color:var(--prime-f);border:1px solid var(--prime-d)}
 .s-aksam{background:var(--aksam-b);color:var(--aksam-f);border:1px solid var(--aksam-d)}
 .s-gece{background:var(--gece-b);color:var(--gece-f);border:1px solid var(--gece-d)}
 .s-dis{background:var(--dis-b);color:var(--dis-f);border:1px solid var(--dis-d)}
 .s-izin{background:var(--izin-b);color:var(--izin-f);border:1px solid var(--izin-d)}
 .s-yillik{background:var(--yillik-b);color:var(--yillik-f);border:1px solid var(--yillik-d)}
 .s-dogum{background:var(--dogum-b);color:var(--dogum-f);border:1px solid var(--dogum-d)}
+.s-ki{background:var(--ki-b);color:var(--ki-f);border:1px solid var(--ki-d)}
 .s-dup{background:var(--warn-b)!important;color:var(--warn-f)!important;border:2px solid #A32D2D!important}
-textarea.nt{width:100%;box-sizing:border-box;border:1px solid #e0e0e0;border-radius:5px;padding:3px 5px;font-size:10px;resize:none;font-family:inherit;background:#FAFAF8;color:var(--txt);line-height:1.5}
-.viewer-cell{padding:5px 4px;font-size:11px;font-weight:500;text-align:center}
-/* Alerts */
+textarea.nt{width:100%;box-sizing:border-box;border:1px solid #e0e0e0;border-radius:5px;padding:3px 5px;font-size:10px;resize:none;font-family:inherit;background:#FAFAF8;color:var(--txt)}
 .alert{display:flex;align-items:flex-start;gap:9px;padding:10px 13px;border-radius:var(--r);margin-bottom:8px;font-size:13px;border-left:3px solid}
 .alert.danger{background:#FCEAEA;color:#7B0000;border-color:#A32D2D}
 .alert.warn{background:#FFF3E0;color:#7B3800;border-color:#E65100}
 .alert.ok{background:#E8F5E9;color:#1B5E20;border-color:#2E7D32}
-.alert.info{background:var(--araci-b);color:var(--araci-f);border-color:var(--araci-d)}
+.alert.info{background:var(--prime-b);color:var(--prime-f);border-color:var(--prime-d)}
 .alert.bday{background:var(--dogum-b);color:var(--dogum-f);border-color:var(--dogum-d)}
-/* Card */
 .card{background:var(--srf);border:1px solid var(--bd);border-radius:10px;padding:16px 18px;margin-bottom:14px;box-shadow:0 1px 4px rgba(0,0,0,.05)}
 .card-title{font-weight:600;font-size:14px;margin-bottom:13px;display:flex;align-items:center;gap:7px;color:var(--navy)}
 .fl{display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap}
@@ -93,49 +93,49 @@ textarea.nt{width:100%;box-sizing:border-box;border:1px solid #e0e0e0;border-rad
 .inp,.sel-f,.ta{width:100%;padding:7px 10px;border:1px solid var(--bd2);border-radius:6px;font-size:13px;font-family:inherit;background:#fff;color:var(--txt);outline:none}
 .inp:focus,.sel-f:focus,.ta:focus{border-color:var(--blue);box-shadow:0 0 0 2px rgba(46,117,182,.18)}
 .hint{font-size:11px;color:var(--txt3);margin-top:3px}
-/* Stat */
 .sc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:16px}
 .sc{background:var(--srf);border:1px solid var(--bd);border-radius:var(--r);padding:11px 13px}
 .sc-lbl{font-size:11px;color:var(--txt2);margin-bottom:3px}.sc-val{font-size:22px;font-weight:600;color:var(--navy)}.sc-sub{font-size:10px;color:var(--txt3);margin-top:2px}
 .stat-t{border-collapse:collapse;width:100%;font-size:12px;min-width:680px}
 .stat-t th,.stat-t td{border:1px solid var(--bd);padding:6px 8px;text-align:center}
-/* Users */
-.user-row{display:flex;align-items:center;padding:9px 12px;border-radius:8px;margin-bottom:6px;border:1px solid var(--bd);background:#fff;gap:10px;flex-wrap:wrap}
-.user-row .name{flex:1;min-width:130px;font-weight:500;font-size:13px}
-.user-row .uname{font-size:11px;color:var(--txt3)}
-.role-pill{padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600}
-.role-admin{background:#E8F0FE;color:var(--navy)}
-.role-user{background:var(--ok-b);color:var(--ok-f)}
-/* Requests */
 .req-row{background:#fff;border:1px solid var(--bd);border-radius:8px;padding:10px 13px;margin-bottom:7px;display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap}
 .req-info{flex:1;min-width:180px}
 .req-acts{display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap}
 .sp{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600}
 .sp-p{background:#FFF3E0;color:#7B3800}.sp-a{background:var(--ok-b);color:var(--ok-f)}.sp-r{background:var(--warn-b);color:var(--warn-f)}
-/* Birthday */
 .bday-row{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border-radius:8px;margin-bottom:7px;border:1px solid var(--bd);background:#fff;gap:10px;flex-wrap:wrap}
 .bday-row.today{background:var(--dogum-b);border-color:var(--dogum-d)}
 .bday-row.soon{background:#FFF9F0;border-color:#FFD699}
-/* Legend */
+.user-row{display:flex;align-items:center;padding:9px 12px;border-radius:8px;margin-bottom:6px;border:1px solid var(--bd);background:#fff;gap:10px;flex-wrap:wrap}
+.user-row .name{flex:1;min-width:130px;font-weight:500;font-size:13px}
+.role-pill{padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600}
+.role-admin{background:#E8F0FE;color:var(--navy)}.role-user{background:var(--ok-b);color:var(--ok-f)}
 .leg{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:10px}
 .leg-i{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--txt2)}
 .leg-d{width:10px;height:10px;border-radius:2px;flex-shrink:0}
-/* Archive */
 .arc-t{border-collapse:collapse;width:100%;font-size:12px}
 .arc-t th,.arc-t td{border:1px solid var(--bd);padding:7px 10px;text-align:left}
 .arc-t th{background:var(--blue2);color:#fff;font-weight:500}
 .arc-t tr:nth-child(even) td{background:var(--alt)}
-/* Modal */
+.hol-t{border-collapse:collapse;width:100%;font-size:12px;max-width:500px}
+.hol-t th,.hol-t td{border:1px solid var(--bd);padding:7px 10px;text-align:left}
+.hol-t th{background:var(--ok-f);color:#fff}
+.ki-summary{border-collapse:collapse;width:100%;font-size:12px}
+.ki-summary th,.ki-summary td{border:1px solid var(--bd);padding:7px 10px;text-align:center}
+.ki-summary th{background:var(--ki-f);color:#fff}
+.ki-summary td:first-child{text-align:left;font-weight:500}
 .mb{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:center;justify-content:center}
 .mb.open{display:flex}
-.modal{background:#fff;border-radius:12px;padding:22px 24px;width:440px;max-width:96vw;box-shadow:0 8px 32px rgba(0,0,0,.2);max-height:90vh;overflow-y:auto}
+.modal{background:#fff;border-radius:12px;padding:22px 24px;width:460px;max-width:96vw;box-shadow:0 8px 32px rgba(0,0,0,.2);max-height:92vh;overflow-y:auto}
 .modal h3{margin-bottom:14px;font-size:15px;color:var(--navy);display:flex;align-items:center;gap:7px}
 .modal-acts{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+.dyn-btn{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:4px;border:none;cursor:pointer;font-size:13px;font-weight:700;line-height:1}
+.dyn-add{background:#2E7D32;color:#fff}.dyn-rem{background:#A32D2D;color:#fff}
 </style>
 </head>
 <body>
 
-<!-- ── LOGIN ── -->
+<!-- LOGIN -->
 <div class="login-wrap" id="login-wrap">
   <div class="login-box">
     <div class="login-logo">
@@ -143,14 +143,10 @@ textarea.nt{width:100%;box-sizing:border-box;border:1px solid #e0e0e0;border-rad
       <h1>Nöbet Çizelgesi</h1>
       <p>Yayın Mühendisliği Yönetim Sistemi</p>
     </div>
-    <div class="form-row">
-      <label class="form-label">Kullanıcı Adı</label>
-      <input class="inp" id="l-user" autocomplete="username" placeholder="kullaniciadi" onkeydown="if(event.key==='Enter')doLogin()">
-    </div>
-    <div class="form-row">
-      <label class="form-label">Şifre</label>
-      <input class="inp" type="password" id="l-pass" autocomplete="current-password" placeholder="••••••" onkeydown="if(event.key==='Enter')doLogin()">
-    </div>
+    <div class="form-row"><label class="form-label">Kullanıcı Adı</label>
+      <input class="inp" id="l-user" autocomplete="username" placeholder="kullaniciadi" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <div class="form-row"><label class="form-label">Şifre</label>
+      <input class="inp" type="password" id="l-pass" autocomplete="current-password" placeholder="••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
     <button class="btn btn-blue" style="width:100%;padding:10px;font-size:14px;justify-content:center" onclick="doLogin()">
       <i class="ti ti-login" aria-hidden="true"></i> Giriş Yap
     </button>
@@ -158,9 +154,8 @@ textarea.nt{width:100%;box-sizing:border-box;border:1px solid #e0e0e0;border-rad
   </div>
 </div>
 
-<!-- ── APP ── -->
+<!-- APP -->
 <div class="app" id="app-wrap" style="display:none">
-
 <div class="topbar">
   <div>
     <div class="t-logo"><i class="ti ti-calendar-time" aria-hidden="true"></i> Nöbet Çizelgesi</div>
@@ -170,34 +165,30 @@ textarea.nt{width:100%;box-sizing:border-box;border:1px solid #e0e0e0;border-rad
     <span style="font-size:11px;opacity:.7;display:flex;align-items:center"><span class="dot" id="dot"></span><span id="sstat">Hazır</span></span>
     <button class="btn btn-red" id="btn-warnbar" onclick="sw('uyarilar')" style="display:none"><i class="ti ti-alert-triangle" aria-hidden="true"></i><span id="wbtnlbl">Uyarılar</span></button>
     <button class="btn btn-blue" onclick="exportExcel()"><i class="ti ti-file-spreadsheet" aria-hidden="true"></i> Excel</button>
-    <div id="user-info" style="display:flex;align-items:center;gap:6px">
-      <span class="user-chip" id="user-chip"></span>
-      <button class="btn btn-ghost btn-sm" onclick="sw('profil')" title="Profil"><i class="ti ti-user" aria-hidden="true"></i></button>
-      <button class="btn btn-ghost btn-sm" onclick="doLogout()" title="Çıkış"><i class="ti ti-logout" aria-hidden="true"></i></button>
-    </div>
+    <button class="btn btn-ghost btn-sm" onclick="downloadBackup()" title="Yedek Al"><i class="ti ti-download" aria-hidden="true"></i></button>
+    <span class="user-chip" id="user-chip"></span>
+    <button class="btn btn-ghost btn-sm" onclick="sw('profil')"><i class="ti ti-user" aria-hidden="true"></i></button>
+    <button class="btn btn-ghost btn-sm" onclick="doLogout()"><i class="ti ti-logout" aria-hidden="true"></i></button>
   </div>
 </div>
-
 <div class="tabs" id="tabs">
   <button class="tab active" id="tb-cizelge"    onclick="sw('cizelge')"><i class="ti ti-layout-grid" aria-hidden="true"></i> Çizelge</button>
-  <button class="tab"        id="tb-uyarilar"   onclick="sw('uyarilar')" style="display:none"><i class="ti ti-alert-triangle" aria-hidden="true"></i> Uyarılar <span class="badge" id="wb" style="display:none">0</span></button>
-  <button class="tab"        id="tb-talepler"   onclick="sw('talepler')"><i class="ti ti-inbox" aria-hidden="true"></i> Talepler <span class="badge" id="reqb" style="display:none">0</span></button>
-  <button class="tab"        id="tb-dogumgunu"  onclick="sw('dogumgunu')"><i class="ti ti-cake" aria-hidden="true"></i> Doğum Günleri <span class="badge" id="bdaybadge" style="display:none">🎂</span></button>
-  <button class="tab admin-only" id="tb-ki" onclick="sw('ki')"><i class="ti ti-coins" aria-hidden="true"></i> K.İ <span class="badge" id="ki-badge" style="display:none"></span></button>
+  <button class="tab" id="tb-uyarilar"          onclick="sw('uyarilar')" style="display:none"><i class="ti ti-alert-triangle" aria-hidden="true"></i> Uyarılar <span class="badge" id="wb" style="display:none">0</span></button>
+  <button class="tab" id="tb-talepler"          onclick="sw('talepler')"><i class="ti ti-inbox" aria-hidden="true"></i> Talepler <span class="badge" id="reqb" style="display:none">0</span></button>
+  <button class="tab admin-only" id="tb-dogumgunu" onclick="sw('dogumgunu')"><i class="ti ti-cake" aria-hidden="true"></i> Doğum Günleri <span class="badge" id="bdaybadge" style="display:none">🎂</span></button>
+  <button class="tab" id="tb-yillikplan" onclick="sw('yillikplan')"><i class="ti ti-calendar-month" aria-hidden="true"></i> Yıllık Plan</button>
   <button class="tab admin-only" id="tb-istatistik" onclick="sw('istatistik')"><i class="ti ti-chart-bar" aria-hidden="true"></i> İstatistik</button>
   <button class="tab admin-only" id="tb-arsiv"  onclick="sw('arsiv')"><i class="ti ti-archive" aria-hidden="true"></i> Arşiv</button>
   <button class="tab admin-only" id="tb-kullanicilar" onclick="sw('kullanicilar')"><i class="ti ti-users" aria-hidden="true"></i> Kullanıcılar</button>
   <button class="tab admin-only" id="tb-ayarlar" onclick="sw('ayarlar')"><i class="ti ti-settings" aria-hidden="true"></i> Ayarlar</button>
-  <button class="tab"        id="tb-profil"     onclick="sw('profil')" style="display:none"><i class="ti ti-user" aria-hidden="true"></i> Profil</button>
+  <button class="tab" id="tb-profil"            onclick="sw('profil')" style="display:none"><i class="ti ti-user" aria-hidden="true"></i> Profil</button>
 </div>
 
 <div class="main">
 
 <!-- ÇİZELGE -->
 <div id="pn-cizelge">
-  <div class="wbar" id="wbar">
-    <select class="wsel" id="wsel" onchange="loadWeek(this.value)"></select>
-  </div>
+  <div class="wbar" id="wbar"><select class="wsel" id="wsel" onchange="loadWeek(this.value)"></select></div>
   <div id="bday-notice"></div>
   <div class="leg" id="leg"></div>
   <div class="sw"><table class="st" id="st"></table></div>
@@ -212,43 +203,33 @@ textarea.nt{width:100%;box-sizing:border-box;border:1px solid #e0e0e0;border-rad
 <!-- TALEPLER -->
 <div id="pn-talepler" style="display:none">
   <div class="card" id="talep-form-card">
-    <div class="card-title"><i class="ti ti-plus-circle" style="font-size:18px" aria-hidden="true"></i> Vardiya Talebi Oluştur</div>
-    <div class="alert info" style="margin-bottom:12px">
-      <i class="ti ti-info-circle" style="flex-shrink:0" aria-hidden="true"></i>
-      <span>Talep oluşturduğunuzda yönetici onaylayana kadar <b>beklemede</b> kalır. Onay verildiğinde çizelgeye otomatik eklenir.</span>
-    </div>
+    <div class="card-title"><i class="ti ti-plus-circle" style="font-size:18px" aria-hidden="true"></i> Vardiya Talebi</div>
+    <div class="alert info" style="margin-bottom:12px"><i class="ti ti-info-circle" style="flex-shrink:0" aria-hidden="true"></i>
+      <span>Yönetici onayladıktan sonra çizelgeye otomatik eklenir. Hafta henüz açılmamışsa sistem otomatik oluşturur.</span></div>
     <div class="fl">
-      <div class="form-row" style="flex:1;min-width:130px">
-        <label class="form-label">Tarih</label>
-        <input type="date" class="inp" id="req-date">
-      </div>
-      <div class="form-row" style="flex:2;min-width:160px">
-        <label class="form-label">İstediğiniz Vardiya</label>
+      <div class="form-row" style="flex:1;min-width:130px"><label class="form-label">Tarih</label>
+        <input type="date" class="inp" id="req-date"></div>
+      <div class="form-row" style="flex:2;min-width:160px"><label class="form-label">İstediğiniz Vardiya</label>
         <select class="sel-f" id="req-shift">
           <option value="">— Seçin —</option>
-          <option value="p1a|06:15 – 15:15">Sabah — 06:15 / 15:15</option>
-          <option value="p1b|08:00 – 17:00">Sabah — 08:00 / 17:00</option>
-          <option value="p1c|10:00 – 17:00">Araçı — 10:00 / 17:00</option>
-          <option value="p1d|12:00 – 20:00">Araçı — 12:00 / 20:00</option>
-          <option value="p1e|15:00 – 00:00">Akşam — 15:00 / 00:00</option>
-          <option value="p1f|17:00 – Yayın Sonu">Akşam — 17:00 / Yayın Sonu</option>
-          <option value="p1g|00:00 – 06:30">Gece — 00:00 / 06:30</option>
-          <option value="iz1|Haftalık İzin">Haftalık İzin</option>
-          <option value="yl1|Yıllık İzin / Rapor">Yıllık İzin / Rapor</option>
-        </select>
-      </div>
+          <option value="pcr_1|06:15 – 15:15">Sabah — 06:15 / 15:15</option>
+          <option value="pcr_2|08:00 – 17:00">Sabah — 08:00 / 17:00</option>
+          <option value="pcr_3|10:00 – 17:00">Prime Vardiya — 10:00 / 17:00</option>
+          <option value="pcr_4|15:00 – 00:00">Akşam — 15:00 / 00:00</option>
+          <option value="pcr_5|17:00 – Yayın Sonu">Akşam — 17:00 / Yayın Sonu</option>
+          <option value="tm_1|00:00 – 06:30">Gece — 00:00 / 06:30</option>
+          <option value="hafizin_1|Haftalık İzin">Haftalık İzin</option>
+          <option value="yl_1|Yıllık İzin / Rapor">Yıllık İzin / Rapor</option>
+        </select></div>
     </div>
-    <div class="form-row">
-      <label class="form-label">Not (isteğe bağlı)</label>
-      <input class="inp" id="req-note" placeholder="Neden bu vardiyayı istiyorsunuz...">
-    </div>
+    <div class="form-row"><label class="form-label">Not</label>
+      <input class="inp" id="req-note" placeholder="İsteğe bağlı açıklama..."></div>
     <button class="btn btn-blue" onclick="submitRequest()"><i class="ti ti-send" aria-hidden="true"></i> Talep Gönder</button>
   </div>
-
   <div class="card">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
       <div class="card-title" style="margin-bottom:0"><i class="ti ti-list" aria-hidden="true"></i> Talepler</div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap" id="req-filter-btns">
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
         <button class="btn btn-sm" style="background:var(--izin-b);color:var(--izin-f);border:1px solid var(--izin-d)" onclick="loadRequests('pending')">⏳ Bekleyen</button>
         <button class="btn btn-sm" style="background:var(--ok-b);color:var(--ok-f)" onclick="loadRequests('approved')">✓ Onaylı</button>
         <button class="btn btn-sm" style="background:var(--alt);color:var(--txt2);border:1px solid var(--bd)" onclick="loadRequests()">Tümü</button>
@@ -262,25 +243,20 @@ textarea.nt{width:100%;box-sizing:border-box;border:1px solid #e0e0e0;border-rad
 <div id="pn-dogumgunu" style="display:none">
   <div class="card">
     <div class="card-title"><i class="ti ti-cake" style="font-size:18px" aria-hidden="true"></i> Doğum Günleri</div>
-    <div class="admin-only" style="background:var(--alt);border-radius:var(--r);padding:12px;margin-bottom:12px">
+    <div style="background:var(--alt);border-radius:var(--r);padding:12px;margin-bottom:12px">
       <div style="font-weight:600;margin-bottom:10px;font-size:13px;color:var(--navy)">+ Ekle</div>
       <div class="fl">
-        <div style="flex:2;min-width:140px" class="form-row">
-          <label class="form-label">Personel</label>
-          <select class="sel-f" id="bd-person"><option value="">— Seçin —</option></select>
-        </div>
-        <div style="flex:1;min-width:140px" class="form-row">
-          <label class="form-label">Doğum Tarihi</label>
-          <input type="date" class="inp" id="bd-date">
-        </div>
-        <div style="flex:2;min-width:120px" class="form-row">
-          <label class="form-label">Not</label>
-          <input class="inp" id="bd-note" placeholder="Dilekler...">
-        </div>
+        <div style="flex:2;min-width:140px" class="form-row"><label class="form-label">Personel</label>
+          <select class="sel-f" id="bd-person"><option value="">— Seçin —</option></select></div>
+        <div style="flex:1;min-width:140px" class="form-row"><label class="form-label">Doğum Tarihi</label>
+          <input type="date" class="inp" id="bd-date"></div>
+        <div style="flex:2;min-width:120px" class="form-row"><label class="form-label">Not / Alıcı Mail</label>
+          <input class="inp" id="bd-note" placeholder="bildirim@mail.com veya not..."></div>
       </div>
       <button class="btn btn-green" onclick="addBirthday()"><i class="ti ti-check" aria-hidden="true"></i> Ekle</button>
     </div>
     <div id="bday-list"></div>
+    <div class="hint" style="margin-top:8px"><i class="ti ti-mail" aria-hidden="true"></i> Not alanına bir mail adresi yazarsanız doğum günü bildirimi o adrese de gönderilir (Gmail, Outlook, her adres geçerli).</div>
   </div>
 </div>
 
@@ -292,13 +268,79 @@ textarea.nt{width:100%;box-sizing:border-box;border:1px solid #e0e0e0;border-rad
     <button class="btn btn-blue" onclick="loadStats()"><i class="ti ti-refresh" aria-hidden="true"></i></button>
   </div>
   <div class="sc-grid" id="sc-cards"></div>
-  <div style="overflow-x:auto;border:1px solid var(--bd);border-radius:10px"><table class="stat-t" id="stat-t"></table></div>
+  <div style="overflow-x:auto;border:1px solid var(--bd);border-radius:10px;margin-bottom:16px">
+    <table class="stat-t" id="stat-t"></table>
+  </div>
+  <!-- K.İ Özeti -->
+  <div class="card">
+    <div class="card-title"><i class="ti ti-coins" style="font-size:18px" aria-hidden="true"></i> K.İ (Kullanılmayan İzin) Özeti</div>
+    <div class="admin-only" style="background:var(--alt);border-radius:var(--r);padding:12px;margin-bottom:12px">
+      <div style="font-weight:600;margin-bottom:8px;font-size:13px;color:var(--navy)">+ K.İ Tanımla</div>
+      <div class="fl">
+        <div style="flex:2;min-width:130px" class="form-row"><label class="form-label">Personel</label>
+          <select class="sel-f" id="ki-person"><option value="">— Seçin —</option></select></div>
+        <div style="flex:1;min-width:80px" class="form-row"><label class="form-label">Gün</label>
+          <input class="inp" type="number" id="ki-days" min="0.5" step="0.5" placeholder="1"></div>
+        <div style="flex:1;min-width:110px" class="form-row"><label class="form-label">Tarih</label>
+          <input type="date" class="inp" id="ki-date"></div>
+        <div style="flex:3;min-width:150px" class="form-row"><label class="form-label">Açıklama</label>
+          <input class="inp" id="ki-reason" placeholder="Resmi tatil çalışması..."></div>
+      </div>
+      <div class="form-row"><label class="form-label">Bildirim E-postası (opsiyonel — Gmail, Outlook vb.)</label>
+        <input class="inp" id="ki-email" type="email" placeholder="personel@herhangi.com"></div>
+      <button class="btn btn-green" onclick="addKi()"><i class="ti ti-check" aria-hidden="true"></i> K.İ Tanımla</button>
+    </div>
+    <div id="ki-table-wrap" style="overflow-x:auto">
+      <table class="ki-summary" id="ki-table"><thead><tr>
+        <th>Personel</th><th>Kazanılan</th><th>Kullanılan</th><th>Kalan</th><th>Tarihler</th><th class="admin-only">İşlem</th>
+      </tr></thead><tbody id="ki-body"></tbody></table>
+    </div>
+  </div>
+</div>
+
+
+<!-- YILLIK PLANLAMA -->
+<div id="pn-yillikplan" style="display:none">
+  <div class="card">
+    <div class="card-title"><i class="ti ti-calendar-month" style="font-size:18px" aria-hidden="true"></i> Yıllık İzin Planlaması</div>
+    <div class="alert info" style="margin-bottom:14px">
+      <i class="ti ti-info-circle" style="flex-shrink:0" aria-hidden="true"></i>
+      <span>Her kullanıcı <b>kendi sütunundaki</b> hücrelere tıklayarak yıllık izin planını işaretler. Yönetici yeni hafta açtığında planlar otomatik olarak çizelgeye düşer.</span>
+    </div>
+    <div class="wbar" style="margin-bottom:12px">
+      <select class="wsel" id="plan-year" style="min-width:100px" onchange="loadYearPlan()">
+      </select>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <span class="leg-i"><span class="leg-d" style="background:#E8F5E9;border:1px solid #81C784"></span> Yıllık İzin (seçildi)</span>
+        <span class="leg-i"><span class="leg-d" style="background:var(--ki-b);border:1px solid var(--ki-d)"></span> K.İ (seçildi)</span>
+        <span class="leg-i"><span class="leg-d" style="background:var(--alt);border:1px solid var(--bd)"></span> Seçilmedi</span>
+      </div>
+      <span id="plan-saved" style="font-size:12px;color:#2E7D32;display:none">✓ Kaydedildi</span>
+    </div>
+    <div style="overflow-x:auto">
+      <table id="plan-table" style="border-collapse:collapse;font-size:11px;min-width:900px;width:100%">
+        <thead id="plan-head"></thead>
+        <tbody id="plan-body"></tbody>
+      </table>
+    </div>
+    <div style="margin-top:10px;font-size:11px;color:var(--txt3)">
+      💡 Tıklayarak yıllık izin seçin. Tekrar tıklayarak iptal edin. Yönetici o haftayı açtığında seçimleriniz otomatik çizelgeye eklenir.
+    </div>
+  </div>
 </div>
 
 <!-- ARŞİV -->
 <div id="pn-arsiv" style="display:none">
   <div class="card">
     <div class="card-title"><i class="ti ti-archive" style="font-size:18px" aria-hidden="true"></i> Tüm Haftalar</div>
+    <div style="margin-bottom:10px">
+      <label style="font-size:12px;font-weight:500;color:var(--txt2)">Excel İçe Aktar:</label>
+      <input type="file" id="import-file" accept=".xlsx,.xls" style="display:none" onchange="importExcel(this)">
+      <button class="btn btn-green btn-sm" style="margin-left:8px" onclick="document.getElementById('import-file').click()">
+        <i class="ti ti-upload" aria-hidden="true"></i> Excel'den Aktar
+      </button>
+      <span id="import-status" style="font-size:11px;color:var(--txt2);margin-left:8px"></span>
+    </div>
     <div style="overflow-x:auto"><table class="arc-t">
       <thead><tr><th>Hafta</th><th>Başlangıç</th><th>Bitiş</th><th>Yıl</th><th>Durum</th><th></th></tr></thead>
       <tbody id="arc-body"></tbody>
@@ -313,22 +355,14 @@ textarea.nt{width:100%;box-sizing:border-box;border:1px solid #e0e0e0;border-rad
     <div style="background:var(--alt);border-radius:var(--r);padding:14px;margin-bottom:14px">
       <div style="font-weight:600;margin-bottom:10px;color:var(--navy);font-size:13px">+ Yeni Kullanıcı</div>
       <div class="fl">
-        <div style="flex:2;min-width:130px" class="form-row">
-          <label class="form-label">Adı Soyadı (Personel listesiyle eşleşmeli)</label>
-          <select class="sel-f" id="u-name"><option value="">— Personel seçin —</option></select>
-        </div>
-        <div style="flex:1;min-width:120px" class="form-row">
-          <label class="form-label">Kullanıcı Adı</label>
-          <input class="inp" id="u-uname" placeholder="yagizguven">
-        </div>
-        <div style="flex:1;min-width:110px" class="form-row">
-          <label class="form-label">Şifre</label>
-          <input class="inp" type="password" id="u-pass" placeholder="En az 4 karakter">
-        </div>
-        <div style="min-width:90px" class="form-row">
-          <label class="form-label">Rol</label>
-          <select class="sel-f" id="u-role"><option value="user">Personel</option><option value="admin">Yönetici</option></select>
-        </div>
+        <div style="flex:2;min-width:130px" class="form-row"><label class="form-label">Adı Soyadı</label>
+          <select class="sel-f" id="u-name"><option value="">— Personel seçin —</option></select></div>
+        <div style="flex:1;min-width:110px" class="form-row"><label class="form-label">Kullanıcı Adı</label>
+          <input class="inp" id="u-uname" placeholder="yagizguven"></div>
+        <div style="flex:1;min-width:100px" class="form-row"><label class="form-label">Şifre</label>
+          <input class="inp" type="password" id="u-pass" placeholder="En az 4 karakter"></div>
+        <div style="min-width:90px" class="form-row"><label class="form-label">Rol</label>
+          <select class="sel-f" id="u-role"><option value="user">Personel</option><option value="admin">Yönetici</option></select></div>
       </div>
       <button class="btn btn-green" onclick="addUser()"><i class="ti ti-check" aria-hidden="true"></i> Ekle</button>
       <div id="u-err" style="font-size:12px;color:#A32D2D;margin-top:6px"></div>
@@ -340,18 +374,38 @@ textarea.nt{width:100%;box-sizing:border-box;border:1px solid #e0e0e0;border-rad
 <!-- AYARLAR -->
 <div id="pn-ayarlar" style="display:none">
   <div class="card">
-    <div class="card-title"><i class="ti ti-mail" style="font-size:18px" aria-hidden="true"></i> Doğum Günü Mail Bildirimi <span style="font-size:11px;color:var(--txt3);font-weight:400">(opsiyonel)</span></div>
-    <div class="alert info" style="margin-bottom:12px"><i class="ti ti-info-circle" style="flex-shrink:0" aria-hidden="true"></i><span>Sadece doğum günü bildirimleri için kullanılır. Doldurmak zorunlu değil.</span></div>
+    <div class="card-title"><i class="ti ti-mail" style="font-size:18px" aria-hidden="true"></i> Doğum Günü Mail Bildirimi</div>
     <div class="fl">
-      <div class="form-row" style="flex:2;min-width:180px"><label class="form-label">Gmail Adresi</label><input class="inp" id="s-user" placeholder="nobet@gmail.com"></div>
-      <div class="form-row" style="flex:2;min-width:180px"><label class="form-label">Bildirim Gitsin</label><input class="inp" id="s-to" placeholder="yonetici@gmail.com"></div>
+      <div class="form-row" style="flex:2;min-width:180px"><label class="form-label">Gmail Gönderen Adres</label>
+        <input class="inp" id="s-user" placeholder="nobet@gmail.com"></div>
+      <div class="form-row" style="flex:2;min-width:180px"><label class="form-label">Varsayılan Alıcı (herhangi mail)</label>
+        <input class="inp" id="s-to" placeholder="yonetici@sirket.com.tr"></div>
     </div>
-    <div class="form-row"><label class="form-label">Gmail Uygulama Şifresi</label><input class="inp" type="password" id="s-pass" placeholder="xxxx xxxx xxxx xxxx"><div class="hint">Google Hesabı → Güvenlik → 2 Adımlı Doğrulama → Uygulama Şifreleri</div></div>
+    <div class="form-row"><label class="form-label">Gmail Uygulama Şifresi</label>
+      <input class="inp" type="password" id="s-pass" placeholder="xxxx xxxx xxxx xxxx">
+      <div class="hint">Google Hesabı → Güvenlik → 2 Adımlı Doğrulama → Uygulama Şifreleri</div></div>
     <div style="display:flex;gap:8px">
       <button class="btn btn-blue" onclick="saveSettings()"><i class="ti ti-device-floppy" aria-hidden="true"></i> Kaydet</button>
       <button class="btn btn-green" onclick="testMail()"><i class="ti ti-send" aria-hidden="true"></i> Test Gönder</button>
     </div>
     <div id="mail-status" style="margin-top:8px;font-size:12px"></div>
+  </div>
+  <!-- Resmi Tatiller -->
+  <div class="card">
+    <div class="card-title"><i class="ti ti-calendar-event" style="font-size:18px" aria-hidden="true"></i> Resmi Tatiller</div>
+    <div style="background:var(--alt);border-radius:var(--r);padding:12px;margin-bottom:12px">
+      <div class="fl">
+        <div class="form-row" style="flex:1;min-width:140px"><label class="form-label">Tarih</label>
+          <input type="date" class="inp" id="hol-date"></div>
+        <div class="form-row" style="flex:3;min-width:180px"><label class="form-label">Tatil Adı</label>
+          <input class="inp" id="hol-name" placeholder="Kurban Bayramı 1. Günü"></div>
+      </div>
+      <button class="btn btn-green btn-sm" onclick="addHoliday()"><i class="ti ti-check" aria-hidden="true"></i> Ekle</button>
+    </div>
+    <div style="overflow-x:auto"><table class="hol-t" id="hol-t">
+      <thead><tr><th>Tarih</th><th>Tatil</th><th></th></tr></thead>
+      <tbody id="hol-body"></tbody>
+    </table></div>
   </div>
 </div>
 
@@ -362,84 +416,33 @@ textarea.nt{width:100%;box-sizing:border-box;border:1px solid #e0e0e0;border-rad
     <div id="profil-info" style="margin-bottom:16px;font-size:13px;color:var(--txt2);line-height:2"></div>
     <hr style="border:none;border-top:1px solid var(--bd);margin-bottom:16px">
     <div style="font-weight:600;margin-bottom:12px;font-size:13px;color:var(--navy)">Şifre Değiştir</div>
-    <div class="form-row"><label class="form-label">Mevcut Şifre</label><input class="inp" type="password" id="p-old" placeholder="••••••"></div>
-    <div class="form-row"><label class="form-label">Yeni Şifre</label><input class="inp" type="password" id="p-new" placeholder="En az 4 karakter"></div>
-    <div class="form-row"><label class="form-label">Yeni Şifre (tekrar)</label><input class="inp" type="password" id="p-new2" placeholder="••••••"></div>
-    <button class="btn btn-blue" onclick="changePass()"><i class="ti ti-key" aria-hidden="true"></i> Şifreyi Güncelle</button>
+    <div class="form-row"><label class="form-label">Mevcut Şifre</label><input class="inp" type="password" id="p-old"></div>
+    <div class="form-row"><label class="form-label">Yeni Şifre</label><input class="inp" type="password" id="p-new"></div>
+    <div class="form-row"><label class="form-label">Yeni Şifre (tekrar)</label><input class="inp" type="password" id="p-new2"></div>
+    <button class="btn btn-blue" onclick="changePass()"><i class="ti ti-key" aria-hidden="true"></i> Güncelle</button>
     <div id="pass-msg" style="margin-top:8px;font-size:12px"></div>
+    <!-- Personel K.İ görünümü -->
+    <div id="my-ki" style="margin-top:20px;display:none">
+      <hr style="border:none;border-top:1px solid var(--bd);margin-bottom:14px">
+      <div style="font-weight:600;margin-bottom:10px;font-size:13px;color:var(--ki-f)"><i class="ti ti-coins" aria-hidden="true"></i> K.İ Bakiyem</div>
+      <div id="my-ki-body"></div>
+    </div>
   </div>
 </div>
 
 </div><!-- /main -->
 </div><!-- /app -->
 
-
-<!-- K.İ (KULLANILMAYAN İZİN) -->
-<div id="pn-ki" style="display:none">
-  <div class="card">
-    <div class="card-title"><i class="ti ti-coins" style="font-size:18px" aria-hidden="true"></i> Kullanılmayan İzin (K.İ) Yönetimi</div>
-    <div class="alert info" style="margin-bottom:12px">
-      <i class="ti ti-info-circle" style="flex-shrink:0" aria-hidden="true"></i>
-      <span><b>K.İ:</b> Resmi tatilde çalışma, fazla mesai gibi durumlarda biriken izin hakkı. Personel bunu ileri haftalarda <b>K.İ Günü</b> olarak kullanır. Çizelgede kullanıldığında bakiyeden otomatik düşer.</span>
-    </div>
-
-    <!-- K.İ Ekleme Formu -->
-    <div style="background:var(--alt);border-radius:var(--r);padding:14px;margin-bottom:16px">
-      <div style="font-weight:600;margin-bottom:10px;color:var(--navy);font-size:13px">+ K.İ Ekle / Tanımla</div>
-      <div class="fl">
-        <div style="flex:2;min-width:150px" class="form-row">
-          <label class="form-label">Personel</label>
-          <select class="sel-f" id="ki-person"><option value="">— Seçin —</option></select>
-        </div>
-        <div style="flex:1;min-width:80px" class="form-row">
-          <label class="form-label">Gün Sayısı</label>
-          <input class="inp" type="number" id="ki-days" min="0.5" step="0.5" placeholder="1">
-        </div>
-        <div style="flex:3;min-width:160px" class="form-row">
-          <label class="form-label">Açıklama</label>
-          <input class="inp" id="ki-reason" placeholder="Resmi tatil çalışması, fazla mesai...">
-        </div>
-      </div>
-      <div class="form-row">
-        <label class="form-label">Bildirim E-postası (personelin maili — opsiyonel)</label>
-        <input class="inp" id="ki-email" type="email" placeholder="personel@gmail.com — doldurulursa bildirim gönderilir">
-      </div>
-      <button class="btn btn-green" onclick="addKi()"><i class="ti ti-check" aria-hidden="true"></i> K.İ Tanımla</button>
-    </div>
-
-    <!-- K.İ Özet Tablosu -->
-    <div style="overflow-x:auto;border:1px solid var(--bd);border-radius:10px">
-      <table style="border-collapse:collapse;width:100%;font-size:12px;min-width:580px">
-        <thead><tr>
-          <th style="background:var(--blue2);color:#fff;padding:8px 12px;text-align:left;min-width:170px">Personel</th>
-          <th style="background:var(--blue2);color:#fff;padding:8px 10px;text-align:center">Kazanılan</th>
-          <th style="background:var(--blue2);color:#fff;padding:8px 10px;text-align:center">Kullanılan</th>
-          <th style="background:var(--blue2);color:#fff;padding:8px 10px;text-align:center">Kalan</th>
-          <th style="background:var(--blue2);color:#fff;padding:8px 10px;text-align:center">İşlemler</th>
-        </tr></thead>
-        <tbody id="ki-table-body"></tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- K.İ Detay Modal tetikleyici -->
-  <div id="ki-detail" style="display:none" class="card">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-      <div class="card-title" style="margin-bottom:0"><i class="ti ti-list" aria-hidden="true"></i> <span id="ki-detail-title">İşlem Geçmişi</span></div>
-      <button class="btn btn-sm" style="background:var(--sec);color:#fff" onclick="document.getElementById('ki-detail').style.display='none'">Kapat</button>
-    </div>
-    <div id="ki-detail-list"></div>
-  </div>
-</div>
-
 <!-- MODALLER -->
 <div class="mb" id="m-week">
   <div class="modal">
     <h3><i class="ti ti-calendar-plus" aria-hidden="true"></i> Yeni Hafta Aç</h3>
-    <div class="form-row"><label class="form-label">Hafta Başlığı</label><input class="inp" id="nw-label" placeholder="Otomatik doldurulur"></div>
+    <div class="form-row"><label class="form-label">Hafta Başlığı (otomatik doldurulur)</label><input class="inp" id="nw-label"></div>
     <div class="fl">
-      <div class="form-row" style="flex:1"><label class="form-label">Başlangıç (Pazartesi)</label><input type="date" class="inp" id="nw-start" onchange="autoWeekLabel()"></div>
-      <div class="form-row" style="flex:1"><label class="form-label">Bitiş (Pazar)</label><input type="date" class="inp" id="nw-end" onchange="autoWeekLabel()"></div>
+      <div class="form-row" style="flex:1"><label class="form-label">Başlangıç (Pazartesi)</label>
+        <input type="date" class="inp" id="nw-start" onchange="autoLabel()"></div>
+      <div class="form-row" style="flex:1"><label class="form-label">Bitiş (Pazar)</label>
+        <input type="date" class="inp" id="nw-end" onchange="autoLabel()"></div>
     </div>
     <div class="modal-acts">
       <button class="btn btn-ghost" style="background:#888;color:#fff" onclick="cm()">İptal</button>
@@ -457,17 +460,14 @@ textarea.nt{width:100%;box-sizing:border-box;border:1px solid #e0e0e0;border-rad
       <select class="sel-f" id="apr-day">
         <option value="0">Pazartesi</option><option value="1">Salı</option><option value="2">Çarşamba</option>
         <option value="3">Perşembe</option><option value="4">Cuma</option><option value="5">Cumartesi</option><option value="6">Pazar</option>
-      </select>
-    </div>
-    <div class="form-row" id="reject-row" style="display:none">
-      <label class="form-label">Red Gerekçesi</label>
-      <input class="inp" id="reject-reason" placeholder="Personel uygulamada görecek...">
-    </div>
+      </select></div>
+    <div class="form-row" id="reject-row" style="display:none"><label class="form-label">Red Gerekçesi</label>
+      <input class="inp" id="reject-reason" placeholder="Personel görecek..."></div>
     <div id="apr-err" class="alert danger" style="display:none;margin-bottom:8px"></div>
     <div class="modal-acts">
       <button class="btn btn-ghost" style="background:#888;color:#fff" onclick="cm()">İptal</button>
       <button class="btn btn-red"   onclick="doReject()"><i class="ti ti-x" aria-hidden="true"></i> Reddet</button>
-      <button class="btn btn-green" onclick="resolveReq('approved')"><i class="ti ti-check" aria-hidden="true"></i> Onayla → Çizelgeye Ekle</button>
+      <button class="btn btn-green" onclick="resolveReq('approved')"><i class="ti ti-check" aria-hidden="true"></i> Onayla</button>
     </div>
   </div>
 </div>
@@ -476,7 +476,7 @@ textarea.nt{width:100%;box-sizing:border-box;border:1px solid #e0e0e0;border-rad
   <div class="modal">
     <h3><i class="ti ti-key" aria-hidden="true"></i> Şifre Sıfırla</h3>
     <div id="reset-name" style="font-size:13px;color:var(--txt2);margin-bottom:12px"></div>
-    <div class="form-row"><label class="form-label">Yeni Şifre</label><input class="inp" type="password" id="rp-pass" placeholder="En az 4 karakter"></div>
+    <div class="form-row"><label class="form-label">Yeni Şifre</label><input class="inp" type="password" id="rp-pass"></div>
     <div class="modal-acts">
       <button class="btn btn-ghost" style="background:#888;color:#fff" onclick="cm()">İptal</button>
       <button class="btn btn-blue" onclick="doResetPass()"><i class="ti ti-check" aria-hidden="true"></i> Kaydet</button>
@@ -486,14 +486,28 @@ textarea.nt{width:100%;box-sizing:border-box;border:1px solid #e0e0e0;border-rad
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script>
-// ══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
 // SABİTLER
-// ══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
 const PERSONEL=["Alpcan ŞİŞMAN","Doğuhan DEMİROK","Evren KARA","İlyas GÜNEŞ","Özgür YENİAY","Özkan AYTEN","Mustafa ALTAŞ","Melih MEMİŞLER","Yusuf YİĞİT","Tolga KANOĞLU","Yağız GÜVEN"];
 const DAYS=[{f:"PAZARTESİ"},{f:"SALI"},{f:"ÇARŞAMBA"},{f:"PERŞEMBE"},{f:"CUMA"},{f:"CUMARTESİ"},{f:"PAZAR"}];
+
+// Tüm olası vardiya saatleri
+const ALL_SHIFTS=[
+  {s:"06:15 – 15:15",c:"sabah"},{s:"08:00 – 17:00",c:"sabah"},
+  {s:"10:00 – 17:00",c:"prime"},{s:"10:00 – 19:00",c:"prime"},
+  {s:"10:00 – 20:00",c:"prime"},{s:"12:00 – 20:00",c:"prime"},
+  {s:"12:00 – 21:00",c:"prime"},{s:"12:00 – 22:00",c:"prime"},
+  {s:"13:00 – 22:00",c:"prime"},
+  {s:"15:00 – 00:00",c:"aksam"},{s:"17:00 – Yayın Sonu",c:"aksam"},
+  {s:"18:00 – Yayın Sonu",c:"aksam"},{s:"19:00 – Yayın Sonu",c:"aksam"},
+  {s:"00:00 – 06:30",c:"gece"},{s:"SERBEST",c:"sabah"},
+];
+
+// Shift renkler
 const SC={
   sabah:{bg:"FAEEDA",fg:"412402",bd:"FAC775",lbl:"Sabah",ico:"ti-sun"},
-  araci:{bg:"E6F1FB",fg:"042C53",bd:"85B7EB",lbl:"Araçı",ico:"ti-clock-2"},
+  prime:{bg:"E8F5E0",fg:"1A5C00",bd:"6DB33F",lbl:"Prime Vardiya",ico:"ti-star"},
   aksam:{bg:"EEEDFE",fg:"26215C",bd:"AFA9EC",lbl:"Akşam",ico:"ti-moon-2"},
   gece:{bg:"2C3E50",fg:"D3D1C7",bd:"5F5E5A",lbl:"Gece",ico:"ti-moon-stars"},
   dis:{bg:"E1F5EE",fg:"04342C",bd:"5DCAA5",lbl:"Dış Görev",ico:"ti-car"},
@@ -502,70 +516,39 @@ const SC={
   dogum:{bg:"FCE4FC",fg:"5B0A5B",bd:"D07ED0",lbl:"Doğum Günü İzni",ico:"ti-cake"},
   ki:{bg:"EDE8FF",fg:"3D1D8A",bd:"9B7EEB",lbl:"K.İ",ico:"ti-coins"}
 };
-const SHIFT_ROWS = [
-  {s:"06:15 – 15:15",c:"sabah"},{s:"08:00 – 17:00",c:"sabah"},
-  {s:"10:00 – 17:00",c:"araci"},{s:"12:00 – 20:00",c:"araci"},
-  {s:"15:00 – 00:00",c:"aksam"},{s:"17:00 – Yayın Sonu",c:"aksam"},
-  {s:"00:00 – 06:30",c:"gece"}
-];
-const ROW_META={};
-// PCR 1-2
-["p1a","p1b","p1c","p1d","p1e","p1f","p1g"].forEach((id,i)=>{ROW_META[id]=SHIFT_ROWS[i];});
-// PCR 3
-["p3a","p3b","p3c","p3d","p3e","p3f","p3g"].forEach((id,i)=>{ROW_META[id]=SHIFT_ROWS[i];});
-// TEK.MON
-["tma","tmb","tmc","tmd","tme","tmf","tmg"].forEach((id,i)=>{ROW_META[id]=SHIFT_ROWS[i];});
-// ÖLÇÜ BAKIM
-ROW_META["ob1"]={s:"08:00 – 17:00",c:"sabah"};
-// HAFTALIK İZİN
-["iz1","iz2","iz3"].forEach(id=>{ROW_META[id]={s:"Tam Gün",c:"izin"};});
-// DIŞ GÖREV
-["dg1","dg2"].forEach(id=>{ROW_META[id]={s:"08:00 – 17:00",c:"dis"};});
-// YILLIK
-["yl1","yl2","yl3"].forEach(id=>{ROW_META[id]={s:"Tam Gün",c:"yillik"};});
-// DOĞUM GÜNÜ İZNİ
-ROW_META["dgi1"]={s:"+1 Gün",c:"dogum"};
-// K.İ
-ROW_META["ki1"]={s:"Tam Gün",c:"ki"};
-const ROWS=[
-  {_s:"PCR 1 – PCR 2"},
-  {id:"p1a",b:"PCR 1 – PCR 2"},{id:"p1b",b:""},{id:"p1c",b:""},{id:"p1d",b:""},
-  {id:"p1e",b:""},{id:"p1f",b:""},{id:"p1g",b:""},
-  {_s:"PCR 3"},
-  {id:"p3a",b:"PCR 3"},{id:"p3b",b:""},{id:"p3c",b:""},{id:"p3d",b:""},
-  {id:"p3e",b:""},{id:"p3f",b:""},{id:"p3g",b:""},
-  {_s:"TEKNİK MONİTÖRİNG"},
-  {id:"tma",b:"TEK.MON."},{id:"tmb",b:""},{id:"tmc",b:""},{id:"tmd",b:""},
-  {id:"tme",b:""},{id:"tmf",b:""},{id:"tmg",b:""},
-  {_s:"ÖLÇÜ BAKIM"},
-  {id:"ob1",b:"ÖLÇÜ BAKIM"},
-  {_div:1},
-  {_s:"HAFTALIK İZİN",_bot:1},
-  {id:"iz1",b:""},{id:"iz2",b:""},{id:"iz3",b:""},
-  {_s:"DIŞ GÖREV",_bot:1},
-  {id:"dg1",b:""},{id:"dg2",b:""},
-  {_s:"YILLIK / RAPOR / EĞİTİM",_bot:1},
-  {id:"yl1",b:""},{id:"yl2",b:""},{id:"yl3",b:""},
-  {_s:"DOĞUM GÜNÜ İZNİ",_bot:1},
-  {id:"dgi1",b:""},
-  {_s:"K.İ (Kullanılmayan İzin)",_bot:1},
-  {id:"ki1",b:""},
-];
-const DROWS=ROWS.filter(r=>r.id);
 
-// ══════════════════════════════════════════════════════════
+// Shift zamanı → kategori
+function shiftCat(s){
+  if(!s)return'sabah';
+  if(s.includes('00:00'))return'gece';
+  if(s.includes('15:15'))return'sabah';
+  if(s.includes('17:00')&&s.includes('08'))return'sabah';
+  if(s.includes('10:00'))return'prime';
+  if(s.includes('15:00')||s.includes('Yayın'))return'aksam';
+  return'sabah';
+}
+
+// Shift saatinden saat değeri çıkar
+function parseHours(s){
+  if(!s||s.includes('Tam')||s.includes('İzin')||s.includes('Rapor'))return 0;
+  const m=s.match(/(\d{2}):(\d{2})\s*[–-]\s*(\d{2}):(\d{2})/);
+  if(!m)return 0;
+  let st=parseInt(m[1])+parseInt(m[2])/60, en=parseInt(m[3])+parseInt(m[4])/60;
+  if(en<st)en+=24;
+  return en-st;
+}
+
 // STATE
-// ══════════════════════════════════════════════════════════
 let TOKEN='',ROLE='',UNAME='',UID=0;
-let cWeekId=null,sched={},notes=[Array(7).fill(""),Array(7).fill("")],weeks=[];
-let pendingReqId=null,pendingReqObj=null,resetUserId=null,saveT=null;
-DROWS.forEach(r=>{sched[r.id]=Array(7).fill("");});
+let cWeekId=null,sched={},notes=[Array(7).fill(""),Array(7).fill("")];
+let rowMeta={},sectionCounts={},holidays=[];
+let weeks=[],pendingReqId=null,pendingReqObj=null,resetUserId=null,saveT=null;
 
 function setSaving(on){document.getElementById("dot").className="dot"+(on?" saving":"");document.getElementById("sstat").textContent=on?"Kaydediliyor...":"Kaydedildi ✓";}
 
-// ══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
 // API
-// ══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
 async function api(m,u,b){
   const o={method:m,headers:{"Content-Type":"application/json","Authorization":"Bearer "+TOKEN}};
   if(b)o.body=JSON.stringify(b);
@@ -575,9 +558,9 @@ async function api(m,u,b){
   return r.json();
 }
 
-// ══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
 // AUTH
-// ══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
 async function doLogin(){
   const user=document.getElementById("l-user").value.trim();
   const pass=document.getElementById("l-pass").value;
@@ -587,7 +570,7 @@ async function doLogin(){
   try{
     const r=await fetch("/api/auth/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:user,password:pass})});
     const d=await r.json();
-    if(!r.ok){errEl.textContent=d.error||"Giriş başarısız";return;}
+    if(!r.ok){errEl.textContent=d.error||"Hata";return;}
     TOKEN=d.token;ROLE=d.role;UNAME=d.name;
     localStorage.setItem("nb_tok",TOKEN);localStorage.setItem("nb_role",ROLE);localStorage.setItem("nb_name",UNAME);
     showApp();
@@ -603,24 +586,23 @@ function doLogout(){
 function showApp(){
   document.getElementById("login-wrap").style.display="none";
   document.getElementById("app-wrap").style.display="flex";
-  // Rol bazlı UI
   const isAdmin=ROLE==="admin";
   document.getElementById("user-chip").innerHTML=`<i class="ti ${isAdmin?"ti-shield-check":"ti-user"}" aria-hidden="true"></i>${UNAME}`;
-  document.querySelectorAll(".admin-only").forEach(el=>el.style.display=isAdmin?"flex":"none");
+  document.querySelectorAll(".admin-only").forEach(el=>el.style.display=isAdmin?"":"none");
   if(isAdmin){
     document.getElementById("tb-uyarilar").style.display="flex";
     document.getElementById("btn-warnbar").style.display="flex";
   }
-  // Wbar admin butonları
+  // Wbar — admin ise hafta yönetim butonları
   if(isAdmin){
-    const wbar=document.getElementById("wbar");
-    wbar.innerHTML=`<select class="wsel" id="wsel" onchange="loadWeek(this.value)"></select>
+    const wb=document.getElementById("wbar");
+    wb.innerHTML=`<select class="wsel" id="wsel" onchange="loadWeek(this.value)"></select>
       <button class="btn btn-green" onclick="openNewWeek()"><i class="ti ti-plus" aria-hidden="true"></i> Yeni Hafta</button>
       <button class="btn btn-ghost" style="background:var(--blue2);color:#fff" onclick="doLockWeek()"><i class="ti ti-lock" aria-hidden="true"></i> Kilitle</button>
+      <button class="btn btn-ghost" style="background:#555;color:#fff" onclick="doUnlockWeek()"><i class="ti ti-lock-open" aria-hidden="true"></i> Aç</button>
       <button class="btn btn-red btn-sm" onclick="doDelWeek()"><i class="ti ti-trash" aria-hidden="true"></i></button>`;
   }
-  // Profil bilgisi
-  document.getElementById("profil-info").innerHTML=`<b>Adı Soyadı:</b> ${UNAME}<br><b>Rol:</b> ${ROLE==="admin"?"Yönetici":"Personel"}`;
+  document.getElementById("profil-info").innerHTML=`<b>Ad Soyad:</b> ${UNAME}<br><b>Rol:</b> ${ROLE==="admin"?"Yönetici":"Personel"}`;
   initApp();
 }
 
@@ -631,23 +613,27 @@ async function changePass(){
   const msg=document.getElementById("pass-msg");
   if(!old||!nw){msg.innerHTML=`<span style="color:#A32D2D">Tüm alanları doldurun.</span>`;return;}
   if(nw!==nw2){msg.innerHTML=`<span style="color:#A32D2D">Yeni şifreler eşleşmiyor.</span>`;return;}
-  if(nw.length<4){msg.innerHTML=`<span style="color:#A32D2D">Şifre en az 4 karakter olmalı.</span>`;return;}
+  if(nw.length<4){msg.innerHTML=`<span style="color:#A32D2D">En az 4 karakter.</span>`;return;}
   try{
     await api("POST","/api/auth/change-password",{oldPass:old,newPass:nw});
     msg.innerHTML=`<span style="color:#2E7D32">✓ Şifre güncellendi.</span>`;
-    document.getElementById("p-old").value="";document.getElementById("p-new").value="";document.getElementById("p-new2").value="";
+    ["p-old","p-new","p-new2"].forEach(id=>document.getElementById(id).value="");
   }catch(e){msg.innerHTML=`<span style="color:#A32D2D">${e.message}</span>`;}
 }
 
-// ══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
 // INIT
-// ══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
 async function initApp(){
-  DROWS.forEach(r=>{sched[r.id]=Array(7).fill("");});
+  ["bd-person","u-name","ki-person"].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el)el.innerHTML=`<option value="">— Seçin —</option>${PERSONEL.map(p=>`<option value="${p}">${p}</option>`).join("")}`;
+  });
   buildLegend();
+  holidays = await api("GET","/api/holidays").catch(()=>[]);
   await loadWeeks();
   await loadYears();
-  if(ROLE==="admin")await loadSettings();
+  if(ROLE==="admin"){await loadSettings();loadHolidays();}
   checkTodayBirthdays();
   setInterval(()=>api("GET","/api/requests?status=pending").then(l=>{
     const n=ROLE==="admin"?l.length:0;
@@ -656,26 +642,23 @@ async function initApp(){
   }).catch(()=>{}),30000);
 }
 
-// Başlangıçta token var mı kontrol et
+// Token kontrolü
 (()=>{
-  const tok=localStorage.getItem("nb_tok");
-  const rl=localStorage.getItem("nb_role");
-  const nm=localStorage.getItem("nb_name");
+  const tok=localStorage.getItem("nb_tok"),rl=localStorage.getItem("nb_role"),nm=localStorage.getItem("nb_name");
   if(tok&&rl&&nm){
     TOKEN=tok;ROLE=rl;UNAME=nm;
-    // Token geçerli mi?
     fetch("/api/auth/me",{headers:{Authorization:"Bearer "+tok}}).then(r=>{
       if(r.ok){showApp();}else{localStorage.clear();document.getElementById("login-wrap").style.display="flex";}
     }).catch(()=>{document.getElementById("login-wrap").style.display="flex";});
-  } else {
+  }else{
     document.getElementById("login-wrap").style.display="flex";
     setTimeout(()=>document.getElementById("l-user").focus(),100);
   }
 })();
 
-// ══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
 // HAFTALAR
-// ══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
 async function loadWeeks(){
   weeks=await api("GET","/api/weeks");
   const sel=document.getElementById("wsel");
@@ -689,16 +672,30 @@ async function loadWeek(wid){
   cWeekId=parseInt(wid);
   const w=weeks.find(x=>x.id==cWeekId);
   if(w)document.getElementById("t-sub").textContent=w.label;
-  const data=await api("GET",`/api/schedule/${cWeekId}`);
-  DROWS.forEach(r=>{sched[r.id]=data.sched[r.id]||Array(7).fill("");});
+  const [data,counts,meta]=await Promise.all([
+    api("GET",`/api/schedule/${cWeekId}`),
+    api("GET",`/api/weeks/${cWeekId}/sections`),
+    api("GET",`/api/schedule/${cWeekId}`).then(d=>d.meta||{})
+  ]);
+  sched={};
+  Object.keys(data.sched||{}).forEach(rid=>{sched[rid]=data.sched[rid];});
   notes=data.notes||[Array(7).fill(""),Array(7).fill("")];
-  buildTable();if(ROLE==="admin")refreshWarnings();
+  rowMeta=data.meta||{};
+  sectionCounts=counts;
+  buildTable();
+  if(ROLE==="admin")refreshWarnings();
 }
 
-async function saveCell(rid,gi,val){if(!cWeekId)return;setSaving(true);clearTimeout(saveT);saveT=setTimeout(async()=>{await api("PUT",`/api/schedule/${cWeekId}/cell`,{row_id:rid,day_index:gi,person:val});setSaving(false);},400);}
+async function saveCell(rid,gi,val){
+  if(!cWeekId)return;setSaving(true);clearTimeout(saveT);
+  saveT=setTimeout(async()=>{
+    await api("PUT",`/api/schedule/${cWeekId}/cell`,{row_id:rid,day_index:gi,person:val});setSaving(false);
+  },400);
+}
 async function saveNote(ni,gi,val){if(!cWeekId)return;await api("PUT",`/api/schedule/${cWeekId}/note`,{note_index:ni,day_index:gi,content:val});}
+async function saveRowMeta(rid,shift_time){if(!cWeekId)return;await api("PUT",`/api/schedule/${cWeekId}/rowmeta`,{row_id:rid,shift_time});}
 
-function autoWeekLabel(){
+function autoLabel(){
   const s=document.getElementById("nw-start").value;
   const e=document.getElementById("nw-end").value;
   if(!s)return;
@@ -711,11 +708,11 @@ function autoWeekLabel(){
 function openNewWeek(){
   const t=new Date(),dy=t.getDay(),df=dy===0?1:8-dy;
   const nx=new Date(t);nx.setDate(t.getDate()+df);
-  const nsn=new Date(nx);nsn.setDate(nx.getDate()+6);
+  const ns=new Date(nx);ns.setDate(nx.getDate()+6);
   const fmt=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
   document.getElementById("nw-start").value=fmt(nx);
-  document.getElementById("nw-end").value=fmt(nsn);
-  autoWeekLabel();
+  document.getElementById("nw-end").value=fmt(ns);
+  autoLabel();
   document.getElementById("m-week").classList.add("open");
 }
 
@@ -731,40 +728,102 @@ async function createWeek(){
 }
 
 async function doLockWeek(){if(!cWeekId)return;if(!confirm("Kilitleyin mi?"))return;await api("PATCH",`/api/weeks/${cWeekId}/lock`);await loadWeeks();}
-async function doDelWeek(){if(!cWeekId)return;if(!confirm("Bu haftayı silmek istiyor musunuz?"))return;await api("DELETE",`/api/weeks/${cWeekId}`);cWeekId=null;await loadWeeks();loadArchive();}
+async function doUnlockWeek(){if(!cWeekId)return;if(!confirm("Kilidi açmak istediğinizden emin misiniz?"))return;await api("PATCH",`/api/weeks/${cWeekId}/unlock`);await loadWeeks();}
+async function doDelWeek(){if(!cWeekId)return;if(!confirm("Sil?"))return;await api("DELETE",`/api/weeks/${cWeekId}`);cWeekId=null;await loadWeeks();loadArchive();}
 function cm(){document.querySelectorAll(".mb").forEach(m=>m.classList.remove("open"));}
 
-// ══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
 // UYARILAR
-// ══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
+function getShiftEndH(shiftStr){
+  const m=shiftStr.match(/–\s*(\d{2}):(\d{2})/);
+  if(!m)return -1;
+  return parseInt(m[1])+parseInt(m[2])/60;
+}
+function getShiftStartH(shiftStr){
+  const m=shiftStr.match(/^(\d{2}):(\d{2})/);
+  if(!m)return -1;
+  return parseInt(m[1])+parseInt(m[2])/60;
+}
+
 function computeWarnings(){
   const W=[];
+  const dynRows=buildDynRows();
+  const allRows=dynRows.filter(r=>r.id);
+
+  // Günlük toplam saat ve çakışma
   for(let gi=0;gi<7;gi++){
     const map={};
-    DROWS.forEach(r=>{const p=(sched[r.id]||[])[gi];if(p)(map[p]=map[p]||[]).push(r);});
+    allRows.forEach(r=>{const p=(sched[r.id]||[])?.[gi];if(p)(map[p]=map[p]||[]).push(r);});
+
     Object.entries(map).forEach(([p,rs])=>{
       if(rs.length<2)return;
-      const cats=rs.map(r=>ROW_META[r.id]?.c||"");
-      const hasIz=cats.some(c=>["izin","yillik","dogum"].includes(c));
-      const hasN=cats.some(c=>!["izin","yillik","dogum"].includes(c));
+      const hasIz=rs.some(r=>["izin","yillik","dogum","ki"].includes(r.c));
+      const hasN=rs.some(r=>!["izin","yillik","dogum","ki"].includes(r.c));
       if(hasIz&&hasN)W.push({t:"danger",msg:`${p} — ${DAYS[gi].f}: Hem nöbete hem izin satırına yazılmış!`});
-      else W.push({t:"danger",msg:`${p} — ${DAYS[gi].f}: ${rs.length} farklı satırda → ${rs.map(r=>ROW_META[r.id]?.s||r.id).join(", ")}`});
+      else W.push({t:"danger",msg:`${p} — ${DAYS[gi].f}: ${rs.length} farklı satırda → ${rs.map(r=>r.s).join(", ")}`});
+    });
+
+    // 11 saat üzeri toplam çalışma uyarısı
+    const personHours={};
+    allRows.filter(r=>!["izin","yillik","dogum","ki"].includes(r.c)).forEach(r=>{
+      const p=(sched[r.id]||[])?.[gi];if(!p)return;
+      const h=parseHours(r.s);
+      personHours[p]=(personHours[p]||0)+h;
+    });
+    Object.entries(personHours).forEach(([p,h])=>{
+      if(h>11)W.push({t:"critical",msg:`🚨 ${p} — ${DAYS[gi].f}: Günlük ${h.toFixed(1)} saat çalışma (11 saati aşıyor!)`});
     });
   }
+
+  // 12 saat ara uyarısı — ardışık günlerde
+  const personShifts={};
+  allRows.filter(r=>!["izin","yillik","dogum","ki"].includes(r.c)).forEach(r=>{
+    (sched[r.id]||[]).forEach((p,gi)=>{
+      if(!p)return;
+      if(!personShifts[p])personShifts[p]=[];
+      personShifts[p].push({gi,s:r.s});
+    });
+  });
+  Object.entries(personShifts).forEach(([p,shifts])=>{
+    for(let i=0;i<shifts.length;i++){
+      for(let j=0;j<shifts.length;j++){
+        if(i===j)return;
+        const a=shifts[i],b=shifts[j];
+        if(b.gi!==a.gi+1)continue;
+        const endH=getShiftEndH(a.s);const startH=getShiftStartH(b.s);
+        if(endH<0||startH<0)continue;
+        let endAbs=endH<12?endH+24:endH;
+        const gap=(startH+24)-endAbs;
+        if(gap<12&&gap>=0){
+          W.push({t:"warn",msg:`⚠️ ${p} — ${DAYS[a.gi].f} → ${DAYS[b.gi].f}: 2 nöbet arası yalnızca ${gap.toFixed(1)} saat (minimum 12 saat olmalı)`});
+        }
+      }
+    }
+  });
+
+  // İzin aşımı
   const im={};
-  DROWS.filter(r=>ROW_META[r.id]?.c==="izin").forEach(r=>(sched[r.id]||[]).forEach((p,gi)=>{if(p)(im[p]=im[p]||new Set()).add(gi);}));
+  allRows.filter(r=>r.c==="izin").forEach(r=>(sched[r.id]||[]).forEach((p,gi)=>{if(p)(im[p]=im[p]||new Set()).add(gi);}));
   Object.entries(im).forEach(([p,d])=>{if(d.size>2)W.push({t:"warn",msg:`${p} — ${d.size} gün haftalık izin (max. 2 gün)`});});
+
+  // 5 gün üzeri
   const wd={};
-  DROWS.filter(r=>!["izin","yillik","dogum"].includes(ROW_META[r.id]?.c)).forEach(r=>(sched[r.id]||[]).forEach((p,gi)=>{if(p)(wd[p]=wd[p]||new Set()).add(gi);}));
+  allRows.filter(r=>!["izin","yillik","dogum","ki"].includes(r.c)).forEach(r=>(sched[r.id]||[]).forEach((p,gi)=>{if(p)(wd[p]=wd[p]||new Set()).add(gi);}));
   Object.entries(wd).forEach(([p,d])=>{if(d.size>5)W.push({t:"warn",msg:`${p} — Haftada ${d.size} gün nöbet (max. 5 önerilir)`});});
+
   return W;
 }
 
 function getDupK(){
   const s=new Set();
-  computeWarnings().filter(w=>w.t==="danger").forEach(w=>{
-    const m=w.msg.match(/^(.+) — ([^:]+):/);
-    if(m){const gi=DAYS.findIndex(d=>d.f===m[2].trim());if(gi>=0)s.add(`${m[1].trim()}-${gi}`);}
+  buildDynRows().filter(r=>r.id).forEach(r=>{
+    (sched[r.id]||[]).forEach((p,gi)=>{
+      if(!p)return;
+      let dup=false;
+      buildDynRows().filter(x=>x.id&&x.id!==r.id).forEach(x=>{if((sched[x.id]||[])[gi]===p)dup=true;});
+      if(dup)s.add(`${p}-${gi}`);
+    });
   });
   return s;
 }
@@ -777,12 +836,75 @@ function refreshWarnings(){
   document.getElementById("btn-warnbar").style.background=wc>0?"#A32D2D":"#2E7D32";
   document.getElementById("wlist").innerHTML=W.length===0
     ?`<div class="alert ok"><i class="ti ti-circle-check" style="font-size:18px;flex-shrink:0" aria-hidden="true"></i>Bu haftaya ait uyarı yok.</div>`
-    :W.map(w=>`<div class="alert ${w.t==="danger"?"danger":"warn"}"><i class="ti ${w.t==="danger"?"ti-alert-octagon":"ti-alert-triangle"}" style="font-size:16px;flex-shrink:0" aria-hidden="true"></i>${w.msg}</div>`).join("");
+    :W.map(w=>`<div class="alert ${w.t==="critical"?"danger":"danger"===w.t?"danger":"warn"}" ${w.t==="critical"?'style="animation:flash 1s infinite"':''}>
+      <i class="ti ${w.t==="critical"?"ti-alarm":"ti-alert-triangle"}" style="font-size:16px;flex-shrink:0" aria-hidden="true"></i>${w.msg}</div>`).join("");
 }
 
-// ══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
+// DİNAMİK SATIR YAPISI
+// ═══════════════════════════════════════════════════════════
+function buildDynRows(){
+  const cnt=sectionCounts;
+  const rows=[];
+
+  // PCR 1/2/3 birleşik — sabit 5 satır
+  rows.push({_s:"PCR 1 / PCR 2 / PCR 3"});
+  const pcrShifts=ALL_SHIFTS.filter(s=>s.s!=="00:00 – 06:30"); // gece yok
+  const pcrCount=Math.min(cnt.pcr||5, pcrShifts.length);
+  for(let i=0;i<pcrCount;i++){
+    const rid=`pcr_${i+1}`;
+    const meta=rowMeta[rid]||pcrShifts[i]?.s||pcrShifts[0].s;
+    rows.push({id:rid,b:"",s:meta,c:shiftCat(meta),_dyn_section:"pcr",_idx:i});
+  }
+
+  // TEK.MON — dinamik +/-
+  rows.push({_s:"TEKNİK MONİTÖRİNG"});
+  const tmCount=cnt.tm||3;
+  for(let i=0;i<tmCount;i++){
+    const rid=`tm_${i+1}`;
+    const meta=rowMeta[rid]||ALL_SHIFTS[i%ALL_SHIFTS.length].s;
+    rows.push({id:rid,b:i===0?"TEK.MON.":"",s:meta,c:shiftCat(meta),_dyn_section:"tm",_idx:i});
+  }
+  rows.push({_dyn_ctrl:"tm"});
+
+  // ÖLÇÜ BAKIM — sabit
+  rows.push({_s:"ÖLÇÜ BAKIM"});
+  rows.push({id:"olcu_1",b:"ÖLÇÜ BAKIM",s:"08:00 – 17:00",c:"sabah"});
+
+  rows.push({_div:1});
+
+  // HAFTALIK İZİN — sabit 3
+  rows.push({_s:"HAFTALIK İZİN",_bot:1});
+  const hizCount=cnt.hafizin||3;
+  for(let i=0;i<hizCount;i++)rows.push({id:`hafizin_${i+1}`,b:"",s:"Tam Gün",c:"izin"});
+
+  // DIŞ GÖREV — sabit 2
+  rows.push({_s:"DIŞ GÖREV",_bot:1});
+  rows.push({id:"dis_1",b:"",s:"08:00 – 17:00",c:"dis"});
+  rows.push({id:"dis_2",b:"",s:"08:00 – 17:00",c:"dis"});
+
+  // YILLIK/RAPOR — dinamik
+  rows.push({_s:"YILLIK / RAPOR / EĞİTİM",_bot:1});
+  const ylCount=cnt.yl||3;
+  for(let i=0;i<ylCount;i++)rows.push({id:`yl_${i+1}`,b:"",s:"Tam Gün",c:"yillik",_dyn_section:"yl",_idx:i});
+  rows.push({_dyn_ctrl:"yl"});
+
+  // DOĞUM GÜNÜ İZNİ — sabit
+  rows.push({_s:"DOĞUM GÜNÜ İZNİ",_bot:1});
+  rows.push({id:"dogum_1",b:"",s:"+1 Gün",c:"dogum"});
+
+  // K.İ — dinamik
+  rows.push({_s:"K.İ (Kullanılmayan İzin)",_bot:1});
+  const kiCount=cnt.ki||2;
+  for(let i=0;i<kiCount;i++)rows.push({id:`ki_${i+1}`,b:"",s:"Tam Gün",c:"ki",_dyn_section:"ki",_idx:i});
+  rows.push({_dyn_ctrl:"ki"});
+
+  return rows;
+}
+
+// ═══════════════════════════════════════════════════════════
 // TABLO
-// ══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
 function buildLegend(){
   document.getElementById("leg").innerHTML=Object.entries(SC).map(([k,v])=>
     `<span class="leg-i"><span class="leg-d" style="background:#${v.bg};border:1px solid #${v.bd}"></span><i class="ti ${v.ico}" style="font-size:11px;color:#${v.fg};background:#${v.bg};padding:0 2px;border-radius:2px" aria-hidden="true"></i>${v.lbl}</span>`
@@ -793,34 +915,86 @@ function buildTable(){
   const week=weeks.find(w=>w.id==cWeekId);const locked=week&&week.locked;
   const isAdmin=ROLE==="admin";
   const dupK=isAdmin?getDupK():new Set();
-  let wdates=Array(7).fill("");
-  if(week&&week.start_date){const sd=new Date(week.start_date);for(let i=0;i<7;i++){const d=new Date(sd);d.setDate(sd.getDate()+i);wdates[i]=`${String(d.getDate()).padStart(2,"0")}.${String(d.getMonth()+1).padStart(2,"0")}`;}}
 
+  // Hafta günlerine tatil baklıyoruz
+  let wdates=Array(7).fill("");let isHoliday=Array(7).fill(false);
+  if(week&&week.start_date){
+    const sd=new Date(week.start_date);
+    for(let i=0;i<7;i++){
+      const d=new Date(sd);d.setDate(sd.getDate()+i);
+      const ds=d.toISOString().slice(0,10);
+      wdates[i]=`${String(d.getDate()).padStart(2,"0")}.${String(d.getMonth()+1).padStart(2,"0")}`;
+      isHoliday[i]=holidays.some(h=>h.date===ds);
+    }
+  }
+
+  const dynRows=buildDynRows();
   let h=`<thead><tr><th class="th-pos">Bölüm</th><th class="th-saat">Çalışma Saati</th>
-    ${DAYS.map((d,i)=>`<th class="th-day"><div>${d.f}</div><div style="font-size:10px;opacity:.72;font-weight:400">${wdates[i]}</div></th>`).join("")}</tr></thead><tbody>`;
+    ${DAYS.map((d,i)=>`<th class="th-day${isHoliday[i]?" holiday":""}"><div>${d.f}</div><div style="font-size:10px;opacity:.75;font-weight:400">${wdates[i]}${isHoliday[i]?'<div style="font-size:9px">🌿 Tatil</div>':''}</div></th>`).join("")}</tr></thead><tbody>`;
 
-  ROWS.forEach((row,idx)=>{
+  dynRows.forEach((row,idx)=>{
     if(row._s){h+=`<tr class="sr${row._bot?" bot":""}"><td colspan="9"><i class="ti ti-chevron-right" style="font-size:10px;margin-right:4px" aria-hidden="true"></i>${row._s}</td></tr>`;return;}
-    if(row._div){h+=`<tr class="sr div"><td colspan="9">─── DIŞ GÖREV · İZİN · DOĞUM GÜNÜ İZNİ ───</td></tr>`;return;}
+    if(row._div){h+=`<tr class="sr div"><td colspan="9">─── HAFTALIK İZİN · DIŞ GÖREV · YILLIK · K.İ ───</td></tr>`;return;}
+    if(row._dyn_ctrl&&isAdmin&&!locked){
+      const sec=row._dyn_ctrl;const cnt=sectionCounts[sec]||2;
+      h+=`<tr class="sr dyn"><td colspan="9" style="padding:3px 8px">
+        <button class="dyn-add" onclick="changeSectionCount('${sec}',1)" title="Satır ekle">+</button>
+        <span style="margin:0 6px;font-size:11px;color:#aaa">${cnt} satır</span>
+        <button class="dyn-rem" onclick="changeSectionCount('${sec}',-1)" title="Satır sil">−</button>
+      </td></tr>`;
+      return;
+    }
+    if(row._dyn_ctrl)return; // viewer için ctrl satırı yok
     if(!row.id)return;
-    const meta=ROW_META[row.id]||{s:"?",c:"sabah"};const cl=SC[meta.c]||SC.sabah;
-    const alt=idx%2===0?"#fff":"var(--alt)";
+
+    const cl=SC[row.c]||SC.sabah;const alt=idx%2===0?"#fff":"var(--alt)";
     const bs=row.b?`background:#3D3D3D;color:#fff;font-size:10.5px;font-weight:600`:`background:var(--alt);color:var(--txt3);font-size:10px`;
-    h+=`<tr><td class="td-b" style="${bs}">${row.b||""}</td>
-    <td class="td-s" style="background:#${cl.bg};color:#${cl.fg};border-left-color:#${cl.bd}"><i class="ti ${cl.ico}" style="font-size:11px;margin-right:3px" aria-hidden="true"></i>${meta.s}</td>
+
+    // Dinamik satırlar ve tüm satırlar için shift time seçici (admin)
+    let saatCell;
+    const isDynShift = row._dyn_section === "tm"; // TEK.MON dinamik
+    const isFixedShiftEditable = ["pcr_1","pcr_2","pcr_3","pcr_4","pcr_5","olcu_1","dis_1","dis_2"].includes(row.id); // sabit ama düzenlenebilir
+    if(isAdmin && !locked && (isDynShift || isFixedShiftEditable)){
+      const currentShift = row.s;
+      // Mevcut değer listede yoksa başına ekle
+      const shiftList = ALL_SHIFTS.slice();
+      const inList = shiftList.some(s=>s.s===currentShift);
+      if(!inList && currentShift && currentShift!=="Tam Gün" && currentShift!=="+1 Gün"){
+        shiftList.unshift({s:currentShift,c:row.c});
+      }
+      const opts=shiftList.map(s=>`<option value="${s.s}"${s.s===currentShift?" selected":""}>${s.s==="SERBEST"?"✏️ Serbest Gir...":s.s}</option>`).join("");
+      saatCell=`<td class="td-s" style="background:#${cl.bg};color:#${cl.fg};border-left-color:#${cl.bd};padding:2px 4px">
+        <select class="shift-sel" data-rid="${row.id}" onchange="onShiftChange(this)"
+          style="background:#${cl.bg};color:#${cl.fg};border:none;font-weight:600;width:100%;font-size:10px;cursor:pointer">${opts}</select>
+      </td>`;
+    } else {
+      saatCell=`<td class="td-s" style="background:#${cl.bg};color:#${cl.fg};border-left-color:#${cl.bd}"><i class="ti ${cl.ico}" style="font-size:11px;margin-right:3px" aria-hidden="true"></i>${row.s}</td>`;
+    }
+
+    h+=`<tr><td class="td-b" style="${bs}">${row.b||""}</td>${saatCell}
     ${DAYS.map((_,gi)=>{
-      const p=(sched[row.id]||[])[gi]||"";const dup=p&&dupK.has(`${p}-${gi}`);
+      const p=(sched[row.id]||[])?.[gi]||"";
+      const dup=p&&dupK.has(`${p}-${gi}`);
+      const is11h=(()=>{
+        // Bu kişi bu günde 11 saatten fazla mı?
+        if(!p||["izin","yillik","dogum","ki"].includes(row.c))return false;
+        let total=0;
+        dynRows.filter(x=>x.id&&!["izin","yillik","dogum","ki"].includes(x.c)).forEach(x=>{if((sched[x.id]||[])?.[gi]===p)total+=parseHours(x.s);});
+        return total>11;
+      })();
       if(isAdmin&&!locked){
-        const cls=p?(dup?"s-dup":`s-${meta.c}`):"s-empty";
-        const stl=dup?"":p?`background:#${cl.bg};color:#${cl.fg};border:1px solid #${cl.bd}`:"";
-        return `<td class="td-c" style="background:${alt}"><select class="sel ${cls}"${stl?` style="${stl}"`:""}
+        const cls=p?(dup||is11h?"s-dup":`s-${row.c}`):"s-empty";
+        const stl=dup||is11h?"":p?`background:#${cl.bg};color:#${cl.fg};border:1px solid #${cl.bd}`:"";
+        const flashCls=is11h?"flash-warn":"";
+        return `<td class="td-c" style="background:${alt}"><select class="sel ${cls} ${flashCls}"${stl?` style="${stl}"`:""}
           data-rid="${row.id}" data-gi="${gi}" onchange="onSel(this)">
           <option value="">—</option>
           ${PERSONEL.map(pe=>`<option value="${pe}"${pe===p?" selected":""}>${pe}</option>`).join("")}
         </select></td>`;
       } else {
         const bg=p?`#${cl.bg}`:alt;const fg=p?`#${cl.fg}`:"var(--txt3)";
-        return `<td class="viewer-cell" style="background:${bg};color:${fg};font-weight:${p?500:400}">${p||"—"}</td>`;
+        const flashStyle=is11h?"animation:flash 1s infinite":"";
+        return `<td class="td-c" style="background:${bg};color:${fg};font-weight:${p?500:400};font-size:11px;padding:5px 4px;${flashStyle}">${p||"—"}</td>`;
       }
     }).join("")}</tr>`;
   });
@@ -840,7 +1014,7 @@ function buildTable(){
   if(locked&&isAdmin){
     if(!document.getElementById("locked-n")){
       const n=document.createElement("div");n.id="locked-n";n.className="alert warn";n.style.marginBottom="10px";
-      n.innerHTML=`<i class="ti ti-lock" style="flex-shrink:0" aria-hidden="true"></i> Bu hafta kilitlenmiştir.`;
+      n.innerHTML=`<i class="ti ti-lock" style="flex-shrink:0" aria-hidden="true"></i> Bu hafta kilitlenmiştir. Düzenleme için "Aç" butonunu kullanın.`;
       document.getElementById("pn-cizelge").insertBefore(n,document.querySelector(".leg"));
     }
   }else{const n=document.getElementById("locked-n");if(n)n.remove();}
@@ -856,11 +1030,34 @@ function onNote(ta){
   if(!notes[ni])notes[ni]=Array(7).fill("");
   notes[ni][gi]=ta.value;saveNote(ni,gi,ta.value);
 }
+async function onShiftChange(sel){
+  const rid=sel.dataset.rid;
+  let val=sel.value;
+  if(val==="SERBEST"){
+    const custom=prompt("Serbest saat girin (örn: 14:00 – 23:00):");
+    if(!custom){sel.value=rowMeta[rid]||ALL_SHIFTS[0].s;return;}
+    val=custom.trim();
+  }
+  rowMeta[rid]=val;
+  await saveRowMeta(rid,val);
+  const data=await api("GET",`/api/schedule/${cWeekId}`);
+  rowMeta=data.meta||{};
+  buildTable();
+}
+async function changeSectionCount(section,delta){
+  if(!cWeekId)return;
+  const cur=sectionCounts[section]||2;
+  const next=Math.max(1,cur+delta);
+  sectionCounts[section]=next;
+  await api("PUT",`/api/weeks/${cWeekId}/sections`,{section,count:next});
+  buildTable();if(ROLE==="admin")refreshWarnings();
+}
 
-// ══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
 // DOĞUM GÜNLERİ
-// ══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
 async function checkTodayBirthdays(){
+  if(ROLE!=="admin")return;
   try{
     const list=await api("GET","/api/birthdays");
     const todays=list.filter(b=>b.isToday);
@@ -880,15 +1077,18 @@ async function loadBirthdays(){
     const cls=b.isToday?"today":b.daysLeft<=30?"soon":"";
     const lbl=b.isToday?"🎂 Bugün!":b.daysLeft===1?"Yarın":b.daysLeft<=30?`${b.daysLeft} gün kaldı`:`${b.daysLeft} gün`;
     return `<div class="bday-row ${cls}">
-      <div style="flex:1;min-width:150px"><div style="font-weight:600"><i class="ti ti-cake" aria-hidden="true"></i> ${b.name}</div><div style="font-size:11px;color:var(--txt2);margin-top:2px">${b.birth_date} — ${b.age} yaşında${b.note?` — ${b.note}`:""}</div></div>
+      <div style="flex:1;min-width:150px"><div style="font-weight:600"><i class="ti ti-cake" aria-hidden="true"></i> ${b.name}</div>
+        <div style="font-size:11px;color:var(--txt2);margin-top:2px">${b.birth_date} — ${b.age} yaşında${b.note?` — ${b.note}`:""}</div></div>
       <span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px;background:${b.isToday?"var(--dogum-f)":b.daysLeft<=30?"#FFD699":"#eee"};color:${b.isToday?"#fff":b.daysLeft<=30?"#7B3A00":"var(--txt3)"}">${lbl}</span>
-      ${ROLE==="admin"?`<button class="btn btn-red btn-sm" onclick="delBirthday(${b.id})"><i class="ti ti-trash" aria-hidden="true"></i></button>`:""}
+      <button class="btn btn-red btn-sm" onclick="delBirthday(${b.id})"><i class="ti ti-trash" aria-hidden="true"></i></button>
     </div>`;
   }).join("");
 }
 
 async function addBirthday(){
-  const name=document.getElementById("bd-person").value,date=document.getElementById("bd-date").value,note=document.getElementById("bd-note").value;
+  const name=document.getElementById("bd-person").value;
+  const date=document.getElementById("bd-date").value;
+  const note=document.getElementById("bd-note").value;
   if(!name||!date){alert("Zorunlu alanlar eksik.");return;}
   await api("POST","/api/birthdays",{name,birth_date:date,note});
   document.getElementById("bd-date").value="";document.getElementById("bd-note").value="";document.getElementById("bd-person").value="";
@@ -896,11 +1096,33 @@ async function addBirthday(){
 }
 async function delBirthday(id){if(!confirm("Sil?"))return;await api("DELETE",`/api/birthdays/${id}`);loadBirthdays();}
 
-// ══════════════════════════════════════════════════════════
-// TALEPLER
-// ══════════════════════════════════════════════════════════
-const SHIFT_LABELS={"p1a":"06:15 – 15:15","p1e":"15:00 – 00:00","p3a":"08:00 – 17:00","p3f":"17:00 – Yayın Sonu","tmc":"10:00 – 17:00","tmd":"12:00 – 20:00","tmg":"00:00 – 06:30","iz1":"Haftalık İzin","yl1":"Yıllık/Rapor"};
+// ═══════════════════════════════════════════════════════════
+// TATİLLER
+// ═══════════════════════════════════════════════════════════
+async function loadHolidays(){
+  holidays=await api("GET","/api/holidays").catch(()=>[]);
+  const yr=new Date().getFullYear();
+  const filtered=holidays.filter(h=>h.year>=yr);
+  document.getElementById("hol-body").innerHTML=filtered.map(h=>`<tr>
+    <td>${h.date}</td><td>${h.name}</td>
+    <td><button class="btn btn-red btn-sm" onclick="delHoliday(${h.id})"><i class="ti ti-trash" aria-hidden="true"></i></button></td>
+  </tr>`).join("")||`<tr><td colspan="3" style="text-align:center;color:var(--txt3)">Tatil yok</td></tr>`;
+}
+async function addHoliday(){
+  const date=document.getElementById("hol-date").value;
+  const name=document.getElementById("hol-name").value;
+  if(!date||!name){alert("Tarih ve isim zorunludur.");return;}
+  await api("POST","/api/holidays",{date,name});
+  document.getElementById("hol-date").value="";document.getElementById("hol-name").value="";
+  loadHolidays();
+  holidays=await api("GET","/api/holidays").catch(()=>[]);
+  if(cWeekId)buildTable();
+}
+async function delHoliday(id){await api("DELETE",`/api/holidays/${id}`);loadHolidays();holidays=await api("GET","/api/holidays").catch(()=>[]);if(cWeekId)buildTable();}
 
+// ═══════════════════════════════════════════════════════════
+// TALEPLER
+// ═══════════════════════════════════════════════════════════
 async function submitRequest(){
   const dateVal=document.getElementById("req-date").value;
   const shiftVal=document.getElementById("req-shift").value;
@@ -910,11 +1132,10 @@ async function submitRequest(){
   const d=new Date(dateVal);const gi=(d.getDay()+6)%7;
   const DNs=["Pazartesi","Salı","Çarşamba","Perşembe","Cuma","Cumartesi","Pazar"];
   const dayText=`${DNs[gi]} ${dateVal.split("-").reverse().join(".")}`;
-  const mw=weeks.find(w=>w.start_date<=dateVal&&w.end_date>=dateVal);
-  const result=await api("POST","/api/requests",{day_text:dayText,day_index:gi,shift_text:shiftText,row_id:rowId,note,week_id:mw?.id||null});
+  const result=await api("POST","/api/requests",{day_text:dayText,day_index:gi,shift_text:shiftText,row_id:rowId,note,date_str:dateVal});
   if(result.conflict){alert("⚠️ Çakışma: "+result.reason);return;}
   document.getElementById("req-date").value="";document.getElementById("req-shift").value="";document.getElementById("req-note").value="";
-  alert("✅ Talebiniz iletildi! Yönetici onayından sonra çizelgeye eklenecektir.");
+  alert("✅ Talebiniz iletildi!");
   loadRequests("pending");
 }
 
@@ -933,13 +1154,12 @@ async function loadRequests(status){
       ${r.note?`<div style="font-size:11px;color:var(--txt3);margin-top:2px">💬 ${r.note.slice(0,100)}</div>`:""}
       <div style="font-size:10px;color:var(--txt3);margin-top:3px">${r.created_at}</div>
       ${r.reject_reason?`<div style="font-size:11px;color:#A32D2D;margin-top:3px">Red: ${r.reject_reason}</div>`:""}
-      ${r.resolved_by?`<div style="font-size:10px;color:var(--txt3)">İşlem: ${r.resolved_by}</div>`:""}
     </div>
-    <span class="sp ${r.status==="approved"?"sp-a":r.status==="rejected"?"sp-r":"sp-p"}">${r.status==="approved"?"✓ Onaylı":r.status==="rejected"?"✗ Reddedildi":"⏳ Bekliyor"}</span>
+    <span class="sp ${r.status==="approved"?"sp-a":r.status==="rejected"?"sp-r":"sp-p"}">${r.status==="approved"?"✓ Onaylı":r.status==="rejected"?"✗ Red":"⏳ Bekliyor"}</span>
     ${r.status==="pending"&&ROLE==="admin"?`<div class="req-acts">
-      <button class="btn btn-green btn-sm" onclick="openApprove(${r.id})"><i class="ti ti-check" aria-hidden="true"></i> Onayla</button>
-      <button class="btn btn-red btn-sm" onclick="openRejectDlg(${r.id})"><i class="ti ti-x" aria-hidden="true"></i> Reddet</button>
-    </div>`:`${ROLE==="admin"?`<button class="btn btn-sm btn-sm" style="background:var(--warn-b);color:var(--warn-f)" onclick="delReq(${r.id})"><i class="ti ti-trash" aria-hidden="true"></i></button>`:""}`}
+      <button class="btn btn-green btn-sm" onclick="openApprove(${r.id})"><i class="ti ti-check" aria-hidden="true"></i></button>
+      <button class="btn btn-red btn-sm" onclick="openRejectDlg(${r.id})"><i class="ti ti-x" aria-hidden="true"></i></button>
+    </div>`:`${ROLE==="admin"?`<button class="btn btn-red btn-sm" onclick="delReq(${r.id})"><i class="ti ti-trash" aria-hidden="true"></i></button>`:""}`}
   </div>`).join("");
 }
 
@@ -948,9 +1168,10 @@ function openApprove(id){
   api("GET","/api/requests").then(list=>{
     const r=list.find(x=>x.id===id);if(!r)return;pendingReqObj=r;
     document.getElementById("apr-info").innerHTML=`<b>${r.person}</b><br>📅 ${r.day_text} &nbsp; ⏰ ${r.shift_text}${r.note?`<br>💬 ${r.note}`:""}`;
+    const dynRows=buildDynRows();
     const rowSel=document.getElementById("apr-row");
-    rowSel.innerHTML=Object.entries(ROW_META).filter(([k,v])=>!["izin","yillik","dogum"].includes(v.c))
-      .map(([k,v])=>`<option value="${k}"${k===r.row_id?" selected":""}>${v.s}</option>`).join("");
+    rowSel.innerHTML=dynRows.filter(x=>x.id&&!["izin","yillik","dogum","ki"].includes(x.c))
+      .map(x=>`<option value="${x.id}"${x.id===r.row_id?" selected":""}>${x.s}</option>`).join("");
     if(r.day_index>=0)document.getElementById("apr-day").value=r.day_index;
     document.getElementById("reject-row").style.display="none";
     document.getElementById("apr-err").style.display="none";
@@ -970,9 +1191,7 @@ function openRejectDlg(id){
   });
 }
 
-function doReject(){
-  resolveReq("rejected");
-}
+function doReject(){resolveReq("rejected");}
 
 async function resolveReq(status){
   if(!pendingReqId)return;
@@ -988,24 +1207,150 @@ async function resolveReq(status){
   loadRequests("pending");
   if(status==="approved"&&cWeekId)await loadWeek(cWeekId);
 }
-
 async function delReq(id){if(!confirm("Sil?"))return;await api("DELETE",`/api/requests/${id}`);loadRequests();}
 
-// ══════════════════════════════════════════════════════════
-// KULLANICI YÖNETİMİ
-// ══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
+// K.İ
+// ═══════════════════════════════════════════════════════════
+async function loadKi(){
+  const list=await api("GET","/api/ki");
+  const tbody=document.getElementById("ki-body");
+  if(!tbody)return;
+  tbody.innerHTML=list.map((k,pi)=>{
+    const alt=pi%2===0?"#fff":"var(--alt)";
+    const remBg=k.remaining>0?"var(--ok-b)":k.remaining<0?"var(--warn-b)":alt;
+    const remFg=k.remaining>0?"var(--ok-f)":k.remaining<0?"var(--warn-f)":"var(--txt2)";
+    const dates=k.entries.map(e=>`${e.date_given}(+${e.days}g${e.reason?': '+e.reason.slice(0,20):''})`).join("<br>");
+    return `<tr>
+      <td style="padding:7px 12px;background:${alt}">${k.person}</td>
+      <td style="background:${alt}">${k.given||"—"}</td>
+      <td style="background:${k.used>0?"var(--izin-b)":alt};color:${k.used>0?"var(--izin-f)":"var(--txt3)"}">${k.used||"—"}</td>
+      <td style="background:${remBg};color:${remFg};font-weight:600">${k.remaining||"—"}</td>
+      <td style="font-size:10px;color:var(--txt2);background:${alt};line-height:1.6">${dates||"—"}</td>
+      ${ROLE==="admin"?`<td style="background:${alt}"><button class="btn btn-red btn-xs" onclick="delKiLast('${k.person.replace(/'/g,"\\'")}',${k.entries[0]?.id})"><i class="ti ti-trash" aria-hidden="true"></i></button></td>`:"<td></td>"}
+    </tr>`;
+  }).join("");
+}
+
+async function addKi(){
+  const person=document.getElementById("ki-person").value;
+  const days=parseFloat(document.getElementById("ki-days").value);
+  const reason=document.getElementById("ki-reason").value;
+  const date=document.getElementById("ki-date").value||new Date().toISOString().slice(0,10);
+  const email=document.getElementById("ki-email").value;
+  if(!person||!days||days<=0){alert("Personel ve gün zorunlu.");return;}
+  await api("POST","/api/ki",{person,days,reason,date_given:date,notify_email:email||null});
+  ["ki-person","ki-days","ki-reason","ki-email"].forEach(id=>document.getElementById(id).value="");
+  document.getElementById("ki-date").value="";
+  loadKi();
+  alert(`✅ ${person} için ${days} gün K.İ tanımlandı.${email?" Mail gönderildi.":""}`);
+}
+
+async function delKiLast(person,id){
+  if(!id){alert("Silinecek kayıt yok.");return;}
+  if(!confirm("Bu K.İ kaydını sil?"))return;
+  await api("DELETE",`/api/ki/${id}`);loadKi();
+}
+
+// ═══════════════════════════════════════════════════════════
+// İSTATİSTİK
+// ═══════════════════════════════════════════════════════════
+async function loadStats(){
+  const yr=document.getElementById("yr-sel").value;
+  const stats=await api("GET",yr?`/api/stats?year=${yr}`:"/api/stats");
+  const cats=["sabah","prime","aksam","gece","dis","izin","yillik","dogum","ki"];
+  let tot=0;Object.values(stats).forEach(s=>tot+=s.total||0);
+  document.getElementById("sc-cards").innerHTML=[
+    ["Toplam Atama",tot,"tüm haftalar"],
+    ["Gece Nöbeti",Object.values(stats).reduce((a,s)=>a+(s.gece||0),0),"00:00–06:30"],
+    ["Sabah+Prime",Object.values(stats).reduce((a,s)=>a+(s.sabah||0)+(s.prime||0),0),"gündüz"],
+    ["İzin+Doğum+K.İ",Object.values(stats).reduce((a,s)=>a+(s.izin||0)+(s.yillik||0)+(s.dogum||0)+(s.ki||0),0),"toplam"],
+  ].map(([l,v,s])=>`<div class="sc"><div class="sc-lbl">${l}</div><div class="sc-val">${v}</div><div class="sc-sub">${s}</div></div>`).join("");
+  const cl=k=>SC[k]||SC.sabah;
+  let th=`<thead><tr><th style="background:var(--blue2);color:#fff;text-align:left;padding:7px 10px;min-width:160px">Personel</th>
+    ${cats.map(k=>`<th style="background:#${cl(k).bg};color:#${cl(k).fg};border:1px solid #${cl(k).bd};padding:5px;min-width:65px;font-size:11px"><i class="ti ${cl(k).ico}" style="display:block;margin-bottom:2px;font-size:13px" aria-hidden="true"></i>${cl(k).lbl}</th>`).join("")}
+    <th style="background:var(--navy);color:#fff;padding:5px">Toplam</th></tr></thead>`;
+  let tb=`<tbody>${PERSONEL.map((p,pi)=>{
+    const s=stats[p]||{};const tot=cats.reduce((a,k)=>a+(s[k]||0),0);const alt=pi%2===0?"#fff":"var(--alt)";
+    return `<tr><td style="padding:6px 10px;font-weight:500;text-align:left;background:${alt}">${p}</td>
+      ${cats.map(k=>{const v=s[k]||0;return `<td style="background:${v?`#${cl(k).bg}`:alt};color:${v?`#${cl(k).fg}`:"#aaa"};font-weight:${v?600:400}">${v||"–"}</td>`;}).join("")}
+      <td style="font-weight:600;background:${tot>50?"#F7C1C1":tot>30?"#FAEEDA":tot>0?"#C0DD97":alt}">${tot||"–"}</td></tr>`;
+  }).join("")}</tbody>`;
+  document.getElementById("stat-t").innerHTML=th+tb;
+  loadKi();
+}
+
+async function loadYears(){
+  const yrs=await api("GET","/api/years");
+  const sel=document.getElementById("yr-sel");
+  sel.innerHTML=`<option value="">Tüm</option>${yrs.map(y=>`<option value="${y}">${y}</option>`).join("")}`;
+}
+
+// ═══════════════════════════════════════════════════════════
+// ARŞİV & EXCEL İMPORT
+// ═══════════════════════════════════════════════════════════
+async function loadArchive(){
+  const w=await api("GET","/api/weeks");
+  document.getElementById("arc-body").innerHTML=w.map(x=>`<tr>
+    <td style="font-weight:500">${x.label}</td><td>${x.start_date}</td><td>${x.end_date}</td><td>${x.year}</td>
+    <td><span class="sp ${x.locked?"sp-r":"sp-a"}">${x.locked?"🔒 Kilitli":"✓ Aktif"}</span></td>
+    <td><button class="btn btn-blue btn-sm" onclick="jumpWeek(${x.id})"><i class="ti ti-eye" aria-hidden="true"></i></button></td>
+  </tr>`).join("")||`<tr><td colspan="6" style="text-align:center;color:var(--txt3)">Kayıt yok</td></tr>`;
+}
+async function jumpWeek(wid){sw("cizelge");const sel=document.getElementById("wsel");if(sel){sel.value=wid;await loadWeek(wid);}}
+
+// Excel içe aktarma — XLSX.js gerektiriyor
+async function importExcel(input){
+  const file=input.files[0];if(!file)return;
+  const status=document.getElementById("import-status");
+  status.textContent="Dosya okunuyor...";
+  // Basit parse: SheetJS kullanılamıyor (CDN yok), JSON backup ile import destekleniyor
+  const reader=new FileReader();
+  reader.onload=async e=>{
+    try{
+      // Excel binary → JSON parse attempt (basit)
+      status.textContent="⚠️ Excel import henüz geliştirme aşamasında. JSON yedek dosyası ile içe aktarabilirsiniz.";
+    }catch(err){status.textContent="✗ Hata: "+err.message;}
+  };
+  reader.readAsBinaryString(file);
+  input.value="";
+}
+
+// ═══════════════════════════════════════════════════════════
+// AYARLAR
+// ═══════════════════════════════════════════════════════════
+async function loadSettings(){
+  try{
+    const s=await api("GET","/api/settings");
+    document.getElementById("s-user").value=s.mailUser||"";
+    document.getElementById("s-to").value=s.mailTo||"";
+    document.getElementById("s-pass").value=s.mailPass??"";
+  }catch(e){}
+}
+async function saveSettings(){
+  await api("POST","/api/settings",{mailUser:document.getElementById("s-user").value,mailTo:document.getElementById("s-to").value,mailPass:document.getElementById("s-pass").value});
+  document.getElementById("mail-status").innerHTML=`<span style="color:#2E7D32">✓ Kaydedildi.</span>`;
+}
+async function testMail(){
+  document.getElementById("mail-status").innerHTML=`<span style="color:#888">Gönderiliyor...</span>`;
+  const r=await api("POST","/api/settings/test-mail",{});
+  document.getElementById("mail-status").innerHTML=r.ok?`<span style="color:#2E7D32">✓ Gönderildi!</span>`:`<span style="color:#A32D2D">✗ ${r.error||"Hata"}</span>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+// KULLANICILAR
+// ═══════════════════════════════════════════════════════════
 async function loadUsers(){
   const list=await api("GET","/api/users");
   document.getElementById("user-list").innerHTML=list.map(u=>`<div class="user-row">
-    <div class="name">${u.full_name}<br><span class="uname">@${u.username}</span></div>
+    <div class="name">${u.full_name}<br><span class="uname" style="font-size:11px;color:var(--txt3)">@${u.username}</span></div>
     <span class="role-pill ${u.role==="admin"?"role-admin":"role-user"}">${u.role==="admin"?"Yönetici":"Personel"}</span>
     <div style="display:flex;gap:6px">
-      <button class="btn btn-blue btn-sm" onclick="openResetPass(${u.id},'${u.full_name.replace(/'/g,"\\'")}')"><i class="ti ti-key" aria-hidden="true"></i> Şifre</button>
+      <button class="btn btn-blue btn-sm" onclick="openResetPass(${u.id},'${u.full_name.replace(/'/g,"\\'")}')"><i class="ti ti-key" aria-hidden="true"></i></button>
       ${u.role!=="admin"?`<button class="btn btn-red btn-sm" onclick="delUser(${u.id})"><i class="ti ti-trash" aria-hidden="true"></i></button>`:""}
     </div>
   </div>`).join("")||`<div style="color:var(--txt3);font-size:13px">Kullanıcı yok.</div>`;
 }
-
 async function addUser(){
   const full=document.getElementById("u-name").value;
   const uname=document.getElementById("u-uname").value.trim().toLowerCase();
@@ -1022,151 +1367,130 @@ async function addUser(){
     loadUsers();
   }catch(e){err.textContent=e.message.includes("409")||e.message.includes("zaten var")?"Bu kullanıcı adı zaten kullanılıyor.":e.message;}
 }
-
-function openResetPass(id,name){
-  resetUserId=id;
-  document.getElementById("reset-name").textContent=`Kullanıcı: ${name}`;
-  document.getElementById("rp-pass").value="";
-  document.getElementById("m-reset-pass").classList.add("open");
-}
-
+function openResetPass(id,name){resetUserId=id;document.getElementById("reset-name").textContent=`Kullanıcı: ${name}`;document.getElementById("rp-pass").value="";document.getElementById("m-reset-pass").classList.add("open");}
 async function doResetPass(){
   const pass=document.getElementById("rp-pass").value;
   if(!pass||pass.length<4){alert("En az 4 karakter girin.");return;}
   await api("PUT",`/api/users/${resetUserId}/password`,{password:pass});
   cm();resetUserId=null;alert("✅ Şifre güncellendi.");
 }
-
 async function delUser(id){if(!confirm("Bu kullanıcıyı silmek istiyor musunuz?"))return;await api("DELETE",`/api/users/${id}`);loadUsers();}
 
-// ══════════════════════════════════════════════════════════
-// İSTATİSTİK
-// ══════════════════════════════════════════════════════════
-async function loadStats(){
-  const yr=document.getElementById("yr-sel").value;
-  const stats=await api("GET",yr?`/api/stats?year=${yr}`:"/api/stats");
-  const cats=["sabah","araci","aksam","gece","dis","izin","yillik","dogum"];
-  let tot=0;Object.values(stats).forEach(s=>tot+=s.total||0);
-  document.getElementById("sc-cards").innerHTML=[
-    ["Toplam Atama",tot,"tüm haftalar"],
-    ["Gece Nöbeti",Object.values(stats).reduce((a,s)=>a+(s.gece||0),0),"00:00–06:30"],
-    ["Sabah",Object.values(stats).reduce((a,s)=>a+(s.sabah||0),0),"06:15/08:00"],
-    ["İzin+Doğum",Object.values(stats).reduce((a,s)=>a+(s.izin||0)+(s.yillik||0)+(s.dogum||0),0),"toplam"],
-  ].map(([l,v,s])=>`<div class="sc"><div class="sc-lbl">${l}</div><div class="sc-val">${v}</div><div class="sc-sub">${s}</div></div>`).join("");
-  const cl=k=>SC[k]||SC.sabah;
-  let th=`<thead><tr><th style="background:var(--blue2);color:#fff;text-align:left;padding:7px 10px;min-width:160px">Personel</th>
-    ${cats.map(k=>`<th style="background:#${cl(k).bg};color:#${cl(k).fg};border:1px solid #${cl(k).bd};padding:5px;min-width:65px;font-size:11px"><i class="ti ${cl(k).ico}" style="display:block;margin-bottom:2px;font-size:13px" aria-hidden="true"></i>${cl(k).lbl}</th>`).join("")}
-    <th style="background:var(--navy);color:#fff;padding:5px">Toplam</th></tr></thead>`;
-  let tb=`<tbody>${PERSONEL.map((p,pi)=>{
-    const s=stats[p]||{};const tot=cats.reduce((a,k)=>a+(s[k]||0),0);const alt=pi%2===0?"#fff":"var(--alt)";
-    return `<tr><td style="padding:6px 10px;font-weight:500;text-align:left;background:${alt}">${p}</td>
-      ${cats.map(k=>{const v=s[k]||0;return `<td style="background:${v?`#${cl(k).bg}`:alt};color:${v?`#${cl(k).fg}`:"#aaa"};font-weight:${v?600:400}">${v||"–"}</td>`;}).join("")}
-      <td style="font-weight:600;background:${tot>50?"#F7C1C1":tot>30?"#FAEEDA":tot>0?"#C0DD97":alt}">${tot||"–"}</td></tr>`;
-  }).join("")}</tbody>`;
-  document.getElementById("stat-t").innerHTML=th+tb;
-}
-
-async function loadYears(){
-  const yrs=await api("GET","/api/years");
-  const sel=document.getElementById("yr-sel");
-  sel.innerHTML=`<option value="">Tüm</option>${yrs.map(y=>`<option value="${y}">${y}</option>`).join("")}`;
-}
-
-// ══════════════════════════════════════════════════════════
-// ARŞİV
-// ══════════════════════════════════════════════════════════
-async function loadArchive(){
-  const w=await api("GET","/api/weeks");
-  document.getElementById("arc-body").innerHTML=w.map(x=>`<tr>
-    <td style="font-weight:500">${x.label}</td><td>${x.start_date}</td><td>${x.end_date}</td><td>${x.year}</td>
-    <td><span class="sp ${x.locked?"sp-r":"sp-a"}">${x.locked?"🔒 Kilitli":"✓ Aktif"}</span></td>
-    <td><button class="btn btn-blue btn-sm" onclick="jumpWeek(${x.id})"><i class="ti ti-eye" aria-hidden="true"></i> Görüntüle</button></td>
-  </tr>`).join("")||`<tr><td colspan="6" style="text-align:center;color:var(--txt3)">Kayıt yok</td></tr>`;
-}
-async function jumpWeek(wid){sw("cizelge");const sel=document.getElementById("wsel");if(sel){sel.value=wid;await loadWeek(wid);}}
-
-// ══════════════════════════════════════════════════════════
-// AYARLAR
-// ══════════════════════════════════════════════════════════
-async function loadSettings(){
+// ═══════════════════════════════════════════════════════════
+// PROFİL — Personel K.İ görünümü
+// ═══════════════════════════════════════════════════════════
+async function loadMyKi(){
+  if(ROLE==="admin")return;
   try{
-    const s=await api("GET","/api/settings");
-    document.getElementById("s-user").value=s.mailUser||"";
-    document.getElementById("s-to").value=s.mailTo||"";
-    document.getElementById("s-pass").value=s.mailPass??"";
+    const list=await api("GET","/api/ki");
+    const my=list.find(k=>k.person===UNAME);
+    if(!my||my.given===0)return;
+    document.getElementById("my-ki").style.display="block";
+    document.getElementById("my-ki-body").innerHTML=`
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">
+        <div class="sc"><div class="sc-lbl">Kazanılan</div><div class="sc-val" style="font-size:18px">${my.given} gün</div></div>
+        <div class="sc"><div class="sc-lbl">Kullanılan</div><div class="sc-val" style="font-size:18px">${my.used} gün</div></div>
+        <div class="sc" style="background:${my.remaining>0?"var(--ok-b)":"var(--alt)"}"><div class="sc-lbl">Kalan</div><div class="sc-val" style="font-size:18px;color:${my.remaining>0?"var(--ok-f)":"var(--txt)"}">${my.remaining} gün</div></div>
+      </div>
+      <div style="font-size:12px;color:var(--txt2)"><b>Geçmiş:</b><br>
+      ${my.entries.map(e=>`📅 ${e.date_given} — +${e.days} gün${e.reason?` (${e.reason})`:""}`).join("<br>")||"Kayıt yok"}
+      </div>`;
   }catch(e){}
 }
-async function saveSettings(){
-  await api("POST","/api/settings",{mailUser:document.getElementById("s-user").value,mailTo:document.getElementById("s-to").value,mailPass:document.getElementById("s-pass").value});
-  document.getElementById("mail-status").innerHTML=`<span style="color:#2E7D32">✓ Kaydedildi.</span>`;
-}
-async function testMail(){
-  document.getElementById("mail-status").innerHTML=`<span style="color:#888">Gönderiliyor...</span>`;
-  const r=await api("POST","/api/settings/test-mail",{});
-  document.getElementById("mail-status").innerHTML=r.ok?`<span style="color:#2E7D32">✓ Mail gönderildi!</span>`:`<span style="color:#A32D2D">✗ ${r.error||"Hata"}</span>`;
+
+// ═══════════════════════════════════════════════════════════
+// YEDEK
+// ═══════════════════════════════════════════════════════════
+async function downloadBackup(){
+  try{
+    const r=await fetch("/api/backup",{headers:{Authorization:"Bearer "+TOKEN}});
+    const blob=await r.blob();
+    const a=document.createElement("a");a.href=URL.createObjectURL(blob);
+    a.download=`nobet-yedek-${new Date().toISOString().slice(0,10)}.json`;a.click();
+  }catch(e){alert("Yedek indirilemedi: "+e.message);}
 }
 
-// ══════════════════════════════════════════════════════════
-// TABS
-// ══════════════════════════════════════════════════════════
-const PANES=["cizelge","uyarilar","talepler","dogumgunu","ki","istatistik","arsiv","kullanicilar","ayarlar","profil"];
-function sw(id){
-  PANES.forEach(p=>{const el=document.getElementById(`pn-${p}`);if(el)el.style.display=p===id?"block":"none";const b=document.getElementById(`tb-${p}`);if(b)b.classList.toggle("active",p===id);});
-  if(id==="istatistik")loadStats();
-  if(id==="arsiv")loadArchive();
-  if(id==="dogumgunu")loadBirthdays();
-  if(id==="talepler")loadRequests("pending");
-  if(id==="kullanicilar")loadUsers();
-  if(id==="ki")loadKi();
-  if(id==="ayarlar"&&ROLE==="admin")loadSettings();
-}
-
-// ══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
 // EXCEL EXPORT
-// ══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
 function esc(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
 async function exportExcel(){
   const week=weeks.find(w=>w.id==cWeekId);const label=week?week.label:"Nöbet";
   const sd=week?new Date(week.start_date):new Date();
   const wd=i=>{const d=new Date(sd);d.setDate(sd.getDate()+i);return`${String(d.getDate()).padStart(2,"0")}.${String(d.getMonth()+1).padStart(2,"0")}`;};
-  const fills=[{t:"none"},{t:"gray125"},{t:"solid",fg:"FF1F3864"},{t:"solid",fg:"FF2E75B6"},{t:"solid",fg:"FF17375E"},{t:"solid",fg:"FF3D3D3D"},{t:"solid",fg:"FF2E4057"},{t:"solid",fg:"FFFAEEDA"},{t:"solid",fg:"FFE6F1FB"},{t:"solid",fg:"FFEEEDFE"},{t:"solid",fg:"FF2C3E50"},{t:"solid",fg:"FFE1F5EE"},{t:"solid",fg:"FFFFF2E0"},{t:"solid",fg:"FFFAE8E8"},{t:"solid",fg:"FFFCE4FC"},{t:"solid",fg:"FFF7C1C1"},{t:"solid",fg:"FFF4F7FB"}];
-  const F={navy:2,day:3,saat:4,sec:5,bot:6,sabah:7,araci:8,aksam:9,gece:10,dis:11,izin:12,yillik:13,dogum:14,warn:15,alt:16};
+
+  const fills=[{t:"none"},{t:"gray125"},{t:"solid",fg:"FF1F3864"},{t:"solid",fg:"FF2E75B6"},{t:"solid",fg:"FF17375E"},
+    {t:"solid",fg:"FF3D3D3D"},{t:"solid",fg:"FF2E4057"},{t:"solid",fg:"FFFAEEDA"},{t:"solid",fg:"FFE8F5E0"},
+    {t:"solid",fg:"FFEEEDFE"},{t:"solid",fg:"FF2C3E50"},{t:"solid",fg:"FFE1F5EE"},{t:"solid",fg:"FFFFF2E0"},
+    {t:"solid",fg:"FFFAE8E8"},{t:"solid",fg:"FFFCE4FC"},{t:"solid",fg:"FFEEE8FF"},{t:"solid",fg:"FFF7C1C1"},{t:"solid",fg:"FFF4F7FB"},
+    {t:"solid",fg:"FF2E7D32"}]; // tatil yeşili
+  const F={navy:2,day:3,saat:4,sec:5,bot:6,sabah:7,prime:8,aksam:9,gece:10,dis:11,izin:12,yillik:13,dogum:14,ki:15,warn:16,alt:17,hol:18};
   const mf=f=>f.t==="none"?`<fill><patternFill patternType="none"/></fill>`:f.t==="gray125"?`<fill><patternFill patternType="gray125"/></fill>`:`<fill><patternFill patternType="solid"><fgColor rgb="${f.fg}"/><bgColor indexed="64"/></patternFill></fill>`;
-  const fonts=[{sz:10,n:"Arial"},{sz:13,n:"Arial",b:1,c:"FFFFFFFF"},{sz:10,n:"Arial",b:1,c:"FFFFFFFF"},{sz:10,n:"Arial",b:1,c:"FF412402"},{sz:10,n:"Arial",b:1,c:"FF042C53"},{sz:10,n:"Arial",b:1,c:"FF26215C"},{sz:10,n:"Arial",b:1,c:"FFD3D1C7"},{sz:10,n:"Arial",b:1,c:"FF04342C"},{sz:10,n:"Arial",b:1,c:"FF7F3A00"},{sz:10,n:"Arial",b:1,c:"FF7B1818"},{sz:10,n:"Arial",b:1,c:"FF5B0A5B"},{sz:10,n:"Arial",b:1,c:"FF501313"},{sz:9,n:"Arial",c:"FF555555"}];
-  const FN={d:0,t:1,w:2,sabah:3,araci:4,aksam:5,gece:6,dis:7,izin:8,yillik:9,dogum:10,warn:11,note:12};
+  const fonts=[{sz:10,n:"Arial"},{sz:13,n:"Arial",b:1,c:"FFFFFFFF"},{sz:10,n:"Arial",b:1,c:"FFFFFFFF"},
+    {sz:10,n:"Arial",b:1,c:"FF412402"},{sz:10,n:"Arial",b:1,c:"FF1A5C00"},{sz:10,n:"Arial",b:1,c:"FF26215C"},
+    {sz:10,n:"Arial",b:1,c:"FFD3D1C7"},{sz:10,n:"Arial",b:1,c:"FF04342C"},{sz:10,n:"Arial",b:1,c:"FF7F3A00"},
+    {sz:10,n:"Arial",b:1,c:"FF7B1818"},{sz:10,n:"Arial",b:1,c:"FF5B0A5B"},{sz:10,n:"Arial",b:1,c:"FF3D1D8A"},
+    {sz:10,n:"Arial",b:1,c:"FF501313"},{sz:9,n:"Arial",c:"FF555555"}];
+  const FN={d:0,t:1,w:2,sabah:3,prime:4,aksam:5,gece:6,dis:7,izin:8,yillik:9,dogum:10,ki:11,warn:12,note:13};
   const mf2=f=>`<font>${f.b?"<b/>":""}${f.c?`<color rgb="${f.c}"/>`:"<color theme=\"1\"/>"}<sz val="${f.sz}"/><name val="${f.n}"/></font>`;
   const tS=`<left style="thin"><color rgb="FFC0C0C0"/></left><right style="thin"><color rgb="FFC0C0C0"/></right><top style="thin"><color rgb="FFC0C0C0"/></top><bottom style="thin"><color rgb="FFC0C0C0"/></bottom>`;
   const brdX=`<borders count="2"><border>${tS}</border><border><left style="medium"><color rgb="FF808080"/></left><right style="medium"><color rgb="FF808080"/></right><top style="medium"><color rgb="FF808080"/></top><bottom style="medium"><color rgb="FF808080"/></bottom></border></borders>`;
   const xfs=[];const ax=(fi,fn,bi,h,v,w)=>{xfs.push({fi,fn,bi,h:h||"center",v:v||"center",w:!!w});return xfs.length-1;};
   ax(0,FN.d,0);
-  const XF={ti:ax(F.navy,FN.t,1),dy:ax(F.day,FN.w,1,"center","center",true),sa:ax(F.saat,FN.w,1),sc:ax(F.sec,FN.w,1,"left"),bt:ax(F.bot,FN.w,1,"left"),dv:ax(F.saat,FN.w,1),tSb:ax(F.sabah,FN.sabah,1),tAr:ax(F.araci,FN.araci,1),tAk:ax(F.aksam,FN.aksam,1),tGe:ax(F.gece,FN.gece,1),tDi:ax(F.dis,FN.dis,1),tIz:ax(F.izin,FN.izin,1),tYl:ax(F.yillik,FN.yillik,1),tDo:ax(F.dogum,FN.dogum,1),pSb:ax(F.sabah,FN.sabah,0),pAr:ax(F.araci,FN.araci,0),pAk:ax(F.aksam,FN.aksam,0),pGe:ax(F.gece,FN.gece,0),pDi:ax(F.dis,FN.dis,0),pIz:ax(F.izin,FN.izin,0),pYl:ax(F.yillik,FN.yillik,0),pDo:ax(F.dogum,FN.dogum,0),pWn:ax(F.warn,FN.warn,0),pEm:ax(0,FN.d,0),bSc:ax(F.sec,FN.w,0,"left"),bAl:ax(F.alt,FN.d,0,"left"),nC:ax(F.alt,FN.note,0,"left","top",true),nL:ax(F.alt,FN.note,0,"left")};
+  const XF={ti:ax(F.navy,FN.t,1),dy:ax(F.day,FN.w,1,"center","center",true),dyH:ax(F.hol,FN.w,1,"center","center",true),
+    sa:ax(F.saat,FN.w,1),sc:ax(F.sec,FN.w,1,"left"),bt:ax(F.bot,FN.w,1,"left"),dv:ax(F.saat,FN.w,1),
+    tSb:ax(F.sabah,FN.sabah,1),tPr:ax(F.prime,FN.prime,1),tAk:ax(F.aksam,FN.aksam,1),tGe:ax(F.gece,FN.gece,1),
+    tDi:ax(F.dis,FN.dis,1),tIz:ax(F.izin,FN.izin,1),tYl:ax(F.yillik,FN.yillik,1),tDo:ax(F.dogum,FN.dogum,1),tKi:ax(F.ki,FN.ki,1),
+    pSb:ax(F.sabah,FN.sabah,0),pPr:ax(F.prime,FN.prime,0),pAk:ax(F.aksam,FN.aksam,0),pGe:ax(F.gece,FN.gece,0),
+    pDi:ax(F.dis,FN.dis,0),pIz:ax(F.izin,FN.izin,0),pYl:ax(F.yillik,FN.yillik,0),pDo:ax(F.dogum,FN.dogum,0),pKi:ax(F.ki,FN.ki,0),
+    pWn:ax(F.warn,FN.warn,0),pEm:ax(0,FN.d,0),
+    bSc:ax(F.sec,FN.w,0,"left"),bAl:ax(F.alt,FN.d,0,"left"),
+    nC:ax(F.alt,FN.note,0,"left","top",true),nL:ax(F.alt,FN.note,0,"left")};
   const xfsXml=`<cellXfs count="${xfs.length}">${xfs.map(x=>`<xf numFmtId="0" fontId="${x.fn}" fillId="${x.fi}" borderId="${x.bi}" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="${x.h}" vertical="${x.v}" wrapText="${x.w?1:0}"/></xf>`).join("")}</cellXfs>`;
   const sty=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><numFmts count="0"/><fonts count="${fonts.length}">${fonts.map(mf2).join("")}</fonts><fills count="${fills.length}">${fills.map(mf).join("")}</fills>${brdX}${xfsXml}<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>`;
+
   const ss=[];const ssM={};const S=v=>{const k=String(v||"");if(!(k in ssM)){ssM[k]=ss.length;ss.push(k);}return ssM[k];};
   const rows=[];const merges=[];let ri=0;
   const CL=c=>String.fromCharCode(65+c);
   const CV=(col,r,val,xi)=>{const ref=`${CL(col)}${r+1}`;if(!val&&val!==0)return`<c r="${ref}" s="${xi}"/>`;return`<c r="${ref}" t="s" s="${xi}"><v>${S(val)}</v></c>`;};
   const MG=(r1,c1,r2,c2)=>`${CL(c1)}${r1+1}:${CL(c2)}${r2+1}`;
-  const sXF={sabah:{t:XF.tSb,p:XF.pSb},araci:{t:XF.tAr,p:XF.pAr},aksam:{t:XF.tAk,p:XF.pAk},gece:{t:XF.tGe,p:XF.pGe},dis:{t:XF.tDi,p:XF.pDi},izin:{t:XF.tIz,p:XF.pIz},yillik:{t:XF.tYl,p:XF.pYl},dogum:{t:XF.tDo,p:XF.pDo}};
-  const dupK=getDupK();
+
+  const catXF={sabah:{t:XF.tSb,p:XF.pSb},prime:{t:XF.tPr,p:XF.pPr},aksam:{t:XF.tAk,p:XF.pAk},
+    gece:{t:XF.tGe,p:XF.pGe},dis:{t:XF.tDi,p:XF.pDi},izin:{t:XF.tIz,p:XF.pIz},
+    yillik:{t:XF.tYl,p:XF.pYl},dogum:{t:XF.tDo,p:XF.pDo},ki:{t:XF.tKi,p:XF.pKi}};
+
+  // Tatil günleri
+  let wdatesStr=Array(7).fill("");let holDays=Array(7).fill(false);
+  if(week&&week.start_date){
+    const sd=new Date(week.start_date);
+    for(let i=0;i<7;i++){const d=new Date(sd);d.setDate(sd.getDate()+i);const ds=d.toISOString().slice(0,10);wdatesStr[i]=ds;holDays[i]=holidays.some(h=>h.date===ds);}
+  }
+
   const tr0=[CV(0,ri,`YAYIN MÜHENDİSLİĞİ — NÖBET ÇİZELGESİ — ${label}`,XF.ti)];
   for(let i=1;i<9;i++)tr0.push(CV(i,ri,"",XF.ti));rows.push(tr0);merges.push(MG(ri,0,ri,8));ri++;
+
   const hdr=[CV(0,ri,"BÖLÜM",XF.sa),CV(1,ri,"ÇALIŞMA SAATİ",XF.sa)];
-  DAYS.forEach((d,i)=>hdr.push(CV(2+i,ri,`${d.f}\n${wd(i)}`,XF.dy)));rows.push(hdr);ri++;
-  ROWS.forEach(row=>{
+  DAYS.forEach((d,i)=>hdr.push(CV(2+i,ri,`${d.f}\n${wd(i)}${holDays[i]?" 🌿":""}`,holDays[i]?XF.dyH:XF.dy)));
+  rows.push(hdr);ri++;
+
+  const dynRows=buildDynRows();
+  dynRows.forEach(row=>{
     if(row._s){const xS=row._bot?XF.bt:XF.sc;const t=[CV(0,ri,`▶  ${row._s}`,xS)];for(let i=1;i<9;i++)t.push(CV(i,ri,"",xS));rows.push(t);merges.push(MG(ri,0,ri,8));ri++;return;}
-    if(row._div){const t=[CV(0,ri,"─── DIŞ GÖREV · İZİN · DOĞUM GÜNÜ İZNİ ───",XF.dv)];for(let i=1;i<9;i++)t.push(CV(i,ri,"",XF.dv));rows.push(t);merges.push(MG(ri,0,ri,8));ri++;return;}
+    if(row._div){const t=[CV(0,ri,"─── HAFTALIK İZİN · DIŞ GÖREV · YILLIK · K.İ ───",XF.dv)];for(let i=1;i<9;i++)t.push(CV(i,ri,"",XF.dv));rows.push(t);merges.push(MG(ri,0,ri,8));ri++;return;}
+    if(row._dyn_ctrl)return;
     if(!row.id)return;
-    const meta=ROW_META[row.id]||{s:"?",c:"sabah"};const cx=sXF[meta.c]||{t:XF.tSb,p:XF.pSb};
-    const t=[CV(0,ri,row.b||"",row.b?XF.bSc:XF.bAl),CV(1,ri,meta.s,cx.t)];
-    DAYS.forEach((_,gi)=>{const p=(sched[row.id]||[])[gi]||"";const dup=p&&dupK.has(`${p}-${gi}`);t.push(CV(2+gi,ri,p,p?(dup?XF.pWn:cx.p):XF.pEm));});
+    const cx=catXF[row.c]||{t:XF.tSb,p:XF.pSb};
+    const t=[CV(0,ri,row.b||"",row.b?XF.bSc:XF.bAl),CV(1,ri,row.s,cx.t)];
+    DAYS.forEach((_,gi)=>{const p=(sched[row.id]||[])?.[gi]||"";t.push(CV(2+gi,ri,p,p?cx.p:XF.pEm));});
     rows.push(t);ri++;
   });
+
   const ns=[CV(0,ri,"Günlük Görev & Açıklama",XF.bt)];for(let i=1;i<9;i++)ns.push(CV(i,ri,"",XF.bt));rows.push(ns);merges.push(MG(ri,0,ri,8));ri++;
   [["Görev"],["Ekipman / Arıza"]].forEach(([lbl],ni)=>{
     const t=[CV(0,ri,lbl,XF.nL),CV(1,ri,"",XF.nC)];
-    DAYS.forEach((_,gi)=>t.push(CV(2+gi,ri,(notes[ni]||[])[gi]||"",XF.nC)));rows.push(t);ri++;
+    DAYS.forEach((_,gi)=>t.push(CV(2+gi,ri,(notes[ni]||[])?.[gi]||"",XF.nC)));rows.push(t);ri++;
   });
+
   const cols=`<col min="1" max="1" width="18" customWidth="1"/><col min="2" max="2" width="20" customWidth="1"/>${Array.from({length:7},(_,i)=>`<col min="${i+3}" max="${i+3}" width="16" customWidth="1"/>`).join("")}`;
   const rwXml=rows.map((cells,r)=>`<row r="${r+1}" ht="${r===0?22:r===1?26:16}" customHeight="1">${cells.join("")}</row>`).join("");
   const mgXml=merges.length?`<mergeCells count="${merges.length}">${merges.map(m=>`<mergeCell ref="${m}"/>`).join("")}</mergeCells>`:"";
@@ -1184,87 +1508,182 @@ async function exportExcel(){
   const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`Nobet_${label.replace(/[\s–—\/]/g,"_")}.xlsx`;a.click();
 }
 
-// Personel dropdownları doldur
-["bd-person","u-name","ki-person"].forEach(id=>{
-  const el=document.getElementById(id);
-  if(el)el.innerHTML=`<option value="">— Seçin —</option>${PERSONEL.map(p=>`<option value="${p}">${p}</option>`).join("")}`;
-});
+// ═══════════════════════════════════════════════════════════
+// TABS
+// ═══════════════════════════════════════════════════════════
+const PANES=["cizelge","uyarilar","talepler","dogumgunu","yillikplan","istatistik","arsiv","kullanicilar","ayarlar","profil"];
+function sw(id){
+  PANES.forEach(p=>{const el=document.getElementById(`pn-${p}`);if(el)el.style.display=p===id?"block":"none";const b=document.getElementById(`tb-${p}`);if(b)b.classList.toggle("active",p===id);});
+  if(id==="yillikplan"){loadYearPlan();}
+  if(id==="istatistik"){loadStats();}
+  if(id==="arsiv"){loadArchive();}
+  if(id==="dogumgunu"){loadBirthdays();}
+  if(id==="talepler"){loadRequests("pending");}
+  if(id==="kullanicilar"){loadUsers();}
+  if(id==="ayarlar"&&ROLE==="admin"){loadSettings();loadHolidays();}
+  if(id==="profil"){loadMyKi();}
+}
 
-// ══════════════════════════════════════════════════════════
-// K.İ FONKSİYONLARI
-// ══════════════════════════════════════════════════════════
-async function loadKi() {
-  const list = await api('GET', '/api/ki');
-  const hasBadge = list.some(k => k.remaining > 0);
-  const badge = document.getElementById('ki-badge');
-  if (badge) { badge.style.display = hasBadge ? 'inline-block' : 'none'; badge.textContent = list.filter(k=>k.remaining>0).length; }
+// ═══════════════════════════════════════════════════════════
+// YILLIK PLANLAMA
+// ═══════════════════════════════════════════════════════════
+let vacPlanData = {}; // { 'person-week_start': 'yillik'|'ki'|null }
+let vacYear = new Date().getFullYear();
 
-  const tbody = document.getElementById('ki-table-body');
-  if (!tbody) return;
-  tbody.innerHTML = list.map((k, pi) => {
-    const alt = pi%2===0 ? '#fff' : 'var(--alt)';
-    const remBg = k.remaining > 0 ? '#E2EFDA' : k.remaining < 0 ? '#F7C1C1' : alt;
-    const remFg = k.remaining > 0 ? '#274E13' : k.remaining < 0 ? '#7B0000' : 'var(--txt2)';
+function initYearSelect(){
+  const sel = document.getElementById('plan-year');
+  if(!sel) return;
+  const yr = new Date().getFullYear();
+  sel.innerHTML = [yr-1, yr, yr+1, yr+2].map(y => `<option value="${y}"${y===yr?" selected":""}>${y}</option>`).join('');
+  vacYear = yr;
+}
+
+function getWeeksOfYear(year){
+  const weeks = [];
+  // Yılın ilk Pazartesisini bul
+  const d = new Date(year, 0, 1);
+  const dow = (d.getDay() + 6) % 7; // 0=Pzt
+  d.setDate(d.getDate() - dow);
+  // Önceki yılın son haftasındaysa ilerle
+  if(d.getFullYear() < year) d.setDate(d.getDate() + 7);
+
+  let weekNo = 1;
+  while(true) {
+    const mon = new Date(d);
+    const sun = new Date(d); sun.setDate(d.getDate() + 6);
+    if(mon.getFullYear() > year) break;
+    const fmt = x => `${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,'0')}-${String(x.getDate()).padStart(2,'0')}`;
+    const trDate = x => `${String(x.getDate()).padStart(2,'0')}.${String(x.getMonth()+1).padStart(2,'0')}`;
+    const MONTHS = ['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'];
+    weeks.push({
+      weekNo: weekNo++,
+      start: fmt(mon),
+      end: fmt(sun),
+      label: `${trDate(mon)} – ${trDate(sun)}`,
+      month: MONTHS[mon.getMonth()],
+      monthNum: mon.getMonth()
+    });
+    d.setDate(d.getDate() + 7);
+  }
+  return weeks;
+}
+
+async function loadYearPlan(){
+  const sel = document.getElementById('plan-year');
+  vacYear = parseInt(sel?.value || new Date().getFullYear());
+  const plans = await api('GET', `/api/vacation-plans?year=${vacYear}`).catch(()=>[]);
+
+  // Build lookup map
+  vacPlanData = {};
+  plans.forEach(p => { vacPlanData[`${p.person}|${p.week_start}`] = p.type; });
+
+  const weeks = getWeeksOfYear(vacYear);
+  renderYearPlan(weeks);
+}
+
+function renderYearPlan(weeks){
+  const isAdmin = ROLE === 'admin';
+
+  // Başlık satırı: Hafta No | Tarih | P1 | P2 | ...
+  const thead = document.getElementById('plan-head');
+  const colStyle = 'padding:6px 4px;text-align:center;white-space:nowrap;font-size:10px;font-weight:600;';
+  thead.innerHTML = `<tr>
+    <th style="${colStyle}background:var(--blue2);color:#fff;min-width:35px">Hf</th>
+    <th style="${colStyle}background:var(--blue2);color:#fff;min-width:110px;text-align:left;padding-left:8px">Tarih Aralığı</th>
+    ${PERSONEL.map(p => `<th style="${colStyle}background:var(--navy);color:#fff;min-width:80px;max-width:90px;overflow:hidden" title="${p}">${p.split(' ')[0]}<br><span style="font-size:9px;opacity:.7">${p.split(' ').slice(-1)[0].slice(0,6)}</span></th>`).join('')}
+  </tr>`;
+
+  // Ay grupları için renk
+  const monthColors = ['#F3E5F5','#E3F2FD','#E8F5E9','#FFF9C4','#FFE0B2','#FCE4EC',
+                       '#F3E5F5','#E3F2FD','#E8F5E9','#FFF9C4','#FFE0B2','#FCE4EC'];
+
+  const tbody = document.getElementById('plan-body');
+  let lastMonth = -1;
+  tbody.innerHTML = weeks.map((w, wi) => {
+    const isNewMonth = w.monthNum !== lastMonth;
+    lastMonth = w.monthNum;
+    const rowBg = monthColors[w.monthNum];
+
+    const cells = PERSONEL.map(person => {
+      const key = `${person}|${w.start}`;
+      const planType = vacPlanData[key] || null;
+      const canEdit = isAdmin || person === UNAME;
+
+      let cellBg, cellTitle, cellContent;
+      if(planType === 'yillik'){
+        cellBg = '#E8F5E9'; cellContent = '<span style="font-size:14px">✓</span>'; cellTitle = 'Yıllık İzin Planlandı';
+      } else if(planType === 'ki'){
+        cellBg = 'var(--ki-b)'; cellContent = '<span style="font-size:12px">K</span>'; cellTitle = 'K.İ Planlandı';
+      } else {
+        cellBg = canEdit ? '#fff' : rowBg; cellContent = ''; cellTitle = canEdit ? 'Tıkla: Yıllık İzin ekle' : '';
+      }
+
+      if(canEdit){
+        return `<td style="padding:3px;text-align:center;background:${rowBg}">
+          <div onclick="togglePlan('${person.replace(/'/g,"\'")}','${w.start}','yillik')"
+            style="background:${cellBg};border:1px solid ${planType?'#81C784':'#ddd'};border-radius:4px;cursor:pointer;height:26px;display:flex;align-items:center;justify-content:center;font-weight:600;color:${planType==='yillik'?"#1B5E20":planType==='ki'?"var(--ki-f)":"#ccc"};transition:all .15s;font-size:12px"
+            title="${cellTitle}">${cellContent}</div>
+        </td>`;
+      } else {
+        return `<td style="padding:3px;text-align:center;background:${rowBg}">
+          <div style="background:${cellBg};border:1px solid ${planType?'#81C784':'#eee'};border-radius:4px;height:26px;display:flex;align-items:center;justify-content:center;color:${planType==='yillik'?"#1B5E20":planType==='ki'?"var(--ki-f)":"#eee"};font-size:12px">${cellContent}</div>
+        </td>`;
+      }
+    }).join('');
+
     return `<tr>
-      <td style="padding:8px 12px;font-weight:500;background:${alt}">${k.person}</td>
-      <td style="padding:8px 10px;text-align:center;background:${alt}">${k.given > 0 ? `<b>${k.given}</b> gün` : '—'}</td>
-      <td style="padding:8px 10px;text-align:center;background:${k.used>0?'var(--izin-b)':alt};color:${k.used>0?'var(--izin-f)':'var(--txt3)'}">${k.used > 0 ? `${k.used} gün` : '—'}</td>
-      <td style="padding:8px 10px;text-align:center;font-weight:600;background:${remBg};color:${remFg}">${k.remaining !== 0 ? `${k.remaining} gün` : '—'}</td>
-      <td style="padding:8px 10px;text-align:center;background:${alt}">
-        <div style="display:flex;gap:5px;justify-content:center;flex-wrap:wrap">
-          ${k.given>0 ? `<button class="btn btn-blue btn-sm" onclick="showKiDetail('${k.person.replace(/'/g,"\'")}')"><i class="ti ti-list" aria-hidden="true"></i></button>` : ''}
-          ${k.remaining>0 ? `<button class="btn btn-sm" style="background:var(--araci-b);color:var(--araci-f);border:1px solid var(--araci-d)" onclick="sendKiReminder('${k.person.replace(/'/g,"\'")}',${k.remaining})"><i class="ti ti-bell" aria-hidden="true"></i> Hatırlat</button>` : ''}
-        </div>
+      <td style="padding:5px 8px;text-align:center;background:${rowBg};font-size:11px;font-weight:600;color:var(--txt2);border-bottom:1px solid var(--bd)">${w.weekNo}</td>
+      <td style="padding:5px 8px;background:${rowBg};font-size:11px;font-weight:500;white-space:nowrap;border-bottom:1px solid var(--bd)">
+        ${isNewMonth?`<div style="font-size:9px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px">${w.month}</div>`:''}
+        ${w.label}
       </td>
+      ${cells}
     </tr>`;
   }).join('');
 }
 
-async function addKi() {
-  const person = document.getElementById('ki-person').value;
-  const days   = parseFloat(document.getElementById('ki-days').value);
-  const reason = document.getElementById('ki-reason').value;
-  const email  = document.getElementById('ki-email').value;
-  if (!person || !days || days <= 0) { alert('Personel ve gün sayısı zorunludur.'); return; }
-  await api('POST', '/api/ki', { person, days, reason, notify_email: email || null });
-  document.getElementById('ki-days').value = '';
-  document.getElementById('ki-reason').value = '';
-  document.getElementById('ki-email').value = '';
-  document.getElementById('ki-person').value = '';
-  loadKi();
-  alert(`✅ ${person} için ${days} gün K.İ tanımlandı.${email ? ' Bildirim maili gönderildi.' : ''}`);
+async function togglePlan(person, weekStart, type){
+  if(ROLE !== 'admin' && person !== UNAME){alert('Sadece kendi planınızı düzenleyebilirsiniz.');return;}
+  const key = `${person}|${weekStart}`;
+  const current = vacPlanData[key] || null;
+
+  // Cycle: null → yillik → ki → null
+  let newType;
+  if(!current) newType = 'yillik';
+  else if(current === 'yillik') newType = 'ki';
+  else newType = null; // ki → null (sil)
+
+  try {
+    if(newType){
+      // Admin başkası adına ekleyebilir
+      const endpoint = ROLE === 'admin' && person !== UNAME ? '/api/vacation-plans/admin' : '/api/vacation-plans';
+      const body = ROLE === 'admin' && person !== UNAME ? {person, week_start:weekStart, type:newType} : {week_start:weekStart, type:newType};
+      // Önce mevcut varsa sil
+      if(current){
+        await api('POST', endpoint, body); // toggle
+      }
+      await api('POST', endpoint, body);
+      vacPlanData[key] = newType;
+    } else {
+      // Sil — toggle ile
+      const endpoint = ROLE === 'admin' && person !== UNAME ? '/api/vacation-plans/admin' : '/api/vacation-plans';
+      const body = ROLE === 'admin' && person !== UNAME ? {person, week_start:weekStart, type:current} : {week_start:weekStart, type:current};
+      await api('POST', endpoint, body);
+      delete vacPlanData[key];
+    }
+    // Kaydet göstergesi
+    const saved = document.getElementById('plan-saved');
+    saved.style.display = 'inline';
+    setTimeout(()=>{saved.style.display='none';}, 2000);
+    // Re-render (sadece ilgili hücreyi)
+    const weeks = getWeeksOfYear(vacYear);
+    renderYearPlan(weeks);
+  } catch(e) { alert('Hata: ' + e.message); }
 }
 
-async function showKiDetail(person) {
-  const entries = await api('GET', `/api/ki/${encodeURIComponent(person)}/entries`);
-  const el = document.getElementById('ki-detail');
-  document.getElementById('ki-detail-title').textContent = person + ' — K.İ Geçmişi';
-  document.getElementById('ki-detail-list').innerHTML = entries.length === 0
-    ? '<div style="color:var(--txt3);font-size:13px">Kayıt yok.</div>'
-    : entries.map(e => `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid var(--bd);gap:10px;flex-wrap:wrap">
-        <div>
-          <div style="font-weight:500;font-size:13px">+${e.days} gün</div>
-          <div style="font-size:11px;color:var(--txt2);margin-top:2px">${e.reason||'—'} · ${e.created_at}</div>
-        </div>
-        <button class="btn btn-red btn-sm" onclick="deleteKiEntry(${e.id})"><i class="ti ti-trash" aria-hidden="true"></i></button>
-      </div>`).join('');
-  el.style.display = 'block';
-  el.scrollIntoView({ behavior: 'smooth' });
-}
-
-async function deleteKiEntry(id) {
-  if (!confirm('Bu K.İ kaydını sil?')) return;
-  await api('DELETE', `/api/ki/${id}`);
-  loadKi();
-  document.getElementById('ki-detail').style.display = 'none';
-}
-
-async function sendKiReminder(person, remaining) {
-  const email = prompt(`${person} için hatırlatma e-postası (boş bırakırsanız gönderilmez):`);
-  if (!email) return;
-  await api('POST', '/api/ki/reminder', { person, email, remaining });
-  alert('✅ Hatırlatma maili gönderildi.');
-}
+// Yıl seçicisini başlangıçta doldur
+document.addEventListener('DOMContentLoaded', initYearSelect);
+setTimeout(initYearSelect, 500);
 
 </script>
 </body>
