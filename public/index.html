@@ -788,15 +788,29 @@ function computeWarnings(){
   Object.entries(personShifts).forEach(([p,shifts])=>{
     for(let i=0;i<shifts.length;i++){
       for(let j=0;j<shifts.length;j++){
-        if(i===j)return;
+        if(i===j)continue;
         const a=shifts[i],b=shifts[j];
         if(b.gi!==a.gi+1)continue;
         const endH=getShiftEndH(a.s);const startH=getShiftStartH(b.s);
         if(endH<0||startH<0)continue;
-        let endAbs=endH<12?endH+24:endH;
-        const gap=(startH+24)-endAbs;
-        if(gap<12&&gap>=0){
-          W.push({t:"warn",msg:`⚠️ ${p} — ${DAYS[a.gi].f} → ${DAYS[b.gi].f}: 2 nöbet arası yalnızca ${gap.toFixed(1)} saat (minimum 12 saat olmalı)`});
+        // Dinlenme süresi hesaplama:
+        // A günü bitiş saati → B günü başlangıç saati
+        // endH=0 → gece yarısı bitiyor (24:00 = bir sonraki günün 00:00)
+        let gap;
+        const endHNorm = endH === 0 ? 24 : endH; // 00:00 → 24 olarak al
+        if(endHNorm <= 12) {
+          // Gece vardiyası (00:00-06:30 gibi) — ertesi gün sabahında bitiyor
+          gap = startH - endHNorm; // salı 06:15 - salı 06:30 = -0.25 (örtüşme)
+        } else {
+          // Normal vardiya (15:00-00:00 gibi) — gece yarısında bitiyor
+          // Bitiş: 24:00, Başlangıç: ertesi gün 06:15
+          // Dinlenme = 24 - endHNorm + startH
+          gap = 24 - endHNorm + startH;
+        }
+        if(gap<12){
+          const gapStr = gap<0 ? "0 (üst üste biniyor!)" : gap.toFixed(1);
+          const type = gap<=0 ? "danger" : "warn";
+          W.push({t:type,msg:`⚠️ ${p} — ${DAYS[a.gi].f} → ${DAYS[b.gi].f}: 2 nöbet arası yalnızca ${gapStr} saat (minimum 12 saat olmalı)`});
         }
       }
     }
