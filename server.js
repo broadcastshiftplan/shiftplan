@@ -109,7 +109,13 @@ app.put('/api/users/:id/password', requireAdmin, async (req,res) => {
 });
 app.delete('/api/users/:id', requireAdmin, (req,res) => {
   if (parseInt(req.params.id)===req.user.id) return res.status(400).json({error:'Kendinizi silemezsiniz'});
-  db.prepare('DELETE FROM users WHERE id=? AND role!=?').run(req.params.id,'admin');
+  // En az 1 admin kalsın
+  const target = db.prepare('SELECT role FROM users WHERE id=?').get(req.params.id);
+  if (target && target.role === 'admin') {
+    const adminCount = db.prepare("SELECT COUNT(*) c FROM users WHERE role='admin'").get().c;
+    if (adminCount <= 1) return res.status(400).json({error:'Son yönetici silinemez. Önce başka bir yönetici ekleyin.'});
+  }
+  db.prepare('DELETE FROM users WHERE id=?').run(req.params.id);
   res.json({ok:true});
 });
 
@@ -286,20 +292,28 @@ app.post('/api/settings/test-mail', requireAdmin, async (req,res) => {
 
 // ── VERİ YEDEK (JSON indirme) ─────────────────────────────────────────────
 app.get('/api/backup', requireAdmin, (req,res) => {
-  const weeks   = getWeeks();
-  const backup  = { exportDate: new Date().toISOString(), weeks: [] };
-  weeks.forEach(w => {
-    const sched   = getSchedule(w.id);
-    const notes   = getNotes(w.id);
-    const meta    = getRowMeta(w.id);
-    const counts  = getSectionCounts(w.id);
-    backup.weeks.push({ ...w, sched, notes, meta, counts });
-  });
-  backup.ki      = getKiSummary().map(k => ({ person:k.person, entries:k.entries }));
-  backup.birthdays = getBirthdays();
-  backup.holidays  = getHolidays();
-  res.setHeader('Content-Disposition', `attachment; filename="nobet-yedek-${new Date().toISOString().slice(0,10)}.json"`);
-  res.json(backup);
+  try {
+    const weeks  = getWeeks();
+    const backup = { exportDate: new Date().toISOString(), weeks: [] };
+    weeks.forEach(w => {
+      try {
+        const sched  = getSchedule(w.id);
+        const nts    = getNotes(w.id);
+        const meta   = getRowMeta(w.id);
+        const counts = getSectionCounts(w.id);
+        backup.weeks.push({ ...w, sched, notes: nts, meta, counts });
+      } catch(e) { backup.weeks.push({ ...w, error: e.message }); }
+    });
+    try { backup.ki = getKiSummary().map(k => ({ person:k.person, entries:k.entries })); } catch(e) { backup.ki = []; }
+    try { backup.birthdays = getBirthdays(); } catch(e) { backup.birthdays = []; }
+    try { backup.holidays  = getHolidays();  } catch(e) { backup.holidays  = []; }
+    const fname = 'nobet-yedek-' + new Date().toISOString().slice(0,10) + '.json';
+    res.setHeader('Content-Disposition', 'attachment; filename=' + fname);
+    res.json(backup);
+  } catch(e) {
+    console.error('[Backup]', e.message);
+    res.status(500).json({ error: e.message });
+  }
 });
 
 // ── İSTATİSTİK ───────────────────────────────────────────────────────────
