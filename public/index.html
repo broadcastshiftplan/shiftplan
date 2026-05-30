@@ -55,7 +55,7 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--txt
 .sw{overflow-x:auto;border:1px solid var(--bd);border-radius:10px;background:var(--srf);box-shadow:0 1px 4px rgba(0,0,0,.06)}
 .st{border-collapse:collapse;table-layout:fixed;min-width:1060px;width:100%}
 .st th,.st td{border:1px solid var(--bd);vertical-align:middle}
-.th-pos{background:#7B1FA2;color:#fff;font-weight:700;padding:8px 10px;font-size:13px;text-align:left;min-width:110px}
+.th-pos{background:#E8EAF6;color:#283593;font-weight:700;padding:8px 10px;font-size:13px;text-align:left;min-width:110px}
 .th-saat{background:var(--blue2);color:#fff;font-weight:600;padding:8px;font-size:11px;text-align:center;min-width:130px}
 .th-day{background:var(--blue);color:#fff;font-weight:600;font-size:11px;text-align:center;padding:6px 4px;min-width:115px;line-height:1.5}
 .th-day.holiday{background:#2E7D32}
@@ -887,7 +887,7 @@ function buildDynRows(){
   // HAFTALIK İZİN — sabit 3
   rows.push({_s:"HAFTALIK İZİN",_bot:1});
   const hizCount=cnt.hafizin||3;
-  for(let i=0;i<hizCount;i++)rows.push({id:`hafizin_${i+1}`,b:"",s:"Tam Gün",c:"izin"});
+  for(let i=0;i<hizCount;i++)rows.push({id:`hafizin_${i+1}`,b:"HAFTALIK İZİN",s:"Tam Gün",c:"izin"});
 
   // DIŞ GÖREV — sabit 2
   rows.push({_s:"DIŞ GÖREV",_bot:1});
@@ -897,7 +897,7 @@ function buildDynRows(){
   // YILLIK/RAPOR — dinamik
   rows.push({_s:"YILLIK / RAPOR / EĞİTİM",_bot:1});
   const ylCount=cnt.yl||3;
-  for(let i=0;i<ylCount;i++)rows.push({id:`yl_${i+1}`,b:"",s:"Tam Gün",c:"yillik",_dyn_section:"yl",_idx:i});
+  for(let i=0;i<ylCount;i++)rows.push({id:`yl_${i+1}`,b:"YILLIK/RAPOR",s:"Tam Gün",c:"yillik",_dyn_section:"yl",_idx:i});
   rows.push({_dyn_ctrl:"yl"});
 
   // DOĞUM GÜNÜ İZNİ — sabit
@@ -907,7 +907,7 @@ function buildDynRows(){
   // K.İ — dinamik
   rows.push({_s:"K.İ (Kullanılmayan İzin)",_bot:1});
   const kiCount=cnt.ki||2;
-  for(let i=0;i<kiCount;i++)rows.push({id:`ki_${i+1}`,b:"",s:"Tam Gün",c:"ki",_dyn_section:"ki",_idx:i});
+  for(let i=0;i<kiCount;i++)rows.push({id:`ki_${i+1}`,b:"K.İ",s:"Tam Gün",c:"ki",_dyn_section:"ki",_idx:i});
   rows.push({_dyn_ctrl:"ki"});
 
   return rows;
@@ -959,7 +959,7 @@ function buildTable(){
     if(!row.id)return;
 
     const cl=SC[row.c]||SC.sabah;const alt=idx%2===0?"#fff":"var(--alt)";
-    const bs=`background:#6A1B9A;color:${row.b?"#fff":"transparent"};font-size:11px;font-weight:600;text-align:center;vertical-align:middle`;
+    const bs=`background:#E8EAF6;color:#283593;font-size:11px;font-weight:600;text-align:center;vertical-align:middle`;
 
     // Dinamik satırlar ve tüm satırlar için shift time seçici (admin)
     let saatCell;
