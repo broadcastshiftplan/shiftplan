@@ -244,9 +244,18 @@ const addBirthday    = (n,d,nt) => db.prepare('INSERT INTO birthdays(name,birth_
 const deleteBirthday = id => db.prepare('DELETE FROM birthdays WHERE id=?').run(id);
 
 // ── K.İ ────────────────────────────────────────────────────────────────────
-const getKiEntries  = person => person
-  ? db.prepare('SELECT * FROM ki_entries WHERE person=? ORDER BY date_given DESC').all(person)
-  : db.prepare('SELECT * FROM ki_entries ORDER BY date_given DESC').all();
+const getKiEntries  = person => {
+  try {
+    return person
+      ? db.prepare('SELECT * FROM ki_entries WHERE person=? ORDER BY date_given DESC').all(person)
+      : db.prepare('SELECT * FROM ki_entries ORDER BY date_given DESC').all();
+  } catch(e) {
+    // date_given kolonu henüz yoksa created_at ile sırala
+    return person
+      ? db.prepare('SELECT *, created_at as date_given FROM ki_entries WHERE person=? ORDER BY created_at DESC').all(person)
+      : db.prepare('SELECT *, created_at as date_given FROM ki_entries ORDER BY created_at DESC').all();
+  }
+};
 const addKiEntry    = (person,days,reason,date_given,week_id) =>
   db.prepare('INSERT INTO ki_entries(person,days,reason,date_given,week_id) VALUES(?,?,?,?,?)').run(person,days,reason||'',date_given||new Date().toISOString().slice(0,10),week_id||null);
 const deleteKiEntry = id => db.prepare('DELETE FROM ki_entries WHERE id=?').run(id);
