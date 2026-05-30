@@ -33,7 +33,13 @@ async function sendMail(to, subject, html) {
   const pass = getSetting('mailPass') || process.env.MAIL_PASS;
   if (!user || !pass || !to) return;
   try {
-    const t = nodemailer.createTransport({ service: 'gmail', auth: { user, pass } });
+    const t = nodemailer.createTransport({
+      host: 'smtp.gmail.com',
+      port: 587,
+      secure: false,
+      auth: { user, pass },
+      tls: { rejectUnauthorized: false }
+    });
     await t.sendMail({ from: user, to, subject, html });
     console.log(`[Mail] Gönderildi → ${to}`);
   } catch(e) { console.error('[Mail]', e.message); }
