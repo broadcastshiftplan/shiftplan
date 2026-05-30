@@ -1005,7 +1005,8 @@ function buildTable(){
         const stl=dup||is11h?"":p?`background:#${cl.bg};color:#${cl.fg};border:1px solid #${cl.bd}`:"";
         const flashCls=is11h?"flash-warn":"";
         const tekmonStl=row.c==="tekmon"&&p?"background:#fff;color:#C62828;border:2px solid #EF5350;font-weight:700":"";
-        return `<td class="td-c" style="background:${alt}"><select class="sel ${cls} ${flashCls}"${tekmonStl?` style="${tekmonStl}"`:(stl?` style="${stl}"`:""`)}
+        const finalStl=tekmonStl||(stl||"");
+        return `<td class="td-c" style="background:${alt}"><select class="sel ${cls} ${flashCls}"${finalStl?` style="${finalStl}"`:""}
           data-rid="${row.id}" data-gi="${gi}" onchange="onSel(this)">
           <option value="">—</option>
           ${PERSONEL.map(pe=>`<option value="${pe}"${pe===p?" selected":""}>${pe}</option>`).join("")}
