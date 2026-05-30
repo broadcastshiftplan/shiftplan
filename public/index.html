@@ -14,7 +14,7 @@
   --aksam-b:#EEEDFE;--aksam-f:#26215C;--aksam-d:#AFA9EC;
   --gece-b:#2C3E50;--gece-f:#D3D1C7;--gece-d:#5F5E5A;
   --dis-b:#E1F5EE;--dis-f:#04342C;--dis-d:#5DCAA5;
-  --izin-b:#FFF2E0;--izin-f:#7F3A00;--izin-d:#FFBB78;
+  --izin-b:#1B5E20;--izin-f:#FFFFFF;--izin-d:#2E7D32;
   --yillik-b:#FAE8E8;--yillik-f:#7B1818;--yillik-d:#F0A0A0;
   --dogum-b:#FCE4FC;--dogum-f:#5B0A5B;--dogum-d:#D07ED0;
   --ki-b:#EDE8FF;--ki-f:#3D1D8A;--ki-d:#9B7EEB;
@@ -55,14 +55,14 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--txt
 .sw{overflow-x:auto;border:1px solid var(--bd);border-radius:10px;background:var(--srf);box-shadow:0 1px 4px rgba(0,0,0,.06)}
 .st{border-collapse:collapse;table-layout:fixed;min-width:1060px;width:100%}
 .st th,.st td{border:1px solid var(--bd);vertical-align:middle}
-.th-pos{background:var(--sec);color:#fff;font-weight:600;padding:8px 10px;font-size:11px;text-align:left;min-width:110px}
+.th-pos{background:var(--sec);color:#fff;font-weight:600;padding:8px 10px;font-size:13px;text-align:left;min-width:110px}
 .th-saat{background:var(--blue2);color:#fff;font-weight:600;padding:8px;font-size:11px;text-align:center;min-width:130px}
 .th-day{background:var(--blue);color:#fff;font-weight:600;font-size:11px;text-align:center;padding:6px 4px;min-width:115px;line-height:1.5}
 .th-day.holiday{background:#2E7D32}
-.sr td{background:var(--sec);color:#fff;font-weight:500;font-size:10.5px;letter-spacing:.5px;padding:5px 10px}
+.sr td{background:var(--sec);color:#fff;font-weight:600;font-size:13px;letter-spacing:.3px;padding:6px 10px}
 .sr.bot td{background:var(--bot)}.sr.div td{background:var(--blue2);padding:3px;font-size:9px;letter-spacing:2px;color:rgba(255,255,255,.55);text-align:center}
 .sr.dyn td{background:var(--sec)}
-.td-b{padding:5px 8px;font-size:10.5px;text-align:left}
+.td-b{padding:5px 8px;font-size:13px;text-align:left}
 .td-s{padding:4px 6px;font-size:11px;font-weight:600;text-align:center;border-left-width:3px!important;white-space:nowrap}
 .td-c{padding:3px;text-align:center}
 select.sel{width:100%;box-sizing:border-box;border-radius:5px;padding:4px 3px;font-size:11px;font-weight:500;cursor:pointer;outline:none;font-family:inherit}
@@ -77,6 +77,7 @@ select.shift-sel{width:100%;font-size:10px;border-radius:4px;padding:2px 3px;fon
 .s-yillik{background:var(--yillik-b);color:var(--yillik-f);border:1px solid var(--yillik-d)}
 .s-dogum{background:var(--dogum-b);color:var(--dogum-f);border:1px solid var(--dogum-d)}
 .s-ki{background:var(--ki-b);color:var(--ki-f);border:1px solid var(--ki-d)}
+.s-tekmon{background:#fff;color:#C62828;border:2px solid #EF5350;font-weight:700}
 .s-dup{background:var(--warn-b)!important;color:var(--warn-f)!important;border:2px solid #A32D2D!important}
 textarea.nt{width:100%;box-sizing:border-box;border:1px solid #e0e0e0;border-radius:5px;padding:3px 5px;font-size:10px;resize:none;font-family:inherit;background:#FAFAF8;color:var(--txt)}
 .alert{display:flex;align-items:flex-start;gap:9px;padding:10px 13px;border-radius:var(--r);margin-bottom:8px;font-size:13px;border-left:3px solid}
@@ -511,21 +512,24 @@ const SC={
   aksam:{bg:"EEEDFE",fg:"26215C",bd:"AFA9EC",lbl:"Akşam",ico:"ti-moon-2"},
   gece:{bg:"2C3E50",fg:"D3D1C7",bd:"5F5E5A",lbl:"Gece",ico:"ti-moon-stars"},
   dis:{bg:"E1F5EE",fg:"04342C",bd:"5DCAA5",lbl:"Dış Görev",ico:"ti-car"},
-  izin:{bg:"FFF2E0",fg:"7F3A00",bd:"FFBB78",lbl:"Haftalık İzin",ico:"ti-calendar-off"},
+  izin:{bg:"1B5E20",fg:"FFFFFF",bd:"2E7D32",lbl:"Haftalık İzin",ico:"ti-calendar-off"},
   yillik:{bg:"FAE8E8",fg:"7B1818",bd:"F0A0A0",lbl:"Yıllık/Rapor",ico:"ti-beach"},
   dogum:{bg:"FCE4FC",fg:"5B0A5B",bd:"D07ED0",lbl:"Doğum Günü İzni",ico:"ti-cake"},
-  ki:{bg:"EDE8FF",fg:"3D1D8A",bd:"9B7EEB",lbl:"K.İ",ico:"ti-coins"}
+  ki:{bg:"EDE8FF",fg:"3D1D8A",bd:"9B7EEB",lbl:"K.İ",ico:"ti-coins"},
+  tekmon:{bg:"FFFFFF",fg:"C62828",bd:"EF5350",lbl:"Tek.Mon.",ico:"ti-monitor"}
 };
 
 // Shift zamanı → kategori
-function shiftCat(s){
+function shiftCat(s, section){
   if(!s)return'sabah';
-  if(s.includes('00:00'))return'gece';
-  if(s.includes('15:15'))return'sabah';
-  if(s.includes('17:00')&&s.includes('08'))return'sabah';
-  if(s.includes('10:00'))return'prime';
-  if(s.includes('15:00')||s.includes('Yayın'))return'aksam';
-  return'sabah';
+  if(s==='SERBEST')return section==='tm'?'tekmon':'prime';
+  if(s.includes('00:00'))return section==='tm'?'tekmon':'gece';
+  if(s.includes('06:15')||s.includes('15:15'))return section==='tm'?'tekmon':'sabah';
+  if(s.includes('08:00'))return section==='tm'?'tekmon':'sabah';
+  if(s.includes('10:00'))return section==='tm'?'tekmon':'prime';
+  if(s.includes('12:00')||s.includes('13:00'))return section==='tm'?'tekmon':'prime';
+  if(s.includes('15:00')||s.includes('17:00')||s.includes('18:00')||s.includes('19:00')||s.includes('Yayın'))return section==='tm'?'tekmon':'aksam';
+  return section==='tm'?'tekmon':'sabah';
 }
 
 // Shift saatinden saat değeri çıkar
@@ -868,7 +872,7 @@ function buildDynRows(){
   for(let i=0;i<pcrCount;i++){
     const rid=`pcr_${i+1}`;
     const meta=rowMeta[rid]||pcrShifts[i]?.s||pcrShifts[0].s;
-    rows.push({id:rid,b:"",s:meta,c:shiftCat(meta),_dyn_section:"pcr",_idx:i});
+    rows.push({id:rid,b:"",s:meta,c:shiftCat(meta,'pcr'),_dyn_section:"pcr",_idx:i});
   }
 
   // TEK.MON — dinamik +/-
@@ -877,7 +881,7 @@ function buildDynRows(){
   for(let i=0;i<tmCount;i++){
     const rid=`tm_${i+1}`;
     const meta=rowMeta[rid]||ALL_SHIFTS[i%ALL_SHIFTS.length].s;
-    rows.push({id:rid,b:i===0?"TEK.MON.":"",s:meta,c:shiftCat(meta),_dyn_section:"tm",_idx:i});
+    rows.push({id:rid,b:i===0?"TEK.MON.":"",s:meta,c:'tekmon',_dyn_section:"tm",_idx:i});
   }
   rows.push({_dyn_ctrl:"tm"});
 
@@ -962,7 +966,7 @@ function buildTable(){
     if(!row.id)return;
 
     const cl=SC[row.c]||SC.sabah;const alt=idx%2===0?"#fff":"var(--alt)";
-    const bs=row.b?`background:#3D3D3D;color:#fff;font-size:10.5px;font-weight:600`:`background:var(--alt);color:var(--txt3);font-size:10px`;
+    const bs=row.b?`background:#3D3D3D;color:#fff;font-size:13px;font-weight:600`:`background:var(--alt);color:var(--txt3);font-size:11px`;
 
     // Dinamik satırlar ve tüm satırlar için shift time seçici (admin)
     let saatCell;
@@ -997,16 +1001,17 @@ function buildTable(){
         return total>11;
       })();
       if(isAdmin&&!locked){
-        const cls=p?(dup||is11h?"s-dup":`s-${row.c}`):"s-empty";
+        const cls=p?(dup||is11h?"s-dup":row.c==="tekmon"?"s-tekmon":`s-${row.c}`):"s-empty";
         const stl=dup||is11h?"":p?`background:#${cl.bg};color:#${cl.fg};border:1px solid #${cl.bd}`:"";
         const flashCls=is11h?"flash-warn":"";
-        return `<td class="td-c" style="background:${alt}"><select class="sel ${cls} ${flashCls}"${stl?` style="${stl}"`:""}
+        const tekmonStl=row.c==="tekmon"&&p?"background:#fff;color:#C62828;border:2px solid #EF5350;font-weight:700":"";
+        return `<td class="td-c" style="background:${alt}"><select class="sel ${cls} ${flashCls}"${tekmonStl?` style="${tekmonStl}"`:(stl?` style="${stl}"`:""`)}
           data-rid="${row.id}" data-gi="${gi}" onchange="onSel(this)">
           <option value="">—</option>
           ${PERSONEL.map(pe=>`<option value="${pe}"${pe===p?" selected":""}>${pe}</option>`).join("")}
         </select></td>`;
       } else {
-        const bg=p?`#${cl.bg}`:alt;const fg=p?`#${cl.fg}`:"var(--txt3)";
+        const bg=p?(row.c==="tekmon"?"#fff":`#${cl.bg}`):alt;const fg=p?(row.c==="tekmon"?"#C62828":`#${cl.fg}`):"var(--txt3)";
         const flashStyle=is11h?"animation:flash 1s infinite":"";
         return `<td class="td-c" style="background:${bg};color:${fg};font-weight:${p?500:400};font-size:11px;padding:5px 4px;${flashStyle}">${p||"—"}</td>`;
       }
@@ -1471,7 +1476,8 @@ async function exportExcel(){
 
   const catXF={sabah:{t:XF.tSb,p:XF.pSb},prime:{t:XF.tPr,p:XF.pPr},aksam:{t:XF.tAk,p:XF.pAk},
     gece:{t:XF.tGe,p:XF.pGe},dis:{t:XF.tDi,p:XF.pDi},izin:{t:XF.tIz,p:XF.pIz},
-    yillik:{t:XF.tYl,p:XF.pYl},dogum:{t:XF.tDo,p:XF.pDo},ki:{t:XF.tKi,p:XF.pKi}};
+    yillik:{t:XF.tYl,p:XF.pYl},dogum:{t:XF.tDo,p:XF.pDo},ki:{t:XF.tKi,p:XF.pKi},
+    tekmon:{t:XF.tSb,p:XF.pSb}};
 
   // Tatil günleri
   let wdatesStr=Array(7).fill("");let holDays=Array(7).fill(false);
