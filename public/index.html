@@ -975,7 +975,7 @@ function buildTable(){
     if(row._dyn_ctrl)return;
     if(!row.id)return;
 
-    const meta=ROW_META[row.id]||{s:"?",c:"sabah"};const cl=SC[meta.c]||SC.sabah;
+    const cl=SC[row.c]||SC.sabah;
     const alt=idx%2===0?"#fff":"var(--alt)";
     const rs=rowSpanMap[row.id]||{label:'',span:1,isFirst:true};
 
@@ -1006,7 +1006,7 @@ function buildTable(){
       const is11h=(()=>{
         if(!p||["izin","yillik","dogum","ki"].includes(row.c))return false;
         let total=0;
-        dynRows.filter(x=>x.id&&!["izin","yillik","dogum","ki"].includes(ROW_META[x.id]?.c||"")).forEach(x=>{if((sched[x.id]||[])?.[gi]===p)total+=parseHours(x.s);});
+        dynRows.filter(x=>x.id&&!["izin","yillik","dogum","ki"].includes(x.c||"")).forEach(x=>{if((sched[x.id]||[])?.[gi]===p)total+=parseHours(x.s);});
         return total>11;
       })();
       if(isAdmin&&!locked){
