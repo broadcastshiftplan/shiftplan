@@ -121,6 +121,31 @@ function seedAdmin() {
     console.log(`[DB] Admin oluşturuldu: ${u}`);
   }
 }
+// ── Migration: Eksik kolonları ekle ──────────────────────────────────────
+try { db.exec("ALTER TABLE ki_entries ADD COLUMN date_given TEXT DEFAULT (date('now','localtime'))"); console.log('[DB] date_given kolonu eklendi'); } catch(e) {}
+try { db.exec("ALTER TABLE shift_requests ADD COLUMN needs_approval INTEGER DEFAULT 0"); } catch(e) {}
+try { db.exec(`CREATE TABLE IF NOT EXISTS vacation_plans (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  person TEXT NOT NULL,
+  week_start TEXT NOT NULL,
+  type TEXT DEFAULT 'yillik',
+  year INTEGER NOT NULL,
+  created_at TEXT DEFAULT (datetime('now','localtime')),
+  UNIQUE(person, week_start, type)
+)`); } catch(e) {}
+try { db.exec(`CREATE TABLE IF NOT EXISTS row_meta (
+  week_id INTEGER NOT NULL, row_id TEXT NOT NULL, shift_time TEXT DEFAULT '',
+  PRIMARY KEY(week_id, row_id)
+)`); } catch(e) {}
+try { db.exec(`CREATE TABLE IF NOT EXISTS week_sections (
+  week_id INTEGER NOT NULL, section TEXT NOT NULL, row_count INTEGER DEFAULT 1,
+  PRIMARY KEY(week_id, section)
+)`); } catch(e) {}
+try { db.exec(`CREATE TABLE IF NOT EXISTS holidays (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  date TEXT NOT NULL UNIQUE, name TEXT NOT NULL, year INTEGER NOT NULL
+)`); } catch(e) {}
+
 seedAdmin();
 
 // ── Türkiye Resmi Tatilleri (ilk kurulumda ekle) ───────────────────────────
@@ -142,6 +167,21 @@ function seedHolidays() {
   fixed.forEach(([d,n]) => ins.run(d, n, parseInt(d.slice(0,4))));
 }
 seedHolidays();
+
+// ── Migration: Eski veritabanına eksik kolonları ekle ─────────────────────
+(function runMigrations() {
+  const migrations = [
+    "ALTER TABLE ki_entries ADD COLUMN date_given TEXT DEFAULT (date('now','localtime'))",
+    "ALTER TABLE ki_entries ADD COLUMN week_id INTEGER",
+    "ALTER TABLE shift_requests ADD COLUMN needs_approval INTEGER DEFAULT 0",
+    "ALTER TABLE shift_requests ADD COLUMN resolved_by TEXT",
+  ];
+  migrations.forEach(sql => {
+    try { db.exec(sql); console.log('[DB Migration] OK:', sql.slice(0,50)); }
+    catch(e) { /* kolon zaten var, normal */ }
+  });
+})();
+
 
 // ── Genel ──────────────────────────────────────────────────────────────────
 const getSetting = k => db.prepare('SELECT value FROM settings WHERE key=?').get(k)?.value;
