@@ -7,7 +7,7 @@ const { sign, requireAuth, requireAdmin } = require('./auth');
 const {
   getSetting, setSetting,
   getUsers, getUserByUsername, createUser, updateUserPass, deleteUser,
-  getWeeks, getPublishedWeeks, getWeek, getWeekByDate, createWeek, lockWeek, unlockWeek, publishWeek, unpublishWeek, deleteWeek,
+  getWeeks, getPublishedWeeks, getWeek, getWeekByDate, createWeek, lockWeek, unlockWeek, publishWeek, unpublishWeek, draftWeek, deleteWeek,
   getSectionCounts, setSectionCount, getRowMeta, setRowMeta,
   getSchedule, upsertCell, getNotes, upsertNote,
   getHolidays, addHoliday, deleteHoliday, isHoliday,
@@ -143,6 +143,7 @@ app.post('/api/weeks', requireAdmin, (req,res) => {
 app.patch('/api/weeks/:id/lock',    requireAdmin, (req,res) => { lockWeek(req.params.id);     res.json({ok:true}); });
 app.patch('/api/weeks/:id/publish',  requireAdmin, (req,res) => { publishWeek(req.params.id);   res.json({ok:true}); });
 app.patch('/api/weeks/:id/unpublish',requireAdmin, (req,res) => { unpublishWeek(req.params.id); res.json({ok:true}); });
+app.patch('/api/weeks/:id/draft',    requireAdmin, (req,res) => { draftWeek(req.params.id);    res.json({ok:true}); });
 app.patch('/api/weeks/:id/unlock', requireAdmin, (req,res) => { unlockWeek(req.params.id); res.json({ok:true}); });
 app.delete('/api/weeks/:id',       requireAdmin, (req,res) => { deleteWeek(req.params.id); res.json({ok:true}); });
 
@@ -170,7 +171,7 @@ app.get('/api/schedule/:weekId', requireAuth, (req,res) => {
 app.put('/api/schedule/:weekId/cell', requireAdmin, (req,res) => {
   const w = getWeek(req.params.weekId);
   if (!w) return res.status(404).json({error:'Hafta yok'});
-  if (w.locked) return res.status(403).json({error:'Kilitli'});
+  if (w.locked && !w.draft_mode) return res.status(403).json({error:'Kilitli'});
   upsertCell(req.params.weekId, req.body.row_id, req.body.day_index, req.body.person||'');
   res.json({ok:true});
 });
