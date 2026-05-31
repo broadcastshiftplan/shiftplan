@@ -338,6 +338,22 @@ app.get('/api/backup', requireAdmin, (req,res) => {
 
 // ── İSTATİSTİK ───────────────────────────────────────────────────────────
 app.get('/api/stats', requireAuth, (req,res) => res.json(getStats(req.query.year?parseInt(req.query.year):null)));
+
+// Debug: personelin schedule kayıtlarını göster
+app.get('/api/debug/person/:name', requireAdmin, (req,res) => {
+  const person = decodeURIComponent(req.params.name);
+  const rows = db.prepare(`
+    SELECT s.week_id, s.row_id, s.day_index, s.person,
+           COALESCE(rm.shift_time,'(yok)') as shift_time,
+           w.label as week_label
+    FROM schedule s
+    LEFT JOIN row_meta rm ON rm.week_id=s.week_id AND rm.row_id=s.row_id
+    LEFT JOIN weeks w ON w.id=s.week_id
+    WHERE s.person=? AND s.person!=''
+    ORDER BY s.week_id, s.row_id, s.day_index
+  `).all(person);
+  res.json(rows);
+});
 app.get('/api/years', requireAuth, (req,res) => res.json(getYears()));
 app.get('/api/ki/summary', requireAuth, (req,res) => {
   const s = getKiSummary();
