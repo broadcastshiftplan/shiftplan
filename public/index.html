@@ -537,6 +537,7 @@ textarea.nt{width:100%;box-sizing:border-box;border:1px solid #e0e0e0;border-rad
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 // ═══════════════════════════════════════════════════════════
 // SABİTLER
@@ -1963,7 +1964,7 @@ async function exportStatsExcel(){
   const shXml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetFormatPr defaultRowHeight="15"/><cols>${colsXml}</cols><sheetData>${rwXml}</sheetData>${mgXml}</worksheet>`;
   const ssXml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="${ss.length}" uniqueCount="${ss.length}">${ss.map(s=>`<si><t xml:space="preserve">${esc(s)}</t></si>`).join("")}</sst>`;
   const wbXml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="İstatistik" sheetId="1" r:id="rId1"/></sheets></workbook>`;
-  const wbRXml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/><Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings" Target="sharedStrings.xml"/></Relationships>`;
+  const wbRXml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/><Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings" Target="sharedStrings.xml"/><Relationship Id="rId4" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet2.xml"/></Relationships>`;
   const relsXml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>`;
   const ctXml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/><Override PartName="/xl/sharedStrings.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml"/></Types>`;
 
@@ -2144,7 +2145,12 @@ async function loadSodexoYearly(year){
   const thCells = MONTHS_S.map(m=>`<th style="padding:3px 2px;background:#2C3E50;color:#D3D1C7;text-align:center;font-size:10px;font-weight:500;min-width:30px">${m}</th>`).join('');
 
   let h=`<div style="margin-top:20px;border-top:2px solid var(--bd);padding-top:16px">
-    <div style="font-size:12px;font-weight:600;color:var(--txt2);margin-bottom:8px;letter-spacing:1px">📽 ${year} YILI — YILLIK KARŞILAŞTIRMA</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <div style="font-size:12px;font-weight:600;color:var(--txt2);letter-spacing:1px">📽 ${year} YILI — YILLIK KARŞILAŞTIRMA</div>
+      <button class="btn btn-sm" style="background:var(--navy);color:#fff;font-size:11px" onclick="downloadYearlyPNG(${year})">
+        <i class="ti ti-photo-down" aria-hidden="true"></i> PNG İndir
+      </button>
+    </div>
     <div style="display:flex;gap:14px;align-items:center;margin-bottom:12px;font-size:11px;color:var(--txt2)">
       <span style="display:flex;align-items:center;gap:4px"><span style="width:16px;height:6px;border-radius:3px;background:#455A64;display:inline-block"></span>Onaysız</span>
       <span style="display:flex;align-items:center;gap:4px"><span style="width:16px;height:6px;border-radius:3px;background:#4CAF50;display:inline-block"></span>Onaylı</span>
@@ -2302,18 +2308,80 @@ async function exportSodexoExcel(){
   const mgXml=merges.length?`<mergeCells count="${merges.length}">${merges.map(m=>`<mergeCell ref="${m}"/>`).join("")}</mergeCells>`:"";
   const shXml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetFormatPr defaultRowHeight="15"/><cols>${colsXml}</cols><sheetData>${rwXml}</sheetData>${mgXml}</worksheet>`;
   const ssXml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="${ss.length}" uniqueCount="${ss.length}">${ss.map(s=>`<si><t xml:space="preserve">${esc(s)}</t></si>`).join("")}</sst>`;
-  const wbXml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Sodexo" sheetId="1" r:id="rId1"/></sheets></workbook>`;
-  const wbRXml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/><Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings" Target="sharedStrings.xml"/></Relationships>`;
+  // 2. sayfa — özet tablo
+  const persons2=PERSONEL.filter(p=>byPerson[p]);
+  const maxTot2=Math.max(...persons2.map(p=>Object.keys(byPerson[p]).length),1);
+  const ss2=[];const ssM2={};
+  const S2=v=>{const k=String(v||"");if(!(k in ssM2)){ssM2[k]=ss2.length;ss2.push(k);}return ssM2[k];};
+
+  // Özet sayfa satırları
+  const xr2=[];let ri2=0;
+  // Başlık
+  const ot=[`<c r="A${ri2+1}" t="s" s="0"><v>${S2(`YAYIN MÜHENDİSLİĞİ — SODEXO ${label} — ÖZET`)}</v></c>`];
+  for(let i=1;i<=3;i++)ot.push(`<c r="${CL(i)}${ri2+1}" s="0"/>`);
+  xr2.push(`<row r="${ri2+1}" ht="24" customHeight="1">${ot.join("")}</row>`);ri2++;
+
+  // Boş satır
+  xr2.push(`<row r="${ri2+1}"><c r="A${ri2+1}" s="0"/></row>`);ri2++;
+
+  // Sütun başlıkları
+  const oh=[`<c r="A${ri2+1}" t="s" s="0"><v>${S2("Personel")}</v></c>`,
+    `<c r="B${ri2+1}" t="s" s="0"><v>${S2("Toplam Gece")}</v></c>`,
+    `<c r="C${ri2+1}" t="s" s="0"><v>${S2("Onaylı")}</v></c>`,
+    `<c r="D${ri2+1}" t="s" s="0"><v>${S2("Onay %")}</v></c>`,
+    `<c r="E${ri2+1}" t="s" s="0"><v>${S2("Görsel")}</v></c>`];
+  xr2.push(`<row r="${ri2+1}" ht="18" customHeight="1">${oh.join("")}</row>`);ri2++;
+
+  // Personel satırları
+  persons2.forEach((person,pi)=>{
+    const pn=byPerson[person]||{};
+    const tot=Object.keys(pn).length;
+    const appr=Object.values(pn).filter(a=>a&&a.approved).length;
+    const pct=tot>0?Math.round((appr/tot)*100):0;
+    const barLen=Math.max(1,Math.round((tot/maxTot2)*20));
+    const bar="█".repeat(barLen);
+    const pr=[
+      `<c r="A${ri2+1}" t="s" s="0"><v>${S2(person)}</v></c>`,
+      `<c r="B${ri2+1}" t="n" s="0"><v>${tot}</v></c>`,
+      `<c r="C${ri2+1}" t="n" s="0"><v>${appr}</v></c>`,
+      `<c r="D${ri2+1}" t="n" s="0"><v>${pct}</v></c>`,
+      `<c r="E${ri2+1}" t="s" s="0"><v>${S2(bar)}</v></c>`,
+    ];
+    xr2.push(`<row r="${ri2+1}" ht="16" customHeight="1">${pr.join("")}</row>`);ri2++;
+  });
+
+  const sh2Xml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetFormatPr defaultRowHeight="15"/><cols><col min="1" max="1" width="22" customWidth="1"/><col min="2" max="2" width="14" customWidth="1"/><col min="3" max="3" width="10" customWidth="1"/><col min="4" max="4" width="10" customWidth="1"/><col min="5" max="5" width="28" customWidth="1"/></cols><sheetData>${xr2.join("")}</sheetData></worksheet>`;
+  const ss2Xml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="${ss2.length}" uniqueCount="${ss2.length}">${ss2.map(s=>`<si><t xml:space="preserve">${s.replace(/&/g,"&amp;").replace(/</g,"&lt;")}</t></si>`).join("")}</sst>`;
+
+  const wbXml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Sodexo Detay" sheetId="1" r:id="rId1"/><sheet name="Özet" sheetId="2" r:id="rId4"/></sheets></workbook>`;
+  const wbRXml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/><Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings" Target="sharedStrings.xml"/><Relationship Id="rId4" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet2.xml"/></Relationships>`;
   const relsXml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>`;
-  const ctXml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/><Override PartName="/xl/sharedStrings.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml"/></Types>`;
+  const ctXml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/worksheets/sheet2.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/><Override PartName="/xl/sharedStrings.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml"/></Types>`;
   const zipS=new JSZip();
   zipS.file("[Content_Types].xml",ctXml);zipS.folder("_rels").file(".rels",relsXml);
   const xlS=zipS.folder("xl");xlS.file("workbook.xml",wbXml);xlS.folder("_rels").file("workbook.xml.rels",wbRXml);
-  xlS.folder("worksheets").file("sheet1.xml",shXml);xlS.file("styles.xml",sty);xlS.file("sharedStrings.xml",ssXml);
+  xlS.folder("worksheets").file("sheet1.xml",shXml);xlS.folder("worksheets").file("sheet2.xml",sh2Xml);xlS.file("styles.xml",sty);xlS.file("sharedStrings.xml",ssXml);
   const blob=await zipS.generateAsync({type:"blob",mimeType:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
   const a=document.createElement("a");a.href=URL.createObjectURL(blob);
   a.download=`Sodexo_${label.replace(/[\s–—\/]/g,"_")}.xlsx`;a.click();
 }
+async function downloadYearlyPNG(year){
+  const el = document.getElementById('sdx-yearly');
+  if(!el||!el.innerHTML){alert('Önce yıllık özeti yükleyin.');return;}
+  try {
+    const canvas = await html2canvas(el, {
+      backgroundColor: '#ffffff',
+      scale: 2,
+      useCORS: true,
+      logging: false
+    });
+    const a = document.createElement('a');
+    a.href = canvas.toDataURL('image/png');
+    a.download = `Sodexo_Yillik_${year}.png`;
+    a.click();
+  } catch(e) { alert('PNG indirilemedi: ' + e.message); }
+}
+
 </script>
 </body>
 </html>
