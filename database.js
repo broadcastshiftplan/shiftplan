@@ -311,27 +311,33 @@ const getStats = year => {
     GROUP BY s.person, s.row_id, s.week_id
   `).all(...wids);
 
+  // Varsayılan başlangıç saatleri (row_meta'da kayıt yoksa)
+  const DEFAULT_START = {
+    pcr_1:'06:15',pcr_2:'08:00',pcr_3:'10:00',pcr_4:'15:00',pcr_5:'17:00',
+    tm_1:'06:15',tm_2:'08:00',tm_3:'12:00',tm_4:'15:00',tm_5:'17:00',tm_6:'00:00',
+    olcu_1:'08:00',dis_1:'08:00',dis_2:'08:00',
+  };
+
   // Başlangıç saatine göre kategori belirle
   function startCat(row_id, shift_time) {
-    // Özel satırlar
+    // Özel satırlar (saate bakma)
     if (row_id.startsWith('ki_'))       return 'ki';
     if (row_id.startsWith('yl_'))       return 'yillik';
     if (row_id.startsWith('dogum_'))    return 'dogum';
     if (row_id.startsWith('hafizin_'))  return 'izin';
     if (row_id.startsWith('dis_'))      return 'dis';
-    if (row_id.startsWith('olcu_'))     return 'sabah';
 
-    // shift_time'dan başlangıç saatini oku
-    const m = (shift_time||'').match(/^(\d{1,2}):(\d{2})/);
-    if (!m) return null; // kategorisiz — saymayalım
+    // Önce row_meta'daki shift_time, yoksa varsayılan
+    const st = (shift_time && shift_time.trim()) ? shift_time : (DEFAULT_START[row_id] || '');
+    const m = st.match(/^(\d{1,2}):(\d{2})/);
+    if (!m) return null; // tanımsız — sayma
 
     const h = parseInt(m[1]) + parseInt(m[2]) / 60;
-
-    if (h < 1)        return 'gece';       // 00:00 – 00:59
-    if (h < 10)       return 'sabah';      // 06:15 – 09:59
-    if (h < 12)       return 'gec_gunduz'; // 10:00 – 11:59
-    if (h < 15)       return 'prime';      // 12:00 – 14:59
-    return 'aksam';                        // 15:00+
+    if (h < 1)   return 'gece';       // 00:00
+    if (h < 10)  return 'sabah';      // 06:15 – 09:59
+    if (h < 12)  return 'gec_gunduz'; // 10:00 – 11:59
+    if (h < 15)  return 'prime';      // 12:00 – 14:59
+    return 'aksam';                   // 15:00+
   }
 
   const s = {};
