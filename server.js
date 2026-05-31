@@ -141,7 +141,11 @@ app.post('/api/weeks', requireAdmin, (req,res) => {
   res.json({ id: weekId, label, start_date, end_date, auto_populated: autoCount });
 });
 app.patch('/api/weeks/:id/lock',    requireAdmin, (req,res) => { lockWeek(req.params.id);     res.json({ok:true}); });
-app.patch('/api/weeks/:id/publish',  requireAdmin, (req,res) => { publishWeek(req.params.id);   res.json({ok:true}); });
+app.patch('/api/weeks/:id/publish', requireAdmin, (req,res) => {
+  publishWeek(req.params.id);
+  lockWeek(req.params.id);
+  res.json({ok:true});
+});
 app.patch('/api/weeks/:id/unpublish',requireAdmin, (req,res) => { unpublishWeek(req.params.id); res.json({ok:true}); });
 app.patch('/api/weeks/:id/draft',    requireAdmin, (req,res) => { draftWeek(req.params.id);    res.json({ok:true}); });
 app.patch('/api/weeks/:id/unlock', requireAdmin, (req,res) => { unlockWeek(req.params.id); res.json({ok:true}); });
