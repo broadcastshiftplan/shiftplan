@@ -147,7 +147,11 @@ app.patch('/api/weeks/:id/publish', requireAdmin, (req,res) => {
   res.json({ok:true});
 });
 app.patch('/api/weeks/:id/unpublish',requireAdmin, (req,res) => { unpublishWeek(req.params.id); res.json({ok:true}); });
-app.patch('/api/weeks/:id/draft',    requireAdmin, (req,res) => { draftWeek(req.params.id);    res.json({ok:true}); });
+app.patch('/api/weeks/:id/draft', requireAdmin, (req,res) => {
+  draftWeek(req.params.id);
+  unlockWeek(req.params.id);
+  res.json({ok:true});
+});
 app.patch('/api/weeks/:id/unlock', requireAdmin, (req,res) => { unlockWeek(req.params.id); res.json({ok:true}); });
 app.delete('/api/weeks/:id',       requireAdmin, (req,res) => { deleteWeek(req.params.id); res.json({ok:true}); });
 
