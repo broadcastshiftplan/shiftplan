@@ -1837,7 +1837,7 @@ async function exportStatsExcel(){
 
   // Fonts: 0=normal,1=beyaz bold,2=lacivert bold,3=lavender bold,4=siyah bold, 5-14=cats
   const fonts=[{sz:10,n:"Arial"},{sz:13,n:"Arial",b:1,c:"FFFFFFFF"},{sz:10,n:"Arial",b:1,c:"FF1F3864"},{sz:11,n:"Arial",b:1,c:"FF283593"},{sz:10,n:"Arial",b:1,c:"FF000000"},...cats.map(c=>({sz:10,n:"Arial",b:1,c:catFg[c]}))];
-  const mf2=f=>`<font>${f.b?"<b/>":""}${f.c?`<color rgb="${f.c}"/>`:'<color theme="1"/>'}<sz val="${f.sz}"/><name val="${f.n}"/></font>`;
+  const mf2=f=>'<font>'+(f.b?'<b/>':'')+(f.c?'<color rgb="'+f.c+'"/>':`<color theme="1"/>`)+'<sz val="'+f.sz+'"/><name val="'+f.n+'"/></font>';
 
   // 0=thin inner, 1=medium outer (lacivert)
   const thinBrd=`<left style="thin"><color rgb="FF9E9E9E"/></left><right style="thin"><color rgb="FF9E9E9E"/></right><top style="thin"><color rgb="FF9E9E9E"/></top><bottom style="thin"><color rgb="FF9E9E9E"/></bottom>`;
