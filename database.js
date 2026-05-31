@@ -300,20 +300,46 @@ const getStats = year => {
     : db.prepare('SELECT id FROM weeks').all().map(w=>w.id);
   if (!wids.length) return {};
   const ph = wids.map(()=>'?').join(',');
-  const rows = db.prepare(`SELECT person,row_id,COUNT(*) cnt FROM schedule WHERE week_id IN (${ph}) AND person!='' GROUP BY person,row_id`).all(...wids);
+  // schedule + row_meta join ile shift_time bilgisini al
+  const rows = db.prepare(`
+    SELECT s.person, s.row_id, s.week_id,
+           COALESCE(rm.shift_time, '') as shift_time,
+           COUNT(*) cnt
+    FROM schedule s
+    LEFT JOIN row_meta rm ON rm.week_id=s.week_id AND rm.row_id=s.row_id
+    WHERE s.week_id IN (${ph}) AND s.person!=''
+    GROUP BY s.person, s.row_id, s.week_id
+  `).all(...wids);
+
+  // Başlangıç saatine göre kategori belirle
+  function startCat(row_id, shift_time) {
+    // Özel satırlar
+    if (row_id.startsWith('ki_'))       return 'ki';
+    if (row_id.startsWith('yl_'))       return 'yillik';
+    if (row_id.startsWith('dogum_'))    return 'dogum';
+    if (row_id.startsWith('hafizin_'))  return 'izin';
+    if (row_id.startsWith('dis_'))      return 'dis';
+    if (row_id.startsWith('olcu_'))     return 'sabah';
+
+    // shift_time'dan başlangıç saatini oku
+    const m = (shift_time||'').match(/^(\d{1,2}):(\d{2})/);
+    if (!m) return null; // kategorisiz — saymayalım
+
+    const h = parseInt(m[1]) + parseInt(m[2]) / 60;
+
+    if (h < 1)        return 'gece';       // 00:00 – 00:59
+    if (h < 10)       return 'sabah';      // 06:15 – 09:59
+    if (h < 12)       return 'gec_gunduz'; // 10:00 – 11:59
+    if (h < 15)       return 'prime';      // 12:00 – 14:59
+    return 'aksam';                        // 15:00+
+  }
+
   const s = {};
   rows.forEach(r => {
-    if (!s[r.person]) s[r.person] = {sabah:0,prime:0,aksam:0,gece:0,dis:0,izin:0,yillik:0,dogum:0,ki:0,total:0};
-    let cat = 'diger';
-    if (r.row_id.startsWith('ki_'))    cat = 'ki';
-    else if (r.row_id.startsWith('yl_'))    cat = 'yillik';
-    else if (r.row_id.startsWith('dogum_')) cat = 'dogum';
-    else if (r.row_id.startsWith('hafizin_')) cat = 'izin';
-    else if (r.row_id.startsWith('dis_'))   cat = 'dis';
-    else if (r.row_id.startsWith('olcu_'))  cat = 'sabah';
-    // pcr_ ve tm_ satırları için row_meta'dan shift_time'a bakabiliriz ama basit tutuyoruz
+    const cat = startCat(r.row_id, r.shift_time);
+    if (!cat) return; // kategorisiz sayma
+    if (!s[r.person]) s[r.person] = {sabah:0,gec_gunduz:0,prime:0,aksam:0,gece:0,dis:0,izin:0,yillik:0,dogum:0,ki:0};
     s[r.person][cat] = (s[r.person][cat]||0) + r.cnt;
-    s[r.person].total += r.cnt;
   });
   return s;
 };
