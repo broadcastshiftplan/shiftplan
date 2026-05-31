@@ -1858,8 +1858,8 @@ async function exportStatsExcel(){
   const sty=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><numFmts count="0"/><fonts count="${fonts.length}">${fonts.map(mf2).join("")}</fonts><fills count="${fills.length}">${fills.map(mf).join("")}</fills>${brdX}${xfsXml}<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>`;
 
   const CL=c=>String.fromCharCode(65+c);
-  const CV=(col,r,val,xi)=>{const ref=`${CL(col)}${r+1}`;if(!val&&val!==0)return`<c r="${ref}" s="${xi}"/>`;return`<c r="${ref}" t="s" s="${xi}"><v>${S(val)}</v></c>`;};
-  const CVN=(col,r,val,xi)=>{const ref=`${CL(col)}${r+1}`;if(val===undefined||val===null||val==="")return`<c r="${ref}" s="${xi}"/>`;return`<c r="${ref}" t="n" s="${xi}"><v>${val}</v></c>`;};
+  const CV=(col,r,val,xi)=>{const ref=`${CL(col)}${r+1}`;if(!val&&val!==0)return`<c r="${ref}" s="${xi}" t="s"><v>${S("")}</v></c>`;return`<c r="${ref}" t="s" s="${xi}"><v>${S(val)}</v></c>`;};
+  const CVN=(col,r,val,xi)=>{const ref=`${CL(col)}${r+1}`;if(val===undefined||val===null||val==="")return`<c r="${ref}" s="${xi}" t="s"><v>${S("")}</v></c>`;return`<c r="${ref}" t="n" s="${xi}"><v>${val}</v></c>`;};
   const MG=(r1,c1,r2,c2)=>`${CL(c1)}${r1+1}:${CL(c2)}${r2+1}`;
 
   const xlrows=[];const merges=[];let ri=0;
