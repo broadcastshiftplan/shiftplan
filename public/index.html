@@ -2093,18 +2093,13 @@ async function loadSodexo(){
 
 async function loadSodexoYearly(year){
   if(!year) year = parseInt(document.getElementById('sdx-year').value);
-
-  // Tüm 12 ay için veri çek
   const allMonthData = await Promise.all(
     Array.from({length:12},(_,i)=>
       api('GET',`/api/sodexo?year=${year}&month=${i+1}`).catch(()=>({nights:[]}))
     )
   );
-
   const MONTHS_S=['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'];
-
-  // Her personel için aylık özet
-  const personData = {};
+  const personData={};
   allMonthData.forEach((data,mi)=>{
     if(!data.nights)return;
     data.nights.forEach(n=>{
@@ -2113,74 +2108,73 @@ async function loadSodexoYearly(year){
       if(n.approval&&n.approval.approved)personData[n.person].approved[mi]++;
     });
   });
+  const activePersons=PERSONEL.filter(p=>personData[p]&&personData[p].months.reduce((a,b)=>a+b,0)>0);
+  if(activePersons.length===0){document.getElementById('sdx-yearly').innerHTML='';return;}
+  const MX=Math.max(...activePersons.flatMap(p=>personData[p].months));
+  const totals=activePersons.map(p=>personData[p].months.reduce((a,b)=>a+b,0));
+  const maxTot=Math.max(...totals);
 
-  // Sadece gece nöbeti olan personel
-  const activePersons = PERSONEL.filter(p=>personData[p]&&personData[p].months.reduce((a,b)=>a+b,0)>0);
-
-  if(activePersons.length===0){
-    document.getElementById('sdx-yearly').innerHTML='';
-    return;
+  function monthCell(count,appr,bg){
+    if(!count) return `<td style="padding:2px 1px;background:${bg};border-bottom:0.5px solid var(--bd)"><div style="width:18px;height:40px;margin:auto;border-radius:4px;background:var(--alt);opacity:.4"></div></td>`;
+    const tot=Math.max(8,Math.round((count/MX)*40));
+    const aH=Math.round((appr/count)*tot);
+    const uH=tot-aH;
+    return `<td style="padding:2px 1px;background:${bg};border-bottom:0.5px solid var(--bd)">
+      <div style="width:18px;margin:auto;display:flex;flex-direction:column;align-items:center;gap:1px">
+        <div style="font-size:8px;color:var(--txt2);line-height:1.4">${count}</div>
+        <div style="width:14px;border-radius:4px;overflow:hidden;display:flex;flex-direction:column">
+          ${aH?`<div style="height:${aH}px;background:#4CAF50"></div>`:''}
+          ${uH?`<div style="height:${uH}px;background:#455A64"></div>`:''}
+        </div>
+        <div style="font-size:8px;line-height:1.2;color:${appr===count?'#4CAF50':'transparent'}">${appr===count?'✓':'.'}</div>
+      </div>
+    </td>`;
   }
 
-  const maxCount = Math.max(...activePersons.flatMap(p=>personData[p].months));
+  function yearCell(total,bg){
+    const W=Math.max(4,Math.round((total/maxTot)*120));
+    return `<td style="padding:4px 10px;background:${bg};border-bottom:0.5px solid var(--bd);border-left:1px solid var(--bd);vertical-align:middle">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="height:10px;width:${W}px;background:#C62828;border-radius:5px;flex-shrink:0"></div>
+        <span style="font-size:11px;color:var(--txt2);font-weight:500">${total}</span>
+      </div>
+    </td>`;
+  }
 
-  let html2 = `<div style="margin-top:20px;border-top:2px solid var(--bd);padding-top:16px">
-    <div style="font-size:12px;font-weight:600;color:var(--txt2);margin-bottom:12px;letter-spacing:1px">
-      📽 ${year} YILI — YILLIK GECE NÖBETİ ÖZETİ
+  const thCells = MONTHS_S.map(m=>`<th style="padding:3px 2px;background:#2C3E50;color:#D3D1C7;text-align:center;font-size:10px;font-weight:500;min-width:30px">${m}</th>`).join('');
+
+  let h=`<div style="margin-top:20px;border-top:2px solid var(--bd);padding-top:16px">
+    <div style="font-size:12px;font-weight:600;color:var(--txt2);margin-bottom:8px;letter-spacing:1px">📽 ${year} YILI — YILLIK KARŞILAŞTIRMA</div>
+    <div style="display:flex;gap:14px;align-items:center;margin-bottom:12px;font-size:11px;color:var(--txt2)">
+      <span style="display:flex;align-items:center;gap:4px"><span style="width:16px;height:6px;border-radius:3px;background:#455A64;display:inline-block"></span>Onaysız</span>
+      <span style="display:flex;align-items:center;gap:4px"><span style="width:16px;height:6px;border-radius:3px;background:#4CAF50;display:inline-block"></span>Onaylı</span>
+      <span style="display:flex;align-items:center;gap:4px"><span style="width:16px;height:6px;border-radius:3px;background:#C62828;display:inline-block"></span>Yıllık toplam</span>
     </div>
     <div style="overflow-x:auto"><table style="border-collapse:collapse;font-size:11px;width:100%;min-width:600px">
     <thead><tr>
-      <th style="text-align:left;padding:5px 10px;background:var(--blue2);color:#fff;min-width:140px">Personel</th>
-      ${MONTHS_S.map(m=>`<th style="padding:3px 2px;background:var(--gece-b,#2C3E50);color:#D3D1C7;text-align:center;font-size:10px;font-weight:500;min-width:44px">${m}</th>`).join('')}
-      <th style="padding:5px 8px;background:var(--navy);color:#fff;text-align:center;border-left:2px solid rgba(255,255,255,.2)">Toplam</th>
-      <th style="padding:5px 8px;background:#2E7D32;color:#fff;text-align:center">Onaylı</th>
+      <th style="text-align:left;padding:5px 10px;background:var(--blue2);color:#fff;min-width:140px"></th>
+      ${thCells}
+      <th style="padding:5px 8px;background:var(--navy);color:#fff;text-align:center;border-left:1px solid rgba(255,255,255,.2)">Top.</th>
+      <th style="padding:5px 8px;background:#2E7D32;color:#fff;text-align:center">Onay</th>
+      <th style="padding:5px 10px;background:var(--navy);color:#fff;text-align:left;border-left:1px solid rgba(255,255,255,.2);min-width:160px">Yıllık Karşılaştırma</th>
     </tr></thead><tbody>`;
 
   activePersons.forEach((person,pi)=>{
-    const pd = personData[person];
-    const total = pd.months.reduce((a,b)=>a+b,0);
-    const totalAppr = pd.approved.reduce((a,b)=>a+b,0);
-    const bg = pi%2===0?'#fff':'var(--alt)';
-
-    const cells = pd.months.map((count,mi)=>{
-      const appr = pd.approved[mi];
-      if(count===0){
-        return `<td style="padding:2px;background:${bg};border-bottom:0.5px solid var(--bd)">
-          <div style="width:34px;height:46px;margin:auto;border-radius:3px;background:var(--alt);border:0.5px dashed var(--bd)"></div>
-        </td>`;
-      }
-      const apprH = maxCount>0?Math.max(4,Math.round((appr/maxCount)*28)):0;
-      const unapprH = maxCount>0?Math.max(4,Math.round(((count-appr)/maxCount)*28)):0;
-
-      return `<td style="padding:2px;background:${bg};border-bottom:0.5px solid var(--bd)">
-        <div style="width:34px;margin:auto;display:flex;flex-direction:column;align-items:center;gap:1px">
-          <div style="font-size:9px;font-weight:600;color:var(--txt2);line-height:1.2">${count}</div>
-          <div style="width:34px;height:46px;background:#1C2C3A;border-radius:3px;border:2px solid #37474F;display:flex;flex-direction:column;overflow:hidden">
-            <div style="display:flex;gap:2px;padding:2px 2px 1px;flex-shrink:0">
-              ${[1,2].map(()=>'<div style="width:8px;height:3px;border-radius:1px;background:#0D1B25"></div>').join('')}
-            </div>
-            <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;padding:0 2px 1px;gap:1px">
-              ${appr>0?`<div style="width:100%;height:${apprH}px;background:#C8E6C9;border-radius:1px;display:flex;align-items:center;justify-content:center"><span style="font-size:7px;color:#1B5E20;font-weight:700">${appr}</span></div>`:''}
-              ${(count-appr)>0?`<div style="width:100%;height:${unapprH}px;background:#455A64;border-radius:1px;display:flex;align-items:center;justify-content:center"><span style="font-size:7px;color:#90A4AE">${count-appr}</span></div>`:''}
-            </div>
-            <div style="display:flex;gap:2px;padding:1px 2px 2px;flex-shrink:0">
-              ${[1,2].map(()=>'<div style="width:8px;height:3px;border-radius:1px;background:#0D1B25"></div>').join('')}
-            </div>
-          </div>
-        </div>
-      </td>`;
-    }).join('');
-
-    html2 += `<tr>
-      <td style="padding:5px 10px;font-weight:600;font-size:11px;color:var(--navy);background:${bg};border-bottom:0.5px solid var(--bd)">${person}</td>
+    const pd=personData[person];
+    const tot=pd.months.reduce((a,b)=>a+b,0);
+    const totA=pd.approved.reduce((a,b)=>a+b,0);
+    const bg=pi%2===0?'#fff':'var(--alt)';
+    const cells=pd.months.map((c,mi)=>monthCell(c,pd.approved[mi],bg)).join('');
+    h+=`<tr>
+      <td style="padding:4px 10px;font-weight:600;font-size:11px;color:var(--navy);background:${bg};border-bottom:0.5px solid var(--bd)">${person}</td>
       ${cells}
-      <td style="padding:5px 8px;text-align:center;font-weight:700;font-size:14px;color:var(--navy);background:${bg};border-bottom:0.5px solid var(--bd);border-left:2px solid var(--bd)">${total}</td>
-      <td style="padding:5px 8px;text-align:center;font-weight:700;font-size:14px;color:#2E7D32;background:${bg};border-bottom:0.5px solid var(--bd)">${totalAppr}</td>
+      <td style="padding:4px 8px;text-align:center;font-weight:600;font-size:13px;color:var(--navy);background:${bg};border-bottom:0.5px solid var(--bd);border-left:1px solid var(--bd)">${tot}</td>
+      <td style="padding:4px 8px;text-align:center;font-weight:600;font-size:13px;color:#2E7D32;background:${bg};border-bottom:0.5px solid var(--bd)">${totA}</td>
+      ${yearCell(tot,bg)}
     </tr>`;
   });
-
-  html2 += '</tbody></table></div></div>';
-  document.getElementById('sdx-yearly').innerHTML = html2;
+  h+='</tbody></table></div></div>';
+  document.getElementById('sdx-yearly').innerHTML=h;
 }
 
 async function toggleSodexo(person, date){
@@ -2237,10 +2231,11 @@ async function exportSodexoExcel(){
   xlrows.push(t0);merges.push(MG(ri,0,ri,NC));ri++;
 
   // Sütun başlıkları
+  const maxYearlyTotal=Math.max(...PERSONEL.filter(p=>byPerson[p]).map(p=>Object.keys(byPerson[p]).length));
   const hdr=[CV(0,ri,"Personel",XF.hdr_name),...allDates.map((d,i)=>{
     const dt=new Date(d);const days=['Paz','Pzt','Sal','Çar','Per','Cum','Cmt'];
     return CV(i+1,ri,`${days[dt.getDay()]} ${String(dt.getDate()).padStart(2,'0')}.${String(dt.getMonth()+1).padStart(2,'0')}`,XF.hdr_night);
-  }),CV(allDates.length+1,ri,"Toplam",XF.hdr_night),CV(allDates.length+2,ri,"Onaylı",XF.hdr_night)];
+  }),CV(allDates.length+1,ri,"Toplam",XF.hdr_night),CV(allDates.length+2,ri,"Onaylı",XF.hdr_night),CV(allDates.length+3,ri,"Yıllık Karşılaştırma",XF.hdr_night)];
   xlrows.push(hdr);ri++;
 
   // Personel satırları
@@ -2251,11 +2246,12 @@ async function exportSodexoExcel(){
     const row=[CV(0,ri,person,XF.name),...allDates.map((d,i)=>{
       if(!pn.hasOwnProperty(d))return CV(i+1,ri,"",XF.empty);
       return CV(i+1,ri,pn[d]&&pn[d].approved?"✓":"🌙",pn[d]&&pn[d].approved?XF.approved:XF.night);
-    }),CVN(allDates.length+1,ri,total,XF.total),CVN(allDates.length+2,ri,approved,XF.ok_total)];
+    }),CVN(allDates.length+1,ri,total,XF.total),CVN(allDates.length+2,ri,approved,XF.ok_total),
+    CV(allDates.length+3,ri,"█".repeat(Math.max(1,Math.round((total/(maxYearlyTotal||1))*20)))+` ${total}`,XF.yearly)];
     xlrows.push(row);ri++;
   });
 
-  const colWidths=[22,...allDates.map(()=>7),10,10];
+  const colWidths=[22,...allDates.map(()=>7),10,10,30];
   const colsXml=colWidths.map((w,i)=>`<col min="${i+1}" max="${i+1}" width="${w}" customWidth="1"/>`).join("");
   const rwXml=xlrows.map((cells,r)=>`<row r="${r+1}" ht="${r===0?22:r===1?18:15}" customHeight="1">${cells.join("")}</row>`).join("");
   const mgXml=merges.length?`<mergeCells count="${merges.length}">${merges.map(m=>`<mergeCell ref="${m}"/>`).join("")}</mergeCells>`:"";
