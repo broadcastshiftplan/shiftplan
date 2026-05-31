@@ -7,7 +7,7 @@ const { sign, requireAuth, requireAdmin } = require('./auth');
 const {
   getSetting, setSetting,
   getUsers, getUserByUsername, createUser, updateUserPass, deleteUser,
-  getWeeks, getWeek, getWeekByDate, createWeek, lockWeek, unlockWeek, deleteWeek,
+  getWeeks, getPublishedWeeks, getWeek, getWeekByDate, createWeek, lockWeek, unlockWeek, publishWeek, unpublishWeek, deleteWeek,
   getSectionCounts, setSectionCount, getRowMeta, setRowMeta,
   getSchedule, upsertCell, getNotes, upsertNote,
   getHolidays, addHoliday, deleteHoliday, isHoliday,
@@ -126,7 +126,10 @@ app.delete('/api/users/:id', requireAdmin, (req,res) => {
 });
 
 // ── HAFTALAR ─────────────────────────────────────────────────────────────
-app.get('/api/weeks', requireAuth, (req,res) => res.json(getWeeks()));
+app.get('/api/weeks', requireAuth, (req,res) => {
+  if (req.user.role === 'admin') return res.json(getWeeks());
+  res.json(getPublishedWeeks());
+});
 app.post('/api/weeks', requireAdmin, (req,res) => {
   const { label, start_date, end_date } = req.body;
   if (!label||!start_date||!end_date) return res.status(400).json({error:'Eksik'});
@@ -137,7 +140,9 @@ app.post('/api/weeks', requireAdmin, (req,res) => {
   if (autoCount > 0) console.log(`[Auto] ${autoCount} kişi yıllık plandan eklendi → hafta ${weekId}`);
   res.json({ id: weekId, label, start_date, end_date, auto_populated: autoCount });
 });
-app.patch('/api/weeks/:id/lock',   requireAdmin, (req,res) => { lockWeek(req.params.id);   res.json({ok:true}); });
+app.patch('/api/weeks/:id/lock',    requireAdmin, (req,res) => { lockWeek(req.params.id);     res.json({ok:true}); });
+app.patch('/api/weeks/:id/publish',  requireAdmin, (req,res) => { publishWeek(req.params.id);   res.json({ok:true}); });
+app.patch('/api/weeks/:id/unpublish',requireAdmin, (req,res) => { unpublishWeek(req.params.id); res.json({ok:true}); });
 app.patch('/api/weeks/:id/unlock', requireAdmin, (req,res) => { unlockWeek(req.params.id); res.json({ok:true}); });
 app.delete('/api/weeks/:id',       requireAdmin, (req,res) => { deleteWeek(req.params.id); res.json({ok:true}); });
 
