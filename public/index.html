@@ -190,7 +190,7 @@ textarea.nt{width:100%;box-sizing:border-box;border:1px solid #e0e0e0;border-rad
   <button class="tab" id="tb-talepler"          onclick="sw('talepler')"><i class="ti ti-inbox" aria-hidden="true"></i> Talepler <span class="badge" id="reqb" style="display:none">0</span></button>
   <button class="tab admin-only" id="tb-dogumgunu" onclick="sw('dogumgunu')"><i class="ti ti-cake" aria-hidden="true"></i> Doğum Günleri <span class="badge" id="bdaybadge" style="display:none">🎂</span></button>
   <button class="tab" id="tb-yillikplan" onclick="sw('yillikplan')"><i class="ti ti-calendar-month" aria-hidden="true"></i> Yıllık Plan</button>
-  <button class="tab admin-only" id="tb-sodexo" onclick="sw('sodexo')"><i class="ti ti-moon-stars" aria-hidden="true"></i> Sodexo</button>
+  <button class="tab admin-only" id="tb-sodexo" onclick="sw('sodexo')" style="color:#C62828"><i class="ti ti-moon-stars" aria-hidden="true"></i> Sodexo</button>
   <button class="tab admin-only" id="tb-istatistik" onclick="sw('istatistik')"><i class="ti ti-chart-bar" aria-hidden="true"></i> İstatistik</button>
   <button class="tab admin-only" id="tb-arsiv"  onclick="sw('arsiv')"><i class="ti ti-archive" aria-hidden="true"></i> Arşiv</button>
   <button class="tab admin-only" id="tb-kullanicilar" onclick="sw('kullanicilar')"><i class="ti ti-users" aria-hidden="true"></i> Kullanıcılar</button>
@@ -2200,42 +2200,79 @@ async function exportSodexoExcel(){
   const byPerson={};
   nights.forEach(n=>{if(!byPerson[n.person])byPerson[n.person]={};byPerson[n.person][n.shift_date]=n.approval;});
   const persons=PERSONEL.filter(p=>byPerson[p]);
+  const maxTotal=Math.max(...persons.map(p=>Object.keys(byPerson[p]).length),1);
 
   const esc=s=>String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
   const ss=[];const ssM={};
   const S=v=>{const k=String(v||"");if(!(k in ssM)){ssM[k]=ss.length;ss.push(k);}return ssM[k];};
 
-  const fills=[{t:"none"},{t:"gray125"},{t:"solid",fg:"FF1F3864"},{t:"solid",fg:"FF2C3E50"},{t:"solid",fg:"FFC8E6C9"},{t:"solid",fg:"FFF4F7FB"},{t:"solid",fg:"FF2E7D32"}];
+  // Fills: 0=none,1=gray,2=navy,3=gece koyu,4=yeşil açık,5=alt,6=kırmızı açık,7=başlık koyu yeşil
+  const fills=[
+    {t:"none"},{t:"gray125"},
+    {t:"solid",fg:"FF1F3864"}, // 2=navy
+    {t:"solid",fg:"FF2C3E50"}, // 3=gece koyu
+    {t:"solid",fg:"FFE8F5E9"}, // 4=onaylı açık yeşil
+    {t:"solid",fg:"FFF4F7FB"}, // 5=alt/boş
+    {t:"solid",fg:"FFFCE4EC"}, // 6=onaysız açık pembe
+    {t:"solid",fg:"FF1B5E20"}, // 7=koyu yeşil başlık
+  ];
   const mf=f=>f.t==="none"?`<fill><patternFill patternType="none"/></fill>`:f.t==="gray125"?`<fill><patternFill patternType="gray125"/></fill>`:`<fill><patternFill patternType="solid"><fgColor rgb="${f.fg}"/><bgColor indexed="64"/></patternFill></fill>`;
-  const fonts=[{sz:10,n:"Arial"},{sz:13,n:"Arial",b:1,c:"FFFFFFFF"},{sz:10,n:"Arial",b:1,c:"FFFFFFFF"},{sz:10,n:"Arial",b:1,c:"FF1B5E20"},{sz:10,n:"Arial",b:1,c:"FFD3D1C7"},{sz:10,n:"Arial",b:1,c:"FF000000"}];
+
+  // Fonts
+  const fonts=[
+    {sz:10,n:"Arial"},                      // 0=normal
+    {sz:12,n:"Arial",b:1,c:"FFFFFFFF"},     // 1=beyaz bold (başlık)
+    {sz:10,n:"Arial",b:1,c:"FFFFFFFF"},     // 2=beyaz bold (kolon)
+    {sz:10,n:"Arial",b:1,c:"FF1B5E20"},     // 3=koyu yeşil (onaylı)
+    {sz:10,n:"Arial",b:1,c:"FF880E4F"},     // 4=koyu kırmızı (onaysız)
+    {sz:10,n:"Arial",b:1,c:"FF1F3864"},     // 5=navy (isim)
+    {sz:10,n:"Arial",b:1,c:"FF000000"},     // 6=siyah bold (toplam)
+  ];
   const mf2=f=>'<font>'+(f.b?'<b/>':'')+(f.c?'<color rgb="'+f.c+'"/>':'<color theme="1"/>')+'<sz val="'+f.sz+'"/><name val="'+f.n+'"/></font>';
+
   const tS='<left style="thin"><color rgb="FF9E9E9E"/></left><right style="thin"><color rgb="FF9E9E9E"/></right><top style="thin"><color rgb="FF9E9E9E"/></top><bottom style="thin"><color rgb="FF9E9E9E"/></bottom>';
-  const brdX=`<borders count="1"><border>${tS}</border></borders>`;
-  const xfs=[];const ax=(fi,fn,bi,h)=>{xfs.push({fi,fn,bi,h:h||"center"});return xfs.length-1;};
+  const medS='<left style="medium"><color rgb="FF1F3864"/></left><right style="medium"><color rgb="FF1F3864"/></right><top style="medium"><color rgb="FF1F3864"/></top><bottom style="medium"><color rgb="FF1F3864"/></bottom>';
+  const brdX=`<borders count="2"><border>${tS}</border><border>${medS}</border></borders>`;
+
+  const xfs=[];const ax=(fi,fn,bi,h,v,w)=>{xfs.push({fi,fn,bi,h:h||"center",v:v||"center",w:!!w});return xfs.length-1;};
   ax(0,0,0);
-  const XF={title:ax(2,1,0,"center"),hdr_night:ax(3,2,0,"center"),hdr_name:ax(2,1,0,"left"),approved:ax(4,3,0,"center"),night:ax(3,4,0,"center"),empty:ax(5,5,0,"center"),total:ax(2,1,0,"center"),ok_total:ax(6,1,0,"center"),name:ax(5,5,0,"left")};
-  const xfsXml=`<cellXfs count="${xfs.length}">${xfs.map(x=>`<xf numFmtId="0" fontId="${x.fn}" fillId="${x.fi}" borderId="${x.bi}" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="${x.h}" vertical="center" wrapText="0"/></xf>`).join("")}</cellXfs>`;
+  const XF={
+    title:   ax(2,1,1,"center","center",true),
+    hdrName: ax(2,2,1,"left","center",false),
+    hdrDate: ax(3,2,1,"center","center",true),
+    hdrTot:  ax(7,2,1,"center","center",false),
+    hdrAppr: ax(7,2,1,"center","center",false),
+    hdrYr:   ax(2,2,1,"left","center",false),
+    name:    ax(5,5,0,"left","center",false),
+    appr:    ax(4,3,0,"center","center",false),
+    noAppr:  ax(6,4,0,"center","center",false),
+    empty:   ax(5,0,0,"center","center",false),
+    total:   ax(2,6,1,"center","center",false),
+    totalA:  ax(7,2,1,"center","center",false),
+    yearly:  ax(5,5,0,"left","center",false),
+  };
+  const xfsXml=`<cellXfs count="${xfs.length}">${xfs.map(x=>`<xf numFmtId="0" fontId="${x.fn}" fillId="${x.fi}" borderId="${x.bi}" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="${x.h}" vertical="${x.v}" wrapText="${x.w?1:0}"/></xf>`).join("")}</cellXfs>`;
   const sty=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><numFmts count="0"/><fonts count="${fonts.length}">${fonts.map(mf2).join("")}</fonts><fills count="${fills.length}">${fills.map(mf).join("")}</fills>${brdX}${xfsXml}<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>`;
 
   const CL=c=>String.fromCharCode(65+c);
   const CV=(col,r,val,xi)=>{const ref=`${CL(col)}${r+1}`;if(!val&&val!==0)return`<c r="${ref}" s="${xi}" t="s"><v>${S("")}</v></c>`;return`<c r="${ref}" t="s" s="${xi}"><v>${S(val)}</v></c>`;};
-  const CVN=(col,r,val,xi)=>{const ref=`${CL(col)}${r+1}`;return`<c r="${ref}" t="n" s="${xi}"><v>${val}</v></c>`;};
+  const CVN=(col,r,val,xi)=>{const ref=`${CL(col)}${r+1}`;return`<c r="${ref}" t="n" s="${xi}"><v>${val||0}</v></c>`;};
   const MG=(r1,c1,r2,c2)=>`${CL(c1)}${r1+1}:${CL(c2)}${r2+1}`;
 
   const xlrows=[];const merges=[];let ri=0;
-  const NC=allDates.length+2; // name + dates + total + approved
+  const NC=allDates.length+3; // name + dates + toplam + onaylı + yıllık
 
   // Başlık
   const t0=[CV(0,ri,`YAYIN MÜHENDİSLİĞİ — SODEXO GECE NÖBETİ — ${label} (${period.start} → ${period.end})`,XF.title)];
   for(let i=1;i<=NC;i++)t0.push(CV(i,ri,"",XF.title));
   xlrows.push(t0);merges.push(MG(ri,0,ri,NC));ri++;
 
-  // Sütun başlıkları
-  const maxYearlyTotal=Math.max(...PERSONEL.filter(p=>byPerson[p]).map(p=>Object.keys(byPerson[p]).length));
-  const hdr=[CV(0,ri,"Personel",XF.hdr_name),...allDates.map((d,i)=>{
-    const dt=new Date(d);const days=['Paz','Pzt','Sal','Çar','Per','Cum','Cmt'];
-    return CV(i+1,ri,`${days[dt.getDay()]} ${String(dt.getDate()).padStart(2,'0')}.${String(dt.getMonth()+1).padStart(2,'0')}`,XF.hdr_night);
-  }),CV(allDates.length+1,ri,"Toplam",XF.hdr_night),CV(allDates.length+2,ri,"Onaylı",XF.hdr_night),CV(allDates.length+3,ri,"Yıllık Karşılaştırma",XF.hdr_night)];
+  // Tarih başlıkları
+  const days=['Paz','Pzt','Sal','Çar','Per','Cum','Cmt'];
+  const hdr=[CV(0,ri,"Personel",XF.hdrName),...allDates.map((d,i)=>{
+    const dt=new Date(d);
+    return CV(i+1,ri,`${days[dt.getDay()]}\n${String(dt.getDate()).padStart(2,'0')}.${String(dt.getMonth()+1).padStart(2,'0')}`,XF.hdrDate);
+  }),CV(allDates.length+1,ri,"Toplam",XF.hdrTot),CV(allDates.length+2,ri,"Onaylı",XF.hdrAppr),CV(allDates.length+3,ri,"Yıllık",XF.hdrYr)];
   xlrows.push(hdr);ri++;
 
   // Personel satırları
@@ -2243,17 +2280,25 @@ async function exportSodexoExcel(){
     const pn=byPerson[person]||{};
     const total=Object.keys(pn).length;
     const approved=Object.values(pn).filter(a=>a&&a.approved).length;
-    const row=[CV(0,ri,person,XF.name),...allDates.map((d,i)=>{
-      if(!pn.hasOwnProperty(d))return CV(i+1,ri,"",XF.empty);
-      return CV(i+1,ri,pn[d]&&pn[d].approved?"✓":"🌙",pn[d]&&pn[d].approved?XF.approved:XF.night);
-    }),CVN(allDates.length+1,ri,total,XF.total),CVN(allDates.length+2,ri,approved,XF.ok_total),
-    CV(allDates.length+3,ri,"█".repeat(Math.max(1,Math.round((total/(maxYearlyTotal||1))*20)))+` ${total}`,XF.yearly)];
+    const barLen=Math.max(1,Math.round((total/maxTotal)*15));
+    const row=[
+      CV(0,ri,person,XF.name),
+      ...allDates.map((d,i)=>{
+        if(!pn.hasOwnProperty(d))return CV(i+1,ri,"",XF.empty);
+        const isAppr=pn[d]&&pn[d].approved;
+        return CV(i+1,ri,isAppr?"✓":"●",isAppr?XF.appr:XF.noAppr);
+      }),
+      CVN(allDates.length+1,ri,total,XF.total),
+      CVN(allDates.length+2,ri,approved,XF.totalA),
+      CV(allDates.length+3,ri,"▌".repeat(barLen),XF.yearly),
+    ];
     xlrows.push(row);ri++;
   });
 
-  const colWidths=[22,...allDates.map(()=>7),10,10,30];
+  // Kolon genişlikleri: isim=20, tarihler=5, toplam=8, onaylı=8, yıllık=22
+  const colWidths=[20,...allDates.map(()=>5),8,8,22];
   const colsXml=colWidths.map((w,i)=>`<col min="${i+1}" max="${i+1}" width="${w}" customWidth="1"/>`).join("");
-  const rwXml=xlrows.map((cells,r)=>`<row r="${r+1}" ht="${r===0?22:r===1?18:15}" customHeight="1">${cells.join("")}</row>`).join("");
+  const rwXml=xlrows.map((cells,r)=>`<row r="${r+1}" ht="${r===0?22:r===1?32:16}" customHeight="1">${cells.join("")}</row>`).join("");
   const mgXml=merges.length?`<mergeCells count="${merges.length}">${merges.map(m=>`<mergeCell ref="${m}"/>`).join("")}</mergeCells>`:"";
   const shXml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetFormatPr defaultRowHeight="15"/><cols>${colsXml}</cols><sheetData>${rwXml}</sheetData>${mgXml}</worksheet>`;
   const ssXml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="${ss.length}" uniqueCount="${ss.length}">${ss.map(s=>`<si><t xml:space="preserve">${esc(s)}</t></si>`).join("")}</sst>`;
@@ -2270,6 +2315,3 @@ async function exportSodexoExcel(){
   a.download=`Sodexo_${label.replace(/[\s–—\/]/g,"_")}.xlsx`;a.click();
 }
 
-</script>
-</body>
-</html>
