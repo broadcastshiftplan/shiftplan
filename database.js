@@ -102,6 +102,16 @@ db.exec(`
     created_at TEXT DEFAULT (datetime('now','localtime')),
     UNIQUE(person, week_start, type)
   );
+  CREATE TABLE IF NOT EXISTS sodexo_approvals (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    person     TEXT NOT NULL,
+    date       TEXT NOT NULL,
+    approved   INTEGER DEFAULT 0,
+    approved_by TEXT DEFAULT '',
+    approved_at TEXT DEFAULT '',
+    UNIQUE(person, date)
+  );
+
   CREATE TABLE IF NOT EXISTS ki_entries (
     id         INTEGER PRIMARY KEY AUTOINCREMENT,
     person     TEXT NOT NULL,
@@ -397,6 +407,62 @@ function autoPopulateFromPlans(weekId, startDate, endDate) {
   return plans.length;
 }
 
+
+// ── Sodexo ─────────────────────────────────────────────────────────────────
+// Dönem: ay 21'den başlar, ertesi ay 20'de biter
+function getSodexoPeriod(year, month) {
+  // month: 1-12 (hedef ay)
+  const prevMonth = month === 1 ? 12 : month - 1;
+  const prevYear  = month === 1 ? year - 1 : year;
+  const start = `${prevYear}-${String(prevMonth).padStart(2,'0')}-21`;
+  const end   = `${year}-${String(month).padStart(2,'0')}-20`;
+  return { start, end };
+}
+
+function getSodexoNights(year, month) {
+  const { start, end } = getSodexoPeriod(year, month);
+  // Gece nöbeti tutan personel — tm_ ve pcr_ satırlarından 00:00 başlayanlar
+  // row_meta'da 00:00 olanlar VEYA gece kategorisi
+  const rows = db.prepare(`
+    SELECT s.person, w.start_date, w.end_date, s.day_index,
+           date(w.start_date, '+' || s.day_index || ' days') as shift_date,
+           COALESCE(rm.shift_time, '') as shift_time
+    FROM schedule s
+    JOIN weeks w ON w.id = s.week_id
+    LEFT JOIN row_meta rm ON rm.week_id = s.week_id AND rm.row_id = s.row_id
+    WHERE s.person != ''
+      AND (s.row_id LIKE 'tm_%' OR s.row_id LIKE 'pcr_%')
+      AND date(w.start_date, '+' || s.day_index || ' days') BETWEEN ? AND ?
+  `).all(start, end);
+
+  // Gece filtrelemesi: shift_time 00: ile başlıyorsa veya tm_ ve default gece
+  const nights = rows.filter(r => {
+    const st = r.shift_time || '';
+    if (st.startsWith('00:')) return true;
+    // tm_ satırları için varsayılan kontrol
+    return false;
+  });
+
+  // Onay durumları
+  const approvals = db.prepare(
+    "SELECT person, date, approved, approved_by, approved_at FROM sodexo_approvals WHERE date BETWEEN ? AND ?"
+  ).all(start, end);
+  const approvalMap = {};
+  approvals.forEach(a => { approvalMap[`${a.person}|${a.date}`] = a; });
+
+  return nights.map(n => ({
+    ...n,
+    approval: approvalMap[`${n.person}|${n.shift_date}`] || null
+  }));
+}
+
+const setSodexoApproval = (person, date, approved, by) => {
+  db.prepare(`INSERT INTO sodexo_approvals(person,date,approved,approved_by,approved_at)
+    VALUES(?,?,?,?,datetime('now','localtime'))
+    ON CONFLICT(person,date) DO UPDATE SET approved=?,approved_by=?,approved_at=datetime('now','localtime')`)
+  .run(person, date, approved?1:0, by||'', approved?1:0, by||'');
+};
+
 module.exports = {
   db, getSetting, setSetting,
   getUsers, getUserByUsername, createUser, updateUserPass, deleteUser,
@@ -408,6 +474,6 @@ module.exports = {
   getBirthdays, addBirthday, deleteBirthday,
   getKiEntries, addKiEntry, deleteKiEntry, getKiSummary,
   getRequests, getRequestById, createRequest, resolveRequest, checkConflict,
-  getStats, getYears,
+  getStats, getYears, getSodexoPeriod, getSodexoNights, setSodexoApproval,
   getVacationPlans, toggleVacationPlan, deleteVacationPlan, autoPopulateFromPlans
 };
