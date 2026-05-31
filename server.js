@@ -15,7 +15,7 @@ const {
   getKiEntries, addKiEntry, deleteKiEntry, getKiSummary,
   getVacationPlans, toggleVacationPlan, deleteVacationPlan, autoPopulateFromPlans,
   getRequests, getRequestById, createRequest, resolveRequest, checkConflict,
-  getStats, getYears, db
+  getStats, getYears, getSodexoPeriod, getSodexoNights, setSodexoApproval, db
 } = require('./database');
 
 const app  = express();
@@ -397,6 +397,24 @@ app.get('/api/vacation-plans/week', requireAuth, (req, res) => {
     .prepare('SELECT * FROM vacation_plans WHERE week_start >= ? AND week_start <= ?')
     .all(start, end);
   res.json(plans);
+});
+
+
+
+// ── SODEXO ───────────────────────────────────────────────────────────────
+app.get('/api/sodexo', requireAdmin, (req, res) => {
+  const year  = parseInt(req.query.year)  || new Date().getFullYear();
+  const month = parseInt(req.query.month) || new Date().getMonth() + 1;
+  const nights = getSodexoNights(year, month);
+  const period = getSodexoPeriod(year, month);
+  res.json({ nights, period });
+});
+
+app.post('/api/sodexo/approve', requireAdmin, (req, res) => {
+  const { person, date, approved } = req.body;
+  if (!person || !date) return res.status(400).json({ error: 'Eksik' });
+  setSodexoApproval(person, date, approved, req.user.name);
+  res.json({ ok: true });
 });
 
 
