@@ -1322,23 +1322,33 @@ async function delKiLast(person,id){
 async function loadStats(){
   const yr=document.getElementById("yr-sel").value;
   const stats=await api("GET",yr?`/api/stats?year=${yr}`:"/api/stats");
-  const cats=["sabah","prime","aksam","gece","dis","izin","yillik","dogum","ki"];
+  const cats=["sabah","gec_gunduz","prime","aksam","gece","dis","izin","yillik","dogum","ki"];
   let tot=0;Object.values(stats).forEach(s=>tot+=s.total||0);
+  const totGece=Object.values(stats).reduce((a,s)=>a+(s.gece||0),0);
+  const totSabah=Object.values(stats).reduce((a,s)=>a+(s.sabah||0),0);
+  const totGecGun=Object.values(stats).reduce((a,s)=>a+(s.gec_gunduz||0),0);
+  const totPrime=Object.values(stats).reduce((a,s)=>a+(s.prime||0),0);
+  const totAksam=Object.values(stats).reduce((a,s)=>a+(s.aksam||0),0);
+  const totIzin=Object.values(stats).reduce((a,s)=>a+(s.izin||0)+(s.yillik||0)+(s.dogum||0)+(s.ki||0),0);
   document.getElementById("sc-cards").innerHTML=[
-    ["Toplam Atama",tot,"tüm haftalar"],
-    ["Gece Nöbeti",Object.values(stats).reduce((a,s)=>a+(s.gece||0),0),"00:00–06:30"],
-    ["Sabah+Prime",Object.values(stats).reduce((a,s)=>a+(s.sabah||0)+(s.prime||0),0),"gündüz"],
-    ["İzin+Doğum+K.İ",Object.values(stats).reduce((a,s)=>a+(s.izin||0)+(s.yillik||0)+(s.dogum||0)+(s.ki||0),0),"toplam"],
+    ["🌙 Gece Nöbeti",totGece,"00:00 başlangıç"],
+    ["☀️ Sabah Nöbeti",totSabah,"06:15–09:59"],
+    ["🕙 Geç Gündüz",totGecGun,"10:00–11:59"],
+    ["⭐ Prime Vardiya",totPrime,"12:00–14:59"],
+    ["🌆 Akşam Nöbeti",totAksam,"15:00+"],
+    ["🏖️ İzin+Doğum+K.İ",totIzin,"toplam"],
   ].map(([l,v,s])=>`<div class="sc"><div class="sc-lbl">${l}</div><div class="sc-val">${v}</div><div class="sc-sub">${s}</div></div>`).join("");
-  const cl=k=>SC[k]||SC.sabah;
+  // gec_gunduz için SC'ye ek renk
+  const SC2={...SC, gec_gunduz:{bg:"FFF8E1",fg:"E65100",bd:"FFB300",lbl:"Geç Gündüz",ico:"ti-sun-high"}};
+  const cl=k=>SC2[k]||SC2.sabah;
   let th=`<thead><tr><th style="background:var(--blue2);color:#fff;text-align:left;padding:7px 10px;min-width:160px">Personel</th>
     ${cats.map(k=>`<th style="background:#${cl(k).bg};color:#${cl(k).fg};border:1px solid #${cl(k).bd};padding:5px;min-width:65px;font-size:11px"><i class="ti ${cl(k).ico}" style="display:block;margin-bottom:2px;font-size:13px" aria-hidden="true"></i>${cl(k).lbl}</th>`).join("")}
-    <th style="background:var(--navy);color:#fff;padding:5px">Toplam</th></tr></thead>`;
+    </tr></thead>`;
   let tb=`<tbody>${PERSONEL.map((p,pi)=>{
-    const s=stats[p]||{};const tot=cats.reduce((a,k)=>a+(s[k]||0),0);const alt=pi%2===0?"#fff":"var(--alt)";
+    const s=stats[p]||{};const alt=pi%2===0?"#fff":"var(--alt)";
     return `<tr><td style="padding:6px 10px;font-weight:500;text-align:left;background:${alt}">${p}</td>
       ${cats.map(k=>{const v=s[k]||0;return `<td style="background:${v?`#${cl(k).bg}`:alt};color:${v?`#${cl(k).fg}`:"#aaa"};font-weight:${v?600:400}">${v||"–"}</td>`;}).join("")}
-      <td style="font-weight:600;background:${tot>50?"#F7C1C1":tot>30?"#FAEEDA":tot>0?"#C0DD97":alt}">${tot||"–"}</td></tr>`;
+      </tr>`;
   }).join("")}</tbody>`;
   document.getElementById("stat-t").innerHTML=th+tb;
   loadKi();
@@ -1816,10 +1826,10 @@ async function exportStatsExcel(){
   const ss=[];const ssM={};
   const S=v=>{const k=String(v||"");if(!(k in ssM)){ssM[k]=ss.length;ss.push(k);}return ssM[k];};
 
-  const cats=["sabah","prime","aksam","gece","dis","izin","yillik","dogum","ki"];
-  const catLabels={"sabah":"Sabah","prime":"Prime Vardiya","aksam":"Akşam","gece":"Gece","dis":"Dış Görev","izin":"Haftalık İzin","yillik":"Yıllık/Rapor","dogum":"Doğum Günü","ki":"K.İ"};
-  const catColors={"sabah":"FFFAEEDA","prime":"FFE8F5E0","aksam":"FFEEEDFE","gece":"FF2C3E50","dis":"FFE1F5EE","izin":"FF1B5E20","yillik":"FFFAE8E8","dogum":"FFFCE4FC","ki":"FFEEE8FF"};
-  const catFG={"sabah":"FF412402","prime":"FF1A5C00","aksam":"FF26215C","gece":"FFD3D1C7","dis":"FF04342C","izin":"FFFFFFFF","yillik":"FF7B1818","dogum":"FF5B0A5B","ki":"FF3D1D8A"};
+  const cats=["sabah","gec_gunduz","prime","aksam","gece","dis","izin","yillik","dogum","ki"];
+  const catLabels={"sabah":"Sabah","gec_gunduz":"Geç Gündüz","prime":"Prime Vardiya","aksam":"Akşam","gece":"Gece","dis":"Dış Görev","izin":"Haftalık İzin","yillik":"Yıllık/Rapor","dogum":"Doğum Günü","ki":"K.İ"};
+  const catColors={"sabah":"FFFAEEDA","gec_gunduz":"FFFFF8E1","prime":"FFE8F5E0","aksam":"FFEEEDFE","gece":"FF2C3E50","dis":"FFE1F5EE","izin":"FF1B5E20","yillik":"FFFAE8E8","dogum":"FFFCE4FC","ki":"FFEEE8FF"};
+  const catFG={"sabah":"FF412402","gec_gunduz":"FFE65100","prime":"FF1A5C00","aksam":"FF26215C","gece":"FFD3D1C7","dis":"FF04342C","izin":"FFFFFFFF","yillik":"FF7B1818","dogum":"FF5B0A5B","ki":"FF3D1D8A"};
 
   // Fills
   const fills=[
