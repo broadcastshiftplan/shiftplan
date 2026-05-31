@@ -614,6 +614,7 @@ function showApp(){
     wb.innerHTML=`<select class="wsel" id="wsel" onchange="loadWeek(this.value)"></select>
       <button class="btn btn-green" onclick="openNewWeek()"><i class="ti ti-plus" aria-hidden="true"></i> Yeni Hafta</button>
       <button class="btn" style="background:#7B1FA2;color:#fff" onclick="doPublishWeek()" id="btn-publish"><i class="ti ti-camera" aria-hidden="true"></i> Yayınla</button>
+      <button class="btn btn-ghost" style="background:#555;color:#fff" onclick="doDraftWeek()" id="btn-draft"><i class="ti ti-pencil" aria-hidden="true"></i> Taslağa Al</button>
       <button class="btn btn-ghost" style="background:var(--blue2);color:#fff" onclick="doLockWeek()"><i class="ti ti-lock" aria-hidden="true"></i> Kilitle</button>
       <button class="btn btn-ghost" style="background:#555;color:#fff" onclick="doUnlockWeek()"><i class="ti ti-lock-open" aria-hidden="true"></i> Aç</button>
       <button class="btn btn-red btn-sm" onclick="doDelWeek()"><i class="ti ti-trash" aria-hidden="true"></i></button>`;
@@ -692,8 +693,10 @@ async function loadWeek(wid){
     if(ROLE==="admin"){
       const btnP=document.getElementById("btn-publish");
       const btnD=document.getElementById("btn-draft");
-      if(btnP)btnP.style.display=w.published?"none":"inline-flex";
-      if(btnD)btnD.style.display=w.published?"inline-flex":"none";
+      // Yayınla: taslak modunda veya yayınlanmamışsa göster
+      if(btnP)btnP.style.display=(!w.published||w.draft_mode)?"inline-flex":"none";
+      // Taslağa Al: yayınlanmış ve taslak modunda değilse göster
+      if(btnD)btnD.style.display=(w.published&&!w.draft_mode)?"inline-flex":"none";
     }
   }
   const [data,counts,meta]=await Promise.all([
@@ -760,6 +763,12 @@ async function doPublishWeek(){
   alert("✅ Hafta yayınlandı! Personel artık görebilir.");
 }
 
+async function doDraftWeek(){
+  if(!cWeekId)return;
+  if(!confirm("Taslağa alınacak. Personel mevcut hali görmeye devam eder, siz düzenleyebilirsiniz. Devam?"))return;
+  await api("PATCH",`/api/weeks/${cWeekId}/draft`);
+  await loadWeeks();
+}
 async function doDelWeek(){if(!cWeekId)return;if(!confirm("Sil?"))return;await api("DELETE",`/api/weeks/${cWeekId}`);cWeekId=null;await loadWeeks();loadArchive();}
 function cm(){document.querySelectorAll(".mb").forEach(m=>m.classList.remove("open"));}
 
