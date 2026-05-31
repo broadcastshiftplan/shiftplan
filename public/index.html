@@ -1963,8 +1963,7 @@ async function exportStatsExcel(){
   const mgXml=merges.length?`<mergeCells count="${merges.length}">${merges.map(m=>`<mergeCell ref="${m}"/>`).join("")}</mergeCells>`:"";
   const shXml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetFormatPr defaultRowHeight="15"/><cols>${colsXml}</cols><sheetData>${rwXml}</sheetData>${mgXml}</worksheet>`;
   const ssXml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="${ss.length}" uniqueCount="${ss.length}">${ss.map(s=>`<si><t xml:space="preserve">${esc(s)}</t></si>`).join("")}</sst>`;
-  const wbXml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="İstatistik" sheetId="1" r:id="rId1"/></sheets></workbook>`;
-  const wbRXml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/><Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings" Target="sharedStrings.xml"/><Relationship Id="rId4" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet2.xml"/></Relationships>`;
+  const wbXml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Sodexo Detay" sheetId="1" r:id="rId1"/><sheet name="Yıllık Özet" sheetId="2" r:id="rId4"/></sheets></workbook>`;tp://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/><Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings" Target="sharedStrings.xml"/><Relationship Id="rId4" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet2.xml"/></Relationships>`;/schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet2.xml"/></Relationships>`;
   const relsXml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>`;
   const ctXml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/><Override PartName="/xl/sharedStrings.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml"/></Types>`;
 
@@ -2198,7 +2197,7 @@ async function exportSodexoExcel(){
   const year  = parseInt(document.getElementById('sdx-year').value);
   const month = parseInt(document.getElementById('sdx-month').value);
   const data  = await api('GET', `/api/sodexo?year=${year}&month=${month}`);
-  const { nights, period } = data;
+  const {nights, period} = data;
   if(!nights||nights.length===0){alert('Bu dönemde veri yok.');return;}
 
   const label=`${MONTHS_TR[month]} ${year} Sodexo`;
@@ -2206,182 +2205,186 @@ async function exportSodexoExcel(){
   const byPerson={};
   nights.forEach(n=>{if(!byPerson[n.person])byPerson[n.person]={};byPerson[n.person][n.shift_date]=n.approval;});
   const persons=PERSONEL.filter(p=>byPerson[p]);
-  const maxTotal=Math.max(...persons.map(p=>Object.keys(byPerson[p]).length),1);
 
-  const esc=s=>String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  // Aylık dağılım (2. sayfa için)
+  const byPersonMonth={};
+  nights.forEach(n=>{
+    const mo=parseInt(n.shift_date.slice(5,7))-1;
+    if(!byPersonMonth[n.person])byPersonMonth[n.person]=Array(12).fill(null).map(()=>({t:0,a:0}));
+    byPersonMonth[n.person][mo].t++;
+    if(n.approval&&n.approval.approved)byPersonMonth[n.person][mo].a++;
+  });
+  const maxTotY=Math.max(...persons.map(p=>Object.keys(byPerson[p]).length),1);
+
+  const esc=v=>String(v||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+
+  // ── Shared strings ──────────────────────────────────────────────────────
   const ss=[];const ssM={};
   const S=v=>{const k=String(v||"");if(!(k in ssM)){ssM[k]=ss.length;ss.push(k);}return ssM[k];};
 
-  // Fills: 0=none,1=gray,2=navy,3=gece koyu,4=yeşil açık,5=alt,6=kırmızı açık,7=başlık koyu yeşil
+  // ── Ortak stiller ───────────────────────────────────────────────────────
   const fills=[
     {t:"none"},{t:"gray125"},
-    {t:"solid",fg:"FF1F3864"}, // 2=navy
-    {t:"solid",fg:"FF2C3E50"}, // 3=gece koyu
-    {t:"solid",fg:"FFE8F5E9"}, // 4=onaylı açık yeşil
-    {t:"solid",fg:"FFF4F7FB"}, // 5=alt/boş
-    {t:"solid",fg:"FFFCE4EC"}, // 6=onaysız açık pembe
-    {t:"solid",fg:"FF1B5E20"}, // 7=koyu yeşil başlık
+    {t:"solid",fg:"FF1F3864"}, // 2 navy
+    {t:"solid",fg:"FF2C3E50"}, // 3 gece koyu
+    {t:"solid",fg:"FFE8F5E9"}, // 4 onaylı açık
+    {t:"solid",fg:"FFFCE4EC"}, // 5 onaysız açık
+    {t:"solid",fg:"FFF5F5F5"}, // 6 boş
+    {t:"solid",fg:"FF2E7D32"}, // 7 onaylı koyu (yıllık)
+    {t:"solid",fg:"FF37474F"}, // 8 onaysız koyu (yıllık)
+    {t:"solid",fg:"FFC62828"}, // 9 kırmızı bar
+    {t:"solid",fg:"FFE8EAF6"}, // 10 lavender isim
+    {t:"solid",fg:"FF1B5E20"}, // 11 koyu yeşil başlık
   ];
-  const mf=f=>f.t==="none"?`<fill><patternFill patternType="none"/></fill>`:f.t==="gray125"?`<fill><patternFill patternType="gray125"/></fill>`:`<fill><patternFill patternType="solid"><fgColor rgb="${f.fg}"/><bgColor indexed="64"/></patternFill></fill>`;
+  const mf=f=>f.t==="none"?'<fill><patternFill patternType="none"/></fill>':f.t==="gray125"?'<fill><patternFill patternType="gray125"/></fill>':`<fill><patternFill patternType="solid"><fgColor rgb="${f.fg}"/><bgColor indexed="64"/></patternFill></fill>`;
 
-  // Fonts
   const fonts=[
-    {sz:10,n:"Arial"},                      // 0=normal
-    {sz:12,n:"Arial",b:1,c:"FFFFFFFF"},     // 1=beyaz bold (başlık)
-    {sz:10,n:"Arial",b:1,c:"FFFFFFFF"},     // 2=beyaz bold (kolon)
-    {sz:10,n:"Arial",b:1,c:"FF1B5E20"},     // 3=koyu yeşil (onaylı)
-    {sz:10,n:"Arial",b:1,c:"FF880E4F"},     // 4=koyu kırmızı (onaysız)
-    {sz:10,n:"Arial",b:1,c:"FF1F3864"},     // 5=navy (isim)
-    {sz:10,n:"Arial",b:1,c:"FF000000"},     // 6=siyah bold (toplam)
+    {sz:10,n:"Arial"},                    // 0
+    {sz:12,n:"Arial",b:1,c:"FFFFFFFF"},   // 1 başlık beyaz
+    {sz:10,n:"Arial",b:1,c:"FFFFFFFF"},   // 2 kolon beyaz
+    {sz:10,n:"Arial",b:1,c:"FF283593"},   // 3 lavender isim
+    {sz:10,n:"Arial",b:1,c:"FF1B5E20"},   // 4 onaylı yeşil
+    {sz:10,n:"Arial",b:1,c:"FF880E4F"},   // 5 onaysız kırmızı
+    {sz:10,n:"Arial",b:1,c:"FF7B1818"},   // 6 toplam
+    {sz:10,n:"Arial",b:1,c:"FFD3D1C7"},   // 7 gece açık
   ];
   const mf2=f=>'<font>'+(f.b?'<b/>':'')+(f.c?'<color rgb="'+f.c+'"/>':'<color theme="1"/>')+'<sz val="'+f.sz+'"/><name val="'+f.n+'"/></font>';
 
-  const tS='<left style="thin"><color rgb="FF9E9E9E"/></left><right style="thin"><color rgb="FF9E9E9E"/></right><top style="thin"><color rgb="FF9E9E9E"/></top><bottom style="thin"><color rgb="FF9E9E9E"/></bottom>';
-  const medS='<left style="medium"><color rgb="FF1F3864"/></left><right style="medium"><color rgb="FF1F3864"/></right><top style="medium"><color rgb="FF1F3864"/></top><bottom style="medium"><color rgb="FF1F3864"/></bottom>';
-  const brdX=`<borders count="2"><border>${tS}</border><border>${medS}</border></borders>`;
+  const tS='<left style="thin"><color rgb="FFE0E0E0"/></left><right style="thin"><color rgb="FFE0E0E0"/></right><top style="thin"><color rgb="FFE0E0E0"/></top><bottom style="thin"><color rgb="FFE0E0E0"/></bottom>';
+  const mS='<left style="medium"><color rgb="FF1F3864"/></left><right style="medium"><color rgb="FF1F3864"/></right><top style="medium"><color rgb="FF1F3864"/></top><bottom style="medium"><color rgb="FF1F3864"/></bottom>';
+  const brdX=`<borders count="2"><border>${tS}</border><border>${mS}</border></borders>`;
 
-  const xfs=[];const ax=(fi,fn,bi,h,v,w)=>{xfs.push({fi,fn,bi,h:h||"center",v:v||"center",w:!!w});return xfs.length-1;};
+  const xfs=[];
+  const ax=(fi,fn,bi,h,v,w)=>{xfs.push({fi,fn,bi,h:h||"center",v:v||"center",w:!!w});return xfs.length-1;};
   ax(0,0,0);
   const XF={
+    // Sayfa 1 (detay)
     title:   ax(2,1,1,"center","center",true),
     hdrName: ax(2,2,1,"left","center",false),
     hdrDate: ax(3,2,1,"center","center",true),
-    hdrTot:  ax(7,2,1,"center","center",false),
-    hdrAppr: ax(7,2,1,"center","center",false),
-    hdrYr:   ax(2,2,1,"left","center",false),
-    name:    ax(5,5,0,"left","center",false),
-    appr:    ax(4,3,0,"center","center",false),
-    noAppr:  ax(6,4,0,"center","center",false),
-    empty:   ax(5,0,0,"center","center",false),
+    hdrTot:  ax(11,2,1,"center","center",false),
+    name:    ax(6,3,0,"left","center",false),
+    appr:    ax(4,4,0,"center","center",false),
+    noAppr:  ax(5,5,0,"center","center",false),
+    empty:   ax(6,0,0,"center","center",false),
     total:   ax(2,6,1,"center","center",false),
-    totalA:  ax(7,2,1,"center","center",false),
-    yearly:  ax(5,5,0,"left","center",false),
+    totalA:  ax(11,2,1,"center","center",false),
+    // Sayfa 2 (yıllık)
+    title2:  ax(2,1,1,"center","center",true),
+    hdrN2:   ax(3,2,1,"left","center",false),
+    hdrM2:   ax(3,7,1,"center","center",false),
+    hdrT2:   ax(2,6,1,"center","center",false),
+    name2:   ax(10,3,0,"left","center",false),
+    apprM:   ax(7,4,0,"center","center",false),   // onaylı ay hücresi
+    noApprM: ax(8,7,0,"center","center",false),   // onaysız ay hücresi
+    emptyM:  ax(6,0,0,"center","center",false),   // boş ay
+    totN:    ax(2,6,1,"center","center",false),
+    totA:    ax(11,2,1,"center","center",false),
+    barR:    ax(9,0,0,"center","center",false),    // kırmızı bar dolu
+    barE:    ax(6,0,0,"center","center",false),    // bar boş
   };
   const xfsXml=`<cellXfs count="${xfs.length}">${xfs.map(x=>`<xf numFmtId="0" fontId="${x.fn}" fillId="${x.fi}" borderId="${x.bi}" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="${x.h}" vertical="${x.v}" wrapText="${x.w?1:0}"/></xf>`).join("")}</cellXfs>`;
   const sty=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><numFmts count="0"/><fonts count="${fonts.length}">${fonts.map(mf2).join("")}</fonts><fills count="${fills.length}">${fills.map(mf).join("")}</fills>${brdX}${xfsXml}<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>`;
 
   const CL=c=>String.fromCharCode(65+c);
-  const CV=(col,r,val,xi)=>{const ref=`${CL(col)}${r+1}`;if(!val&&val!==0)return`<c r="${ref}" s="${xi}" t="s"><v>${S("")}</v></c>`;return`<c r="${ref}" t="s" s="${xi}"><v>${S(val)}</v></c>`;};
-  const CVN=(col,r,val,xi)=>{const ref=`${CL(col)}${r+1}`;return`<c r="${ref}" t="n" s="${xi}"><v>${val||0}</v></c>`;};
+  const CV=(col,r,val,xi)=>{const ref=`${CL(col)}${r+1}`;const v=val===null||val===undefined||val===""?"":String(val);return `<c r="${ref}" t="s" s="${xi}"><v>${S(v)}</v></c>`;};
+  const CVN=(col,r,val,xi)=>{const ref=`${CL(col)}${r+1}`;return `<c r="${ref}" t="n" s="${xi}"><v>${val||0}</v></c>`;};
   const MG=(r1,c1,r2,c2)=>`${CL(c1)}${r1+1}:${CL(c2)}${r2+1}`;
 
-  const xlrows=[];const merges=[];let ri=0;
-  const NC=allDates.length+3; // name + dates + toplam + onaylı + yıllık
+  // ── SAYFA 1: Dönem Detay ───────────────────────────────────────────────
+  const rows1=[];const mg1=[];let ri=0;
+  const NC=allDates.length+2;
 
   // Başlık
-  const t0=[CV(0,ri,`YAYIN MÜHENDİSLİĞİ — SODEXO GECE NÖBETİ — ${label} (${period.start} → ${period.end})`,XF.title)];
+  const t0=[CV(0,ri,`YAYIN MÜHENDİSLİĞİ — SODEXO GECE NÖBETİ — ${label} (${period.start} / ${period.end})`,XF.title)];
   for(let i=1;i<=NC;i++)t0.push(CV(i,ri,"",XF.title));
-  xlrows.push(t0);merges.push(MG(ri,0,ri,NC));ri++;
+  rows1.push(t0);mg1.push(MG(ri,0,ri,NC));ri++;
 
   // Tarih başlıkları
-  const days=['Paz','Pzt','Sal','Çar','Per','Cum','Cmt'];
-  const hdr=[CV(0,ri,"Personel",XF.hdrName),...allDates.map((d,i)=>{
+  const DAYS=['Paz','Pzt','Sal','Çar','Per','Cum','Cmt'];
+  const hdr1=[CV(0,ri,"Personel",XF.hdrName),...allDates.map((d,i)=>{
     const dt=new Date(d);
-    return CV(i+1,ri,`${days[dt.getDay()]}\n${String(dt.getDate()).padStart(2,'0')}.${String(dt.getMonth()+1).padStart(2,'0')}`,XF.hdrDate);
-  }),CV(allDates.length+1,ri,"Toplam",XF.hdrTot),CV(allDates.length+2,ri,"Onaylı",XF.hdrAppr),CV(allDates.length+3,ri,"Yıllık",XF.hdrYr)];
-  xlrows.push(hdr);ri++;
+    return CV(i+1,ri,DAYS[dt.getDay()]+"\n"+String(dt.getDate()).padStart(2,'0')+"."+String(dt.getMonth()+1).padStart(2,'0'),XF.hdrDate);
+  }),CV(allDates.length+1,ri,"Toplam",XF.hdrTot),CV(allDates.length+2,ri,"Onaylı",XF.hdrTot)];
+  rows1.push(hdr1);ri++;
 
-  // Personel satırları
-  persons.forEach((person,pi)=>{
-    const pn=byPerson[person]||{};
-    const total=Object.keys(pn).length;
-    const approved=Object.values(pn).filter(a=>a&&a.approved).length;
-    const barLen=Math.max(1,Math.round((total/maxTotal)*15));
-    const row=[
-      CV(0,ri,person,XF.name),
-      ...allDates.map((d,i)=>{
-        if(!pn.hasOwnProperty(d))return CV(i+1,ri,"",XF.empty);
-        const isAppr=pn[d]&&pn[d].approved;
-        return CV(i+1,ri,isAppr?"✓":"●",isAppr?XF.appr:XF.noAppr);
-      }),
-      CVN(allDates.length+1,ri,total,XF.total),
-      CVN(allDates.length+2,ri,approved,XF.totalA),
-      CV(allDates.length+3,ri,"▌".repeat(barLen),XF.yearly),
-    ];
-    xlrows.push(row);ri++;
-  });
-
-  // Kolon genişlikleri: isim=20, tarihler=5, toplam=8, onaylı=8, yıllık=22
-  const colWidths=[20,...allDates.map(()=>5),8,8,22];
-  const colsXml=colWidths.map((w,i)=>`<col min="${i+1}" max="${i+1}" width="${w}" customWidth="1"/>`).join("");
-  const rwXml=xlrows.map((cells,r)=>`<row r="${r+1}" ht="${r===0?22:r===1?32:16}" customHeight="1">${cells.join("")}</row>`).join("");
-  const mgXml=merges.length?`<mergeCells count="${merges.length}">${merges.map(m=>`<mergeCell ref="${m}"/>`).join("")}</mergeCells>`:"";
-  const shXml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetFormatPr defaultRowHeight="15"/><cols>${colsXml}</cols><sheetData>${rwXml}</sheetData>${mgXml}</worksheet>`;
-  const ssXml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="${ss.length}" uniqueCount="${ss.length}">${ss.map(s=>`<si><t xml:space="preserve">${esc(s)}</t></si>`).join("")}</sst>`;
-  // 2. sayfa — özet tablo
-  const persons2=PERSONEL.filter(p=>byPerson[p]);
-  const maxTot2=Math.max(...persons2.map(p=>Object.keys(byPerson[p]).length),1);
-  const ss2=[];const ssM2={};
-  const S2=v=>{const k=String(v||"");if(!(k in ssM2)){ssM2[k]=ss2.length;ss2.push(k);}return ssM2[k];};
-
-  // Özet sayfa satırları
-  const xr2=[];let ri2=0;
-  // Başlık
-  const ot=[`<c r="A${ri2+1}" t="s" s="0"><v>${S2(`YAYIN MÜHENDİSLİĞİ — SODEXO ${label} — ÖZET`)}</v></c>`];
-  for(let i=1;i<=3;i++)ot.push(`<c r="${CL(i)}${ri2+1}" s="0"/>`);
-  xr2.push(`<row r="${ri2+1}" ht="24" customHeight="1">${ot.join("")}</row>`);ri2++;
-
-  // Boş satır
-  xr2.push(`<row r="${ri2+1}"><c r="A${ri2+1}" s="0"/></row>`);ri2++;
-
-  // Sütun başlıkları
-  const oh=[`<c r="A${ri2+1}" t="s" s="0"><v>${S2("Personel")}</v></c>`,
-    `<c r="B${ri2+1}" t="s" s="0"><v>${S2("Toplam Gece")}</v></c>`,
-    `<c r="C${ri2+1}" t="s" s="0"><v>${S2("Onaylı")}</v></c>`,
-    `<c r="D${ri2+1}" t="s" s="0"><v>${S2("Onay %")}</v></c>`,
-    `<c r="E${ri2+1}" t="s" s="0"><v>${S2("Görsel")}</v></c>`];
-  xr2.push(`<row r="${ri2+1}" ht="18" customHeight="1">${oh.join("")}</row>`);ri2++;
-
-  // Personel satırları
-  persons2.forEach((person,pi)=>{
+  persons.forEach(person=>{
     const pn=byPerson[person]||{};
     const tot=Object.keys(pn).length;
     const appr=Object.values(pn).filter(a=>a&&a.approved).length;
-    const pct=tot>0?Math.round((appr/tot)*100):0;
-    const barLen=Math.max(1,Math.round((tot/maxTot2)*20));
-    const bar="█".repeat(barLen);
-    const pr=[
-      `<c r="A${ri2+1}" t="s" s="0"><v>${S2(person)}</v></c>`,
-      `<c r="B${ri2+1}" t="n" s="0"><v>${tot}</v></c>`,
-      `<c r="C${ri2+1}" t="n" s="0"><v>${appr}</v></c>`,
-      `<c r="D${ri2+1}" t="n" s="0"><v>${pct}</v></c>`,
-      `<c r="E${ri2+1}" t="s" s="0"><v>${S2(bar)}</v></c>`,
-    ];
-    xr2.push(`<row r="${ri2+1}" ht="16" customHeight="1">${pr.join("")}</row>`);ri2++;
+    const row=[CV(0,ri,person,XF.name),...allDates.map((d,i)=>{
+      if(!pn.hasOwnProperty(d))return CV(i+1,ri,"",XF.empty);
+      return CV(i+1,ri,pn[d]&&pn[d].approved?"✓":"●",pn[d]&&pn[d].approved?XF.appr:XF.noAppr);
+    }),CVN(allDates.length+1,ri,tot,XF.total),CVN(allDates.length+2,ri,appr,XF.totalA)];
+    rows1.push(row);ri++;
   });
 
-  const sh2Xml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetFormatPr defaultRowHeight="15"/><cols><col min="1" max="1" width="22" customWidth="1"/><col min="2" max="2" width="14" customWidth="1"/><col min="3" max="3" width="10" customWidth="1"/><col min="4" max="4" width="10" customWidth="1"/><col min="5" max="5" width="28" customWidth="1"/></cols><sheetData>${xr2.join("")}</sheetData></worksheet>`;
-  const ss2Xml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="${ss2.length}" uniqueCount="${ss2.length}">${ss2.map(s=>`<si><t xml:space="preserve">${s.replace(/&/g,"&amp;").replace(/</g,"&lt;")}</t></si>`).join("")}</sst>`;
+  const colW1=[20,...allDates.map(()=>5),8,8];
+  const cols1=colW1.map((w,i)=>`<col min="${i+1}" max="${i+1}" width="${w}" customWidth="1"/>`).join("");
+  const rw1=rows1.map((cells,r)=>`<row r="${r+1}" ht="${r===0?22:r===1?30:16}" customHeight="1">${cells.join("")}</row>`).join("");
+  const mg1x=mg1.length?`<mergeCells count="${mg1.length}">${mg1.map(m=>`<mergeCell ref="${m}"/>`).join("")}</mergeCells>`:"";
+  const sh1=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetFormatPr defaultRowHeight="15"/><cols>${cols1}</cols><sheetData>${rw1}</sheetData>${mg1x}</worksheet>`;
 
-  const wbXml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Sodexo Detay" sheetId="1" r:id="rId1"/><sheet name="Özet" sheetId="2" r:id="rId4"/></sheets></workbook>`;
-  const wbRXml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/><Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings" Target="sharedStrings.xml"/><Relationship Id="rId4" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet2.xml"/></Relationships>`;
-  const relsXml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>`;
-  const ctXml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/worksheets/sheet2.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/><Override PartName="/xl/sharedStrings.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml"/></Types>`;
+  // ── SAYFA 2: Yıllık Özet ───────────────────────────────────────────────
+  const MNTHS=['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'];
+  const rows2=[];const mg2=[];let ri2=0;
+  const NC2=12+1+1+5; // isim+12ay+toplam+onaylı+5bar
+
+  // Başlık
+  const t1=[CV(0,ri2,`YAYIN MÜHENDİSLİĞİ — SODEXO ${label} — YILLIK ÖZET`,XF.title2)];
+  for(let i=1;i<=NC2;i++)t1.push(CV(i,ri2,"",XF.title2));
+  rows2.push(t1);mg2.push(MG(ri2,0,ri2,NC2));ri2++;
+
+  // Ay başlıkları
+  const hdr2=[CV(0,ri2,"Personel",XF.hdrN2),...MNTHS.map((m,i)=>CV(i+1,ri2,m,XF.hdrM2)),
+    CV(13,ri2,"Toplam",XF.hdrT2),CV(14,ri2,"Onaylı",XF.hdrT2),
+    CV(15,ri2,"Yıllık Karşılaştırma",XF.hdrN2),CV(16,ri2,"",XF.barE),CV(17,ri2,"",XF.barE),CV(18,ri2,"",XF.barE),CV(19,ri2,"",XF.barE)];
+  rows2.push(hdr2);mg2.push(MG(ri2,15,ri2,19));ri2++;
+
+  persons.forEach(person=>{
+    const pm=byPersonMonth[person]||Array(12).fill({t:0,a:0});
+    const pn=byPerson[person]||{};
+    const tot=Object.keys(pn).length;
+    const appr=Object.values(pn).filter(a=>a&&a.approved).length;
+    const barW=Math.max(1,Math.round((tot/maxTotY)*5));
+    const row=[CV(0,ri2,person,XF.name2)];
+    MNTHS.forEach((_,mi)=>{
+      const md=pm[mi]||{t:0,a:0};
+      if(md.t===0)row.push(CV(mi+1,ri2,"",XF.emptyM));
+      else if(md.a===md.t)row.push(CV(mi+1,ri2,String(md.t),XF.apprM));
+      else row.push(CV(mi+1,ri2,String(md.t),XF.noApprM));
+    });
+    row.push(CVN(13,ri2,tot,XF.totN));
+    row.push(CVN(14,ri2,appr,XF.totA));
+    for(let b=0;b<5;b++)row.push(CV(15+b,ri2,"",b<barW?XF.barR:XF.barE));
+    rows2.push(row);ri2++;
+  });
+
+  const colW2=[22,...Array(12).fill(6),8,8,...Array(5).fill(5)];
+  const cols2=colW2.map((w,i)=>`<col min="${i+1}" max="${i+1}" width="${w}" customWidth="1"/>`).join("");
+  const rw2=rows2.map((cells,r)=>`<row r="${r+1}" ht="${r===0?22:r===1?18:16}" customHeight="1">${cells.join("")}</row>`).join("");
+  const mg2x=mg2.length?`<mergeCells count="${mg2.length}">${mg2.map(m=>`<mergeCell ref="${m}"/>`).join("")}</mergeCells>`:"";
+  const sh2=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetFormatPr defaultRowHeight="15"/><cols>${cols2}</cols><sheetData>${rw2}</sheetData>${mg2x}</worksheet>`;
+
+  // ── ZIP ────────────────────────────────────────────────────────────────
+  const ssXml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="${ss.length}" uniqueCount="${ss.length}">${ss.map(s=>`<si><t xml:space="preserve">${esc(s)}</t></si>`).join("")}</sst>`;
+  const wbXml='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Sodexo Detay" sheetId="1" r:id="rId1"/><sheet name="Yillik Ozet" sheetId="2" r:id="rId4"/></sheets></workbook>';
+  const wbRXml='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/><Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings" Target="sharedStrings.xml"/><Relationship Id="rId4" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet2.xml"/></Relationships>';
+  const relsXml='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>';
+  const ctXml='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/worksheets/sheet2.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/><Override PartName="/xl/sharedStrings.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml"/></Types>';
+
   const zipS=new JSZip();
-  zipS.file("[Content_Types].xml",ctXml);zipS.folder("_rels").file(".rels",relsXml);
-  const xlS=zipS.folder("xl");xlS.file("workbook.xml",wbXml);xlS.folder("_rels").file("workbook.xml.rels",wbRXml);
-  xlS.folder("worksheets").file("sheet1.xml",shXml);xlS.folder("worksheets").file("sheet2.xml",sh2Xml);xlS.file("styles.xml",sty);xlS.file("sharedStrings.xml",ssXml);
+  zipS.file("[Content_Types].xml",ctXml);
+  zipS.folder("_rels").file(".rels",relsXml);
+  const xlS=zipS.folder("xl");
+  xlS.file("workbook.xml",wbXml);
+  xlS.folder("_rels").file("workbook.xml.rels",wbRXml);
+  xlS.folder("worksheets").file("sheet1.xml",sh1);
+  xlS.folder("worksheets").file("sheet2.xml",sh2);
+  xlS.file("styles.xml",sty);
+  xlS.file("sharedStrings.xml",ssXml);
   const blob=await zipS.generateAsync({type:"blob",mimeType:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
   const a=document.createElement("a");a.href=URL.createObjectURL(blob);
-  a.download=`Sodexo_${label.replace(/[\s–—\/]/g,"_")}.xlsx`;a.click();
-}
-async function downloadYearlyPNG(year){
-  const el = document.getElementById('sdx-yearly');
-  if(!el||!el.innerHTML){alert('Önce yıllık özeti yükleyin.');return;}
-  try {
-    const canvas = await html2canvas(el, {
-      backgroundColor: '#ffffff',
-      scale: 2,
-      useCORS: true,
-      logging: false
-    });
-    const a = document.createElement('a');
-    a.href = canvas.toDataURL('image/png');
-    a.download = `Sodexo_Yillik_${year}.png`;
-    a.click();
-  } catch(e) { alert('PNG indirilemedi: ' + e.message); }
+  a.download=`Sodexo_${label.replace(/[\s\u2013\u2014\/]/g,"_")}.xlsx`;a.click();
 }
 
-</script>
-</body>
-</html>
