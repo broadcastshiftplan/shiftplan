@@ -173,28 +173,19 @@ seedHolidays();
 // ── Migration: Eski veritabanına eksik kolonları ekle ─────────────────────
 (function runMigrations() {
   const migrations = [
+    // Kolon eklemeleri (zaten varsa hata vermez)
     "ALTER TABLE weeks ADD COLUMN published INTEGER DEFAULT 0",
     "ALTER TABLE weeks ADD COLUMN draft_mode INTEGER DEFAULT 0",
-    // row_meta'daki eski kayıtları temizle
-    "DELETE FROM row_meta WHERE row_id IN ('p1a','p1b','p1c','p1d','p1e','p1f','p1g','p3a','p3b','p3c','p3d','p3e','p3f','p3g','tma','tmb','tmc','tmd','tme','tmf','tmg','r01','r02','r03','r04','r05','r06','r07','r08','r09','r10','r11','r12','pcr_4','pcr_5','pcr_6','pcr_7')",
-    // Eski row_id formatından kalan tüm geçersiz kayıtları temizle
-    // Eski harf tabanlı formatlar (p1a, tmd vs)
-    "DELETE FROM schedule WHERE row_id IN ('p1a','p1b','p1c','p1d','p1e','p1f','p1g','p3a','p3b','p3c','p3d','p3e','p3f','p3g','tma','tmb','tmc','tmd','tme','tmf','tmg','ob1','iz1','iz2','iz3','dg1','dg2','yl1','yl2','yl3','dgi1','ki1')",
-    // Eski sayı tabanlı format (r01, r02 vs)
-    "DELETE FROM schedule WHERE row_id IN ('r01','r02','r03','r04','r05','r06','r07','r08','r09','r10','r11','r12','r12b','r13','r14','r15','r16','r17','r18','bday')",
-    // PCR birleşme öncesi fazla satırlar (pcr_4 ve üstü silinmeli, max 3 pcr satırı)
-    "DELETE FROM schedule WHERE row_id IN ('pcr_4','pcr_5','pcr_6','pcr_7')",
-    // Eski ki/yl formatlar
-    "DELETE FROM schedule WHERE row_id IN ('ki1','ki2','yl1','yl2','yl3')",
-    "ALTER TABLE weeks ADD COLUMN draft_mode INTEGER DEFAULT 0",
-    // row_meta'daki eski kayıtları temizle
-    "DELETE FROM row_meta WHERE row_id IN ('p1a','p1b','p1c','p1d','p1e','p1f','p1g','p3a','p3b','p3c','p3d','p3e','p3f','p3g','tma','tmb','tmc','tmd','tme','tmf','tmg','r01','r02','r03','r04','r05','r06','r07','r08','r09','r10','r11','r12','pcr_4','pcr_5','pcr_6','pcr_7')",
     "ALTER TABLE ki_entries ADD COLUMN date_given TEXT DEFAULT (date('now','localtime'))",
     "ALTER TABLE ki_entries ADD COLUMN week_id INTEGER",
     "ALTER TABLE shift_requests ADD COLUMN needs_approval INTEGER DEFAULT 0",
     "ALTER TABLE shift_requests ADD COLUMN resolved_by TEXT",
+    // Eski row_id formatlarını temizle (schedule)
+    "DELETE FROM schedule WHERE row_id IN ('p1a','p1b','p1c','p1d','p1e','p1f','p1g','p3a','p3b','p3c','p3d','p3e','p3f','p3g','tma','tmb','tmc','tmd','tme','tmf','tmg','ob1','r01','r02','r03','r04','r05','r06','r07','r08','r09','r10','r11','r12','r12b','r13','r14','r15','r16','r17','r18','bday','iz1','iz2','iz3','dg1','dg2','yl1','yl2','yl3','dgi1','ki1','ki2','pcr_4','pcr_5','pcr_6','pcr_7')",
+    // Eski row_id formatlarını temizle (row_meta)
+    "DELETE FROM row_meta WHERE row_id IN ('p1a','p1b','p1c','p1d','p1e','p1f','p1g','p3a','p3b','p3c','p3d','p3e','p3f','p3g','tma','tmb','tmc','tmd','tme','tmf','tmg','r01','r02','r03','r04','r05','r06','r07','r08','r09','r10','r11','r12','pcr_4','pcr_5','pcr_6','pcr_7')",
   ];
-  migrations.forEach(sql => {
+    migrations.forEach(sql => {
     try { db.exec(sql); console.log('[DB Migration] OK:', sql.slice(0,50)); }
     catch(e) { /* kolon zaten var, normal */ }
   });
