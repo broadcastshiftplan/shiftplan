@@ -1841,6 +1841,13 @@ async function togglePlan(person, weekStart, type){
 
 // Yıl seçicisini başlangıçta doldur
 document.addEventListener('DOMContentLoaded', ()=>{
+  // Sodexo varsayılan ay/yıl
+  const _now = new Date();
+  const sdxY = document.getElementById('sdx-year');
+  const sdxM = document.getElementById('sdx-month');
+  if(sdxY) sdxY.value = String(_now.getFullYear());
+  if(sdxM) sdxM.value = String(_now.getMonth()+1);
+
   initYearSelect();
   document.querySelectorAll('.logo1-img').forEach(el=>el.src=LOGO1);
   document.querySelectorAll('.logo2-img').forEach(el=>el.src=LOGO2);
@@ -1976,10 +1983,6 @@ async function loadSodexo(){
   const year  = parseInt(document.getElementById('sdx-year').value);
   const month = parseInt(document.getElementById('sdx-month').value);
 
-  // Set current month as default
-  const now = new Date();
-  document.getElementById('sdx-month').value = String(now.getMonth()+1);
-
   const data = await api('GET', `/api/sodexo?year=${year}&month=${month}`);
   const { nights, period } = data;
 
@@ -2047,7 +2050,41 @@ async function loadSodexo(){
   });
 
   t += '</tbody></table>';
-  document.getElementById('sdx-wrap').innerHTML = t;
+  // Timeline / film karesi görünümü
+  let timeline = `<div style="margin-top:16px;border-top:2px solid var(--bd);padding-top:12px">
+    <div style="font-size:11px;font-weight:600;color:var(--txt2);margin-bottom:8px;letter-spacing:1px">📽 DÖNEM TAKVİMİ</div>
+    <div style="display:flex;gap:2px;flex-wrap:wrap;align-items:flex-end">`;
+
+  allDates.forEach(d => {
+    const dt = new Date(d);
+    const dayName = ['Paz','Pzt','Sal','Çar','Per','Cum','Cmt'][dt.getDay()];
+    const dayNum = dt.getDate();
+    const isSun = dt.getDay() === 0;
+    const isSat = dt.getDay() === 6;
+
+    // Bu tarihte kaç kişi nöbet tuttu / onaylandı
+    const nightCount = persons.filter(p => byPerson[p] && byPerson[p].hasOwnProperty(d)).length;
+    const approvedCount = persons.filter(p => byPerson[p] && byPerson[p][d] && byPerson[p][d].approved).length;
+
+    const height = nightCount > 0 ? 30 + (nightCount * 8) : 20;
+    const bg = nightCount === 0 ? '#F0F0F0' :
+               approvedCount === nightCount ? '#C8E6C9' :
+               approvedCount > 0 ? '#FFF9C4' : '#2C3E50';
+    const fg = nightCount === 0 ? '#aaa' :
+               approvedCount === nightCount ? '#1B5E20' :
+               approvedCount > 0 ? '#F57F17' : '#D3D1C7';
+
+    timeline += `<div style="display:flex;flex-direction:column;align-items:center;gap:2px;min-width:30px">
+      <div style="font-size:8px;color:var(--txt3)">${nightCount>0?nightCount:''}</div>
+      <div style="width:26px;height:${height}px;background:${bg};border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:${fg};border:1px solid ${isSun?'#EF9A9A':'#ddd'}"
+        title="${d}: ${nightCount} gece nöbeti (${approvedCount} onaylı)">${nightCount>0?(approvedCount===nightCount?'✓':nightCount):''}</div>
+      <div style="font-size:8px;color:${isSun?'#C62828':isSat?'#1565C0':'var(--txt3)'};">${dayNum}</div>
+      <div style="font-size:7px;color:var(--txt3)">${dayName}</div>
+    </div>`;
+  });
+
+  timeline += `</div></div>`;
+  document.getElementById('sdx-wrap').innerHTML = t + timeline;
 }
 
 async function toggleSodexo(person, date){
