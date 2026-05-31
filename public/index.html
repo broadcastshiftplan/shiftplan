@@ -377,6 +377,7 @@ textarea.nt{width:100%;box-sizing:border-box;border:1px solid #e0e0e0;border-rad
     <div style="overflow-x:auto" id="sdx-wrap">
       <div style="color:var(--txt3);font-size:13px;padding:20px;text-align:center">Dönem seçin...</div>
     </div>
+    <div id="sdx-yearly"></div>
   </div>
 </div>
 
@@ -1672,7 +1673,7 @@ const PANES=["cizelge","uyarilar","talepler","dogumgunu","yillikplan","sodexo","
 function sw(id){
   PANES.forEach(p=>{const el=document.getElementById(`pn-${p}`);if(el)el.style.display=p===id?"block":"none";const b=document.getElementById(`tb-${p}`);if(b)b.classList.toggle("active",p===id);});
   if(id==="yillikplan"){loadYearPlan();}
-  if(id==="sodexo"){loadSodexo();}
+  if(id==="sodexo"){loadSodexo();loadSodexoYearly();}
   if(id==="istatistik"){loadStats();}
   if(id==="arsiv"){loadArchive();}
   if(id==="dogumgunu"){loadBirthdays();}
@@ -2085,6 +2086,101 @@ async function loadSodexo(){
 
   timeline += `</div></div>`;
   document.getElementById('sdx-wrap').innerHTML = t + timeline;
+
+  // Yıllık özet — film karesi
+  loadSodexoYearly(year);
+}
+
+async function loadSodexoYearly(year){
+  if(!year) year = parseInt(document.getElementById('sdx-year').value);
+
+  // Tüm 12 ay için veri çek
+  const allMonthData = await Promise.all(
+    Array.from({length:12},(_,i)=>
+      api('GET',`/api/sodexo?year=${year}&month=${i+1}`).catch(()=>({nights:[]}))
+    )
+  );
+
+  const MONTHS_S=['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'];
+
+  // Her personel için aylık özet
+  const personData = {};
+  allMonthData.forEach((data,mi)=>{
+    if(!data.nights)return;
+    data.nights.forEach(n=>{
+      if(!personData[n.person])personData[n.person]={months:Array(12).fill(0),approved:Array(12).fill(0)};
+      personData[n.person].months[mi]++;
+      if(n.approval&&n.approval.approved)personData[n.person].approved[mi]++;
+    });
+  });
+
+  // Sadece gece nöbeti olan personel
+  const activePersons = PERSONEL.filter(p=>personData[p]&&personData[p].months.reduce((a,b)=>a+b,0)>0);
+
+  if(activePersons.length===0){
+    document.getElementById('sdx-yearly').innerHTML='';
+    return;
+  }
+
+  const maxCount = Math.max(...activePersons.flatMap(p=>personData[p].months));
+
+  let html2 = `<div style="margin-top:20px;border-top:2px solid var(--bd);padding-top:16px">
+    <div style="font-size:12px;font-weight:600;color:var(--txt2);margin-bottom:12px;letter-spacing:1px">
+      📽 ${year} YILI — YILLIK GECE NÖBETİ ÖZETİ
+    </div>
+    <div style="overflow-x:auto"><table style="border-collapse:collapse;font-size:11px;width:100%;min-width:600px">
+    <thead><tr>
+      <th style="text-align:left;padding:5px 10px;background:var(--blue2);color:#fff;min-width:140px">Personel</th>
+      ${MONTHS_S.map(m=>`<th style="padding:3px 2px;background:var(--gece-b,#2C3E50);color:#D3D1C7;text-align:center;font-size:10px;font-weight:500;min-width:44px">${m}</th>`).join('')}
+      <th style="padding:5px 8px;background:var(--navy);color:#fff;text-align:center;border-left:2px solid rgba(255,255,255,.2)">Toplam</th>
+      <th style="padding:5px 8px;background:#2E7D32;color:#fff;text-align:center">Onaylı</th>
+    </tr></thead><tbody>`;
+
+  activePersons.forEach((person,pi)=>{
+    const pd = personData[person];
+    const total = pd.months.reduce((a,b)=>a+b,0);
+    const totalAppr = pd.approved.reduce((a,b)=>a+b,0);
+    const bg = pi%2===0?'#fff':'var(--alt)';
+
+    const cells = pd.months.map((count,mi)=>{
+      const appr = pd.approved[mi];
+      if(count===0){
+        return `<td style="padding:2px;background:${bg};border-bottom:0.5px solid var(--bd)">
+          <div style="width:34px;height:46px;margin:auto;border-radius:3px;background:var(--alt);border:0.5px dashed var(--bd)"></div>
+        </td>`;
+      }
+      const apprH = maxCount>0?Math.max(4,Math.round((appr/maxCount)*28)):0;
+      const unapprH = maxCount>0?Math.max(4,Math.round(((count-appr)/maxCount)*28)):0;
+
+      return `<td style="padding:2px;background:${bg};border-bottom:0.5px solid var(--bd)">
+        <div style="width:34px;margin:auto;display:flex;flex-direction:column;align-items:center;gap:1px">
+          <div style="font-size:9px;font-weight:600;color:var(--txt2);line-height:1.2">${count}</div>
+          <div style="width:34px;height:46px;background:#1C2C3A;border-radius:3px;border:2px solid #37474F;display:flex;flex-direction:column;overflow:hidden">
+            <div style="display:flex;gap:2px;padding:2px 2px 1px;flex-shrink:0">
+              ${[1,2].map(()=>'<div style="width:8px;height:3px;border-radius:1px;background:#0D1B25"></div>').join('')}
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;padding:0 2px 1px;gap:1px">
+              ${appr>0?`<div style="width:100%;height:${apprH}px;background:#C8E6C9;border-radius:1px;display:flex;align-items:center;justify-content:center"><span style="font-size:7px;color:#1B5E20;font-weight:700">${appr}</span></div>`:''}
+              ${(count-appr)>0?`<div style="width:100%;height:${unapprH}px;background:#455A64;border-radius:1px;display:flex;align-items:center;justify-content:center"><span style="font-size:7px;color:#90A4AE">${count-appr}</span></div>`:''}
+            </div>
+            <div style="display:flex;gap:2px;padding:1px 2px 2px;flex-shrink:0">
+              ${[1,2].map(()=>'<div style="width:8px;height:3px;border-radius:1px;background:#0D1B25"></div>').join('')}
+            </div>
+          </div>
+        </div>
+      </td>`;
+    }).join('');
+
+    html2 += `<tr>
+      <td style="padding:5px 10px;font-weight:600;font-size:11px;color:var(--navy);background:${bg};border-bottom:0.5px solid var(--bd)">${person}</td>
+      ${cells}
+      <td style="padding:5px 8px;text-align:center;font-weight:700;font-size:14px;color:var(--navy);background:${bg};border-bottom:0.5px solid var(--bd);border-left:2px solid var(--bd)">${total}</td>
+      <td style="padding:5px 8px;text-align:center;font-weight:700;font-size:14px;color:#2E7D32;background:${bg};border-bottom:0.5px solid var(--bd)">${totalAppr}</td>
+    </tr>`;
+  });
+
+  html2 += '</tbody></table></div></div>';
+  document.getElementById('sdx-yearly').innerHTML = html2;
 }
 
 async function toggleSodexo(person, date){
