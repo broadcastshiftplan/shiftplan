@@ -190,6 +190,7 @@ textarea.nt{width:100%;box-sizing:border-box;border:1px solid #e0e0e0;border-rad
   <button class="tab" id="tb-talepler"          onclick="sw('talepler')"><i class="ti ti-inbox" aria-hidden="true"></i> Talepler <span class="badge" id="reqb" style="display:none">0</span></button>
   <button class="tab admin-only" id="tb-dogumgunu" onclick="sw('dogumgunu')"><i class="ti ti-cake" aria-hidden="true"></i> Doğum Günleri <span class="badge" id="bdaybadge" style="display:none">🎂</span></button>
   <button class="tab" id="tb-yillikplan" onclick="sw('yillikplan')"><i class="ti ti-calendar-month" aria-hidden="true"></i> Yıllık Plan</button>
+  <button class="tab admin-only" id="tb-sodexo" onclick="sw('sodexo')"><i class="ti ti-moon-stars" aria-hidden="true"></i> Sodexo</button>
   <button class="tab admin-only" id="tb-istatistik" onclick="sw('istatistik')"><i class="ti ti-chart-bar" aria-hidden="true"></i> İstatistik</button>
   <button class="tab admin-only" id="tb-arsiv"  onclick="sw('arsiv')"><i class="ti ti-archive" aria-hidden="true"></i> Arşiv</button>
   <button class="tab admin-only" id="tb-kullanicilar" onclick="sw('kullanicilar')"><i class="ti ti-users" aria-hidden="true"></i> Kullanıcılar</button>
@@ -339,6 +340,42 @@ textarea.nt{width:100%;box-sizing:border-box;border:1px solid #e0e0e0;border-rad
     </div>
     <div style="margin-top:10px;font-size:11px;color:var(--txt3)">
       💡 Tıklayarak yıllık izin seçin. Tekrar tıklayarak iptal edin. Yönetici o haftayı açtığında seçimleriniz otomatik çizelgeye eklenir.
+    </div>
+  </div>
+</div>
+
+
+<!-- SODEXO -->
+<div id="pn-sodexo" style="display:none">
+  <div class="card">
+    <div class="card-title"><i class="ti ti-moon-stars" style="font-size:18px" aria-hidden="true"></i> Sodexo Gece Nöbet Takibi</div>
+    <div class="alert info" style="margin-bottom:12px">
+      <i class="ti ti-info-circle" style="flex-shrink:0" aria-hidden="true"></i>
+      <span>Dönem: Önceki ayın <b>21'i</b> – Bu ayın <b>20'si</b> (dahil). Çizelgeden otomatik çekilir. Tıklayarak onaylayın.</span>
+    </div>
+    <div class="wbar" style="margin-bottom:14px">
+      <select class="wsel" id="sdx-year" style="min-width:100px" onchange="loadSodexo()">
+        <option value="2025">2025</option>
+        <option value="2026" selected>2026</option>
+        <option value="2027">2027</option>
+        <option value="2028">2028</option>
+        <option value="2029">2029</option>
+        <option value="2030">2030</option>
+      </select>
+      <select class="wsel" id="sdx-month" style="min-width:130px" onchange="loadSodexo()">
+        <option value="1">Ocak</option><option value="2">Şubat</option>
+        <option value="3">Mart</option><option value="4">Nisan</option>
+        <option value="5">Mayıs</option><option value="6">Haziran</option>
+        <option value="7">Temmuz</option><option value="8">Ağustos</option>
+        <option value="9">Eylül</option><option value="10">Ekim</option>
+        <option value="11">Kasım</option><option value="12">Aralık</option>
+      </select>
+      <button class="btn btn-blue" onclick="loadSodexo()"><i class="ti ti-refresh" aria-hidden="true"></i></button>
+      <button class="btn btn-green" onclick="exportSodexoExcel()"><i class="ti ti-file-spreadsheet" aria-hidden="true"></i> Excel</button>
+      <span id="sdx-period" style="font-size:12px;color:var(--txt2);font-weight:500"></span>
+    </div>
+    <div style="overflow-x:auto" id="sdx-wrap">
+      <div style="color:var(--txt3);font-size:13px;padding:20px;text-align:center">Dönem seçin...</div>
     </div>
   </div>
 </div>
@@ -1356,8 +1393,9 @@ async function loadStats(){
 
 async function loadYears(){
   const yrs=await api("GET","/api/years");
+  const allYrs=[...new Set([...yrs,...[2025,2026,2027,2028,2029,2030]])].sort((a,b)=>b-a);
   const sel=document.getElementById("yr-sel");
-  sel.innerHTML=`<option value="">Tüm</option>${yrs.map(y=>`<option value="${y}">${y}</option>`).join("")}`;
+  sel.innerHTML=`<option value="">Tüm</option>${allYrs.map(y=>`<option value="${y}">${y}</option>`).join("")}`;
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1630,10 +1668,11 @@ async function exportExcel(){
 // ═══════════════════════════════════════════════════════════
 // TABS
 // ═══════════════════════════════════════════════════════════
-const PANES=["cizelge","uyarilar","talepler","dogumgunu","yillikplan","istatistik","arsiv","kullanicilar","ayarlar","profil"];
+const PANES=["cizelge","uyarilar","talepler","dogumgunu","yillikplan","sodexo","istatistik","arsiv","kullanicilar","ayarlar","profil"];
 function sw(id){
   PANES.forEach(p=>{const el=document.getElementById(`pn-${p}`);if(el)el.style.display=p===id?"block":"none";const b=document.getElementById(`tb-${p}`);if(b)b.classList.toggle("active",p===id);});
   if(id==="yillikplan"){loadYearPlan();}
+  if(id==="sodexo"){loadSodexo();}
   if(id==="istatistik"){loadStats();}
   if(id==="arsiv"){loadArchive();}
   if(id==="dogumgunu"){loadBirthdays();}
@@ -1928,6 +1967,180 @@ async function exportStatsExcel(){
   const a=document.createElement("a");a.href=URL.createObjectURL(blob);
   a.download=`Istatistik_${label.replace(/[\s–—\/]/g,"_")}.xlsx`;a.click();
 }
+// ═══════════════════════════════════════════════════════════
+// SODEXO
+// ═══════════════════════════════════════════════════════════
+const MONTHS_TR = ['','Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+
+async function loadSodexo(){
+  const year  = parseInt(document.getElementById('sdx-year').value);
+  const month = parseInt(document.getElementById('sdx-month').value);
+
+  // Set current month as default
+  const now = new Date();
+  document.getElementById('sdx-month').value = String(now.getMonth()+1);
+
+  const data = await api('GET', `/api/sodexo?year=${year}&month=${month}`);
+  const { nights, period } = data;
+
+  document.getElementById('sdx-period').textContent =
+    `Dönem: ${period.start} → ${period.end}`;
+
+  if(!nights || nights.length === 0){
+    document.getElementById('sdx-wrap').innerHTML =
+      '<div style="color:var(--txt3);font-size:13px;padding:20px;text-align:center">Bu dönemde gece nöbeti kaydı bulunamadı.</div>';
+    return;
+  }
+
+  // Tüm tarihleri topla
+  const allDates = [...new Set(nights.map(n=>n.shift_date))].sort();
+  // Her personel için data
+  const byPerson = {};
+  nights.forEach(n => {
+    if(!byPerson[n.person]) byPerson[n.person] = {};
+    byPerson[n.person][n.shift_date] = n.approval;
+  });
+
+  // Sadece gece nöbeti olan personel
+  const persons = PERSONEL.filter(p => byPerson[p]);
+
+  let t = `<table style="border-collapse:collapse;font-size:11px;min-width:600px;width:100%">
+    <thead><tr>
+      <th style="background:var(--navy);color:#fff;padding:8px 12px;text-align:left;min-width:160px;position:sticky;left:0">Personel</th>
+      ${allDates.map(d=>{
+        const dt=new Date(d);
+        const dayName=['Paz','Pzt','Sal','Çar','Per','Cum','Cmt'][dt.getDay()];
+        const dayNum=String(dt.getDate()).padStart(2,'0')+'.'+String(dt.getMonth()+1).padStart(2,'0');
+        return `<th style="background:var(--gece-b);color:var(--gece-f);padding:5px 4px;text-align:center;min-width:52px;font-size:10px">${dayName}<br>${dayNum}</th>`;
+      }).join('')}
+      <th style="background:var(--navy);color:#fff;padding:5px 8px;text-align:center">Toplam</th>
+      <th style="background:#2E7D32;color:#fff;padding:5px 8px;text-align:center">Onaylı</th>
+    </tr></thead>
+    <tbody>`;
+
+  persons.forEach((person, pi) => {
+    const alt = pi%2===0 ? '#fff' : 'var(--alt)';
+    const personNights = byPerson[person] || {};
+    const total = Object.keys(personNights).length;
+    const approved = Object.values(personNights).filter(a=>a&&a.approved).length;
+
+    t += `<tr>
+      <td style="padding:6px 12px;font-weight:600;background:${alt};position:sticky;left:0;border-right:2px solid var(--bd)">${person}</td>
+      ${allDates.map(d => {
+        const appr = personNights[d];
+        if(!appr && !personNights.hasOwnProperty(d)){
+          return `<td style="background:${alt};padding:4px;text-align:center">—</td>`;
+        }
+        const isApproved = appr && appr.approved;
+        const bg = isApproved ? '#C8E6C9' : '#2C3E50';
+        const fg = isApproved ? '#1B5E20' : '#D3D1C7';
+        const icon = isApproved ? '✓' : '🌙';
+        return `<td style="padding:4px;text-align:center;background:${alt}">
+          <div onclick="toggleSodexo('${person.replace(/'/g,"\'")}','${d}')"
+            style="background:${bg};color:${fg};border-radius:5px;cursor:pointer;padding:4px 6px;font-weight:700;font-size:13px;transition:all .15s"
+            title="${isApproved?'Onaylı — iptal için tıkla':'Onaylamak için tıkla'}">${icon}</div>
+        </td>`;
+      }).join('')}
+      <td style="text-align:center;font-weight:700;background:${alt};color:var(--gece-b)">${total}</td>
+      <td style="text-align:center;font-weight:700;background:${alt};color:#2E7D32">${approved}</td>
+    </tr>`;
+  });
+
+  t += '</tbody></table>';
+  document.getElementById('sdx-wrap').innerHTML = t;
+}
+
+async function toggleSodexo(person, date){
+  // Mevcut durumu bul
+  const year  = parseInt(document.getElementById('sdx-year').value);
+  const month = parseInt(document.getElementById('sdx-month').value);
+  const data  = await api('GET', `/api/sodexo?year=${year}&month=${month}`);
+  const night = data.nights.find(n=>n.person===person&&n.shift_date===date);
+  const currentApproved = night?.approval?.approved || 0;
+  await api('POST', '/api/sodexo/approve', { person, date, approved: currentApproved ? 0 : 1 });
+  loadSodexo();
+}
+
+async function exportSodexoExcel(){
+  const year  = parseInt(document.getElementById('sdx-year').value);
+  const month = parseInt(document.getElementById('sdx-month').value);
+  const data  = await api('GET', `/api/sodexo?year=${year}&month=${month}`);
+  const { nights, period } = data;
+  if(!nights||nights.length===0){alert('Bu dönemde veri yok.');return;}
+
+  const label=`${MONTHS_TR[month]} ${year} Sodexo`;
+  const allDates=[...new Set(nights.map(n=>n.shift_date))].sort();
+  const byPerson={};
+  nights.forEach(n=>{if(!byPerson[n.person])byPerson[n.person]={};byPerson[n.person][n.shift_date]=n.approval;});
+  const persons=PERSONEL.filter(p=>byPerson[p]);
+
+  const esc=s=>String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  const ss=[];const ssM={};
+  const S=v=>{const k=String(v||"");if(!(k in ssM)){ssM[k]=ss.length;ss.push(k);}return ssM[k];};
+
+  const fills=[{t:"none"},{t:"gray125"},{t:"solid",fg:"FF1F3864"},{t:"solid",fg:"FF2C3E50"},{t:"solid",fg:"FFC8E6C9"},{t:"solid",fg:"FFF4F7FB"},{t:"solid",fg:"FF2E7D32"}];
+  const mf=f=>f.t==="none"?`<fill><patternFill patternType="none"/></fill>`:f.t==="gray125"?`<fill><patternFill patternType="gray125"/></fill>`:`<fill><patternFill patternType="solid"><fgColor rgb="${f.fg}"/><bgColor indexed="64"/></patternFill></fill>`;
+  const fonts=[{sz:10,n:"Arial"},{sz:13,n:"Arial",b:1,c:"FFFFFFFF"},{sz:10,n:"Arial",b:1,c:"FFFFFFFF"},{sz:10,n:"Arial",b:1,c:"FF1B5E20"},{sz:10,n:"Arial",b:1,c:"FFD3D1C7"},{sz:10,n:"Arial",b:1,c:"FF000000"}];
+  const mf2=f=>'<font>'+(f.b?'<b/>':'')+(f.c?'<color rgb="'+f.c+'"/>':'<color theme="1"/>')+'<sz val="'+f.sz+'"/><name val="'+f.n+'"/></font>';
+  const tS='<left style="thin"><color rgb="FF9E9E9E"/></left><right style="thin"><color rgb="FF9E9E9E"/></right><top style="thin"><color rgb="FF9E9E9E"/></top><bottom style="thin"><color rgb="FF9E9E9E"/></bottom>';
+  const brdX=`<borders count="1"><border>${tS}</border></borders>`;
+  const xfs=[];const ax=(fi,fn,bi,h)=>{xfs.push({fi,fn,bi,h:h||"center"});return xfs.length-1;};
+  ax(0,0,0);
+  const XF={title:ax(2,1,0,"center"),hdr_night:ax(3,2,0,"center"),hdr_name:ax(2,1,0,"left"),approved:ax(4,3,0,"center"),night:ax(3,4,0,"center"),empty:ax(5,5,0,"center"),total:ax(2,1,0,"center"),ok_total:ax(6,1,0,"center"),name:ax(5,5,0,"left")};
+  const xfsXml=`<cellXfs count="${xfs.length}">${xfs.map(x=>`<xf numFmtId="0" fontId="${x.fn}" fillId="${x.fi}" borderId="${x.bi}" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="${x.h}" vertical="center" wrapText="0"/></xf>`).join("")}</cellXfs>`;
+  const sty=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><numFmts count="0"/><fonts count="${fonts.length}">${fonts.map(mf2).join("")}</fonts><fills count="${fills.length}">${fills.map(mf).join("")}</fills>${brdX}${xfsXml}<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>`;
+
+  const CL=c=>String.fromCharCode(65+c);
+  const CV=(col,r,val,xi)=>{const ref=`${CL(col)}${r+1}`;if(!val&&val!==0)return`<c r="${ref}" s="${xi}" t="s"><v>${S("")}</v></c>`;return`<c r="${ref}" t="s" s="${xi}"><v>${S(val)}</v></c>`;};
+  const CVN=(col,r,val,xi)=>{const ref=`${CL(col)}${r+1}`;return`<c r="${ref}" t="n" s="${xi}"><v>${val}</v></c>`;};
+  const MG=(r1,c1,r2,c2)=>`${CL(c1)}${r1+1}:${CL(c2)}${r2+1}`;
+
+  const xlrows=[];const merges=[];let ri=0;
+  const NC=allDates.length+2; // name + dates + total + approved
+
+  // Başlık
+  const t0=[CV(0,ri,`YAYIN MÜHENDİSLİĞİ — SODEXO GECE NÖBETİ — ${label} (${period.start} → ${period.end})`,XF.title)];
+  for(let i=1;i<=NC;i++)t0.push(CV(i,ri,"",XF.title));
+  xlrows.push(t0);merges.push(MG(ri,0,ri,NC));ri++;
+
+  // Sütun başlıkları
+  const hdr=[CV(0,ri,"Personel",XF.hdr_name),...allDates.map((d,i)=>{
+    const dt=new Date(d);const days=['Paz','Pzt','Sal','Çar','Per','Cum','Cmt'];
+    return CV(i+1,ri,`${days[dt.getDay()]} ${String(dt.getDate()).padStart(2,'0')}.${String(dt.getMonth()+1).padStart(2,'0')}`,XF.hdr_night);
+  }),CV(allDates.length+1,ri,"Toplam",XF.hdr_night),CV(allDates.length+2,ri,"Onaylı",XF.hdr_night)];
+  xlrows.push(hdr);ri++;
+
+  // Personel satırları
+  persons.forEach((person,pi)=>{
+    const pn=byPerson[person]||{};
+    const total=Object.keys(pn).length;
+    const approved=Object.values(pn).filter(a=>a&&a.approved).length;
+    const row=[CV(0,ri,person,XF.name),...allDates.map((d,i)=>{
+      if(!pn.hasOwnProperty(d))return CV(i+1,ri,"",XF.empty);
+      return CV(i+1,ri,pn[d]&&pn[d].approved?"✓":"🌙",pn[d]&&pn[d].approved?XF.approved:XF.night);
+    }),CVN(allDates.length+1,ri,total,XF.total),CVN(allDates.length+2,ri,approved,XF.ok_total)];
+    xlrows.push(row);ri++;
+  });
+
+  const colWidths=[22,...allDates.map(()=>7),10,10];
+  const colsXml=colWidths.map((w,i)=>`<col min="${i+1}" max="${i+1}" width="${w}" customWidth="1"/>`).join("");
+  const rwXml=xlrows.map((cells,r)=>`<row r="${r+1}" ht="${r===0?22:r===1?18:15}" customHeight="1">${cells.join("")}</row>`).join("");
+  const mgXml=merges.length?`<mergeCells count="${merges.length}">${merges.map(m=>`<mergeCell ref="${m}"/>`).join("")}</mergeCells>`:"";
+  const shXml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetFormatPr defaultRowHeight="15"/><cols>${colsXml}</cols><sheetData>${rwXml}</sheetData>${mgXml}</worksheet>`;
+  const ssXml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="${ss.length}" uniqueCount="${ss.length}">${ss.map(s=>`<si><t xml:space="preserve">${esc(s)}</t></si>`).join("")}</sst>`;
+  const wbXml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Sodexo" sheetId="1" r:id="rId1"/></sheets></workbook>`;
+  const wbRXml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/><Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings" Target="sharedStrings.xml"/></Relationships>`;
+  const relsXml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>`;
+  const ctXml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/><Override PartName="/xl/sharedStrings.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml"/></Types>`;
+  const zipS=new JSZip();
+  zipS.file("[Content_Types].xml",ctXml);zipS.folder("_rels").file(".rels",relsXml);
+  const xlS=zipS.folder("xl");xlS.file("workbook.xml",wbXml);xlS.folder("_rels").file("workbook.xml.rels",wbRXml);
+  xlS.folder("worksheets").file("sheet1.xml",shXml);xlS.file("styles.xml",sty);xlS.file("sharedStrings.xml",ssXml);
+  const blob=await zipS.generateAsync({type:"blob",mimeType:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);
+  a.download=`Sodexo_${label.replace(/[\s–—\/]/g,"_")}.xlsx`;a.click();
+}
+
 </script>
 </body>
 </html>
