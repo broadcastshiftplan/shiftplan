@@ -279,6 +279,7 @@ textarea.nt{width:100%;box-sizing:border-box;border:1px solid #e0e0e0;border-rad
     <label style="font-size:12px;color:var(--txt2);font-weight:500">Yıl:</label>
     <select class="wsel" id="yr-sel" style="min-width:110px" onchange="loadStats()"><option value="">Tüm</option></select>
     <button class="btn btn-blue" onclick="loadStats()"><i class="ti ti-refresh" aria-hidden="true"></i></button>
+    <button class="btn btn-green" onclick="exportStatsExcel()"><i class="ti ti-file-spreadsheet" aria-hidden="true"></i> Excel İndir</button>
   </div>
   <div class="sc-grid" id="sc-cards"></div>
   <div style="overflow-x:auto;border:1px solid var(--bd);border-radius:10px;margin-bottom:16px">
@@ -1541,39 +1542,43 @@ async function exportExcel(){
   rows.push(hdr);ri++;
 
   const dynRows=buildDynRows();
-  // Excel için rowspan/merge hesapla
+  // Excel sol sütun merge — önce grupları bul
   const xlGroups=[];let xlCur=null;
   dynRows.forEach(row=>{
     if(!row.id||row._s||row._div||row._dyn_ctrl)return;
-    const sec=row._dyn_section||row.c||row.id;
-    if(!xlCur||xlCur.sec!==sec){xlCur={sec,label:row.b||"",startRi:null,rows:[]};xlGroups.push(xlCur);}
+    const sec=row._dyn_section||(row.c+row.b)||row.id;
+    if(!xlCur||xlCur.sec!==sec){xlCur={sec,label:row.b||"",rows:[]};xlGroups.push(xlCur);}
     xlCur.rows.push(row.id);
   });
-  const xlMergeMap={};
-  xlGroups.forEach(g=>{g.rows.forEach((rid,i)=>{xlMergeMap[rid]={label:g.label,count:g.rows.length,idx:i};});});
+  const xlMap={};
+  xlGroups.forEach(g=>{g.rows.forEach((rid,i)=>{xlMap[rid]={label:g.label,span:g.rows.length,idx:i,first:g.rows[0]};});});
 
-  let xlGroupStartRi={};
+  // Render
   dynRows.forEach(row=>{
     if(row._s){const xS=row._bot?XF.bt:XF.sc;const t=[CV(0,ri,row._s,xS)];for(let i=1;i<9;i++)t.push(CV(i,ri,"",xS));rows.push(t);merges.push(MG(ri,0,ri,8));ri++;return;}
     if(row._div){const t=[CV(0,ri,"─── HAFTALIK İZİN · DIŞ GÖREV · YILLIK · K.İ ───",XF.dv)];for(let i=1;i<9;i++)t.push(CV(i,ri,"",XF.dv));rows.push(t);merges.push(MG(ri,0,ri,8));ri++;return;}
     if(row._dyn_ctrl)return;
     if(!row.id)return;
     const cx=catXF[row.c]||{t:XF.tSb,p:XF.pSb};
-    const mg=xlMergeMap[row.id];
-    // Sol sütun — sadece ilk satırda yaz, merge ile birleştir
+    const mg=xlMap[row.id];
     let bolumCell;
-    if(mg&&mg.idx===0){
-      xlGroupStartRi[row.id]=ri;
-      bolumCell=CV(0,ri,mg.label,XF.bSc);
-    } else if(mg&&mg.idx>0){
-      // Aynı grup içindeki diğer satırlar — boş hücre (merge olacak)
-      const grp=xlGroups.find(g=>g.rows.includes(row.id));
-      if(grp&&mg.idx===mg.count-1){
-        // Son satırda merge ekle
-        const firstRi=Object.entries(xlGroupStartRi).find(([rid])=>grp.rows[0]===rid)?.[1];
-        if(firstRi!==undefined)merges.push(MG(firstRi,0,ri,0));
+    if(mg){
+      if(mg.idx===0){
+        // İlk satır — label yaz, merge başlat
+        mg._startRi=ri;
+        bolumCell=CV(0,ri,mg.label,XF.bSc);
+      } else {
+        // Diğer satırlar — boş, merge içinde
+        bolumCell=CV(0,ri,"",XF.bAl);
+        if(mg.idx===mg.span-1&&mg._startRi===undefined){
+          // startRi kaybolmuşsa bul
+          const firstMg=xlMap[mg.first];
+          if(firstMg&&firstMg._startRi!==undefined)merges.push(MG(firstMg._startRi,0,ri,0));
+        } else if(mg.idx===mg.span-1){
+          const firstMg=xlMap[mg.first];
+          if(firstMg&&firstMg._startRi!==undefined)merges.push(MG(firstMg._startRi,0,ri,0));
+        }
       }
-      bolumCell=CV(0,ri,"",XF.bAl);
     } else {
       bolumCell=CV(0,ri,row.b||"",row.b?XF.bSc:XF.bAl);
     }
@@ -1796,6 +1801,131 @@ setTimeout(()=>{
   document.querySelectorAll('.logo2-img').forEach(el=>el.src=LOGO2);
 },100);
 setTimeout(initYearSelect, 500);
+
+
+// ═══════════════════════════════════════════════════════════
+// İSTATİSTİK EXCEL EXPORT
+// ═══════════════════════════════════════════════════════════
+async function exportStatsExcel(){
+  const yr=document.getElementById("yr-sel").value;
+  const stats=await api("GET",yr?`/api/stats?year=${yr}`:"/api/stats");
+  const ki=await api("GET","/api/ki").catch(()=>[]);
+  const label=yr?`${yr} Yılı İstatistik`:"Tüm Zamanlar İstatistik";
+
+  const esc=s=>String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  const ss=[];const ssM={};
+  const S=v=>{const k=String(v||"");if(!(k in ssM)){ssM[k]=ss.length;ss.push(k);}return ssM[k];};
+
+  const cats=["sabah","prime","aksam","gece","dis","izin","yillik","dogum","ki"];
+  const catLabels={"sabah":"Sabah","prime":"Prime Vardiya","aksam":"Akşam","gece":"Gece","dis":"Dış Görev","izin":"Haftalık İzin","yillik":"Yıllık/Rapor","dogum":"Doğum Günü","ki":"K.İ"};
+  const catColors={"sabah":"FFFAEEDA","prime":"FFE8F5E0","aksam":"FFEEEDFE","gece":"FF2C3E50","dis":"FFE1F5EE","izin":"FF1B5E20","yillik":"FFFAE8E8","dogum":"FFFCE4FC","ki":"FFEEE8FF"};
+  const catFG={"sabah":"FF412402","prime":"FF1A5C00","aksam":"FF26215C","gece":"FFD3D1C7","dis":"FF04342C","izin":"FFFFFFFF","yillik":"FF7B1818","dogum":"FF5B0A5B","ki":"FF3D1D8A"};
+
+  // Fills
+  const fills=[
+    {t:"none"},{t:"gray125"},
+    {t:"solid",fg:"FF1F3864"}, // 2=navy (başlık)
+    {t:"solid",fg:"FF2E75B6"}, // 3=mavi
+    {t:"solid",fg:"FFE8EAF6"}, // 4=lavender (personel adı)
+    {t:"solid",fg:"FFF4F7FB"}, // 5=alt
+    ...cats.map(c=>({t:"solid",fg:catColors[c]})), // 6-14
+  ];
+  const mf=f=>f.t==="none"?`<fill><patternFill patternType="none"/></fill>`:f.t==="gray125"?`<fill><patternFill patternType="gray125"/></fill>`:`<fill><patternFill patternType="solid"><fgColor rgb="${f.fg}"/><bgColor indexed="64"/></patternFill></fill>`;
+
+  // Fonts
+  const fonts=[
+    {sz:10,n:"Arial"},                          // 0=normal
+    {sz:13,n:"Arial",b:1,c:"FFFFFFFF"},        // 1=başlık beyaz
+    {sz:10,n:"Arial",b:1,c:"FF1F3864"},        // 2=koyu lacivert
+    {sz:10,n:"Arial",b:1,c:"FF283593"},        // 3=koyu mor (lavender)
+    {sz:10,n:"Arial",b:1,c:"FF000000"},        // 4=siyah bold
+    ...cats.map(c=>({sz:10,n:"Arial",b:1,c:catFG[c]})), // 5-13
+  ];
+  const mf2=f=>`<font>${f.b?"<b/>":""}${f.c?`<color rgb="${f.c}"/>`:"<color theme=\"1\"/>"}<sz val="${f.sz}"/><name val="${f.n}"/></font>`;
+
+  const tS=`<left style="thin"><color rgb="FFC0C0C0"/></left><right style="thin"><color rgb="FFC0C0C0"/></right><top style="thin"><color rgb="FFC0C0C0"/></top><bottom style="thin"><color rgb="FFC0C0C0"/></bottom>`;
+  const brdX=`<borders count="1"><border>${tS}</border></borders>`;
+
+  const xfs=[];const ax=(fi,fn,bi,h,v,w)=>{xfs.push({fi,fn,bi,h:h||"center",v:v||"center",w:!!w});return xfs.length-1;};
+  ax(0,0,0); // 0=default
+  const XF={
+    title:  ax(2,1,0,"center","center",true),
+    hdr:    ax(3,1,0,"center","center",true),
+    name:   ax(4,3,0,"left","center",false),
+    num:    ax(5,4,0,"center","center",false),
+    total:  ax(2,1,0,"center","center",false),
+    ki_g:   ax(4,2,0,"center","center",false),
+    ki_r:   ax(4,2,0,"center","center",false),
+    ...Object.fromEntries(cats.map((c,i)=>[c, ax(6+i, 5+i, 0,"center","center",false)])),
+    empty:  ax(5,0,0,"center","center",false),
+  };
+  const xfsXml=`<cellXfs count="${xfs.length}">${xfs.map(x=>`<xf numFmtId="0" fontId="${x.fn}" fillId="${x.fi}" borderId="${x.bi}" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="${x.h}" vertical="${x.v}" wrapText="${x.w?1:0}"/></xf>`).join("")}</cellXfs>`;
+  const sty=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><numFmts count="0"/><fonts count="${fonts.length}">${fonts.map(mf2).join("")}</fonts><fills count="${fills.length}">${fills.map(mf).join("")}</fills>${brdX}${xfsXml}<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>`;
+
+  const CL=c=>String.fromCharCode(65+c);
+  const CV=(col,r,val,xi)=>{const ref=`${CL(col)}${r+1}`;if(!val&&val!==0)return`<c r="${ref}" s="${xi}"/>`;return`<c r="${ref}" t="s" s="${xi}"><v>${S(val)}</v></c>`;};
+  const CVN=(col,r,val,xi)=>{const ref=`${CL(col)}${r+1}`;if(!val&&val!==0)return`<c r="${ref}" s="${xi}"/>`;return`<c r="${ref}" t="n" s="${xi}"><v>${val}</v></c>`;};
+  const MG=(r1,c1,r2,c2)=>`${CL(c1)}${r1+1}:${CL(c2)}${r2+1}`;
+
+  const rows=[];const merges=[];let ri=0;
+
+  // Başlık
+  const t0=[CV(0,ri,`YAYIN MÜHENDİSLİĞİ — NÖBET İSTATİSTİKLERİ — ${label}`,XF.title)];
+  for(let i=1;i<=cats.length+2;i++)t0.push(CV(i,ri,"",XF.title));
+  rows.push(t0);merges.push(MG(ri,0,ri,cats.length+2));ri++;
+
+  // Sütun başlıkları
+  const hdr=[CV(0,ri,"Personel",XF.hdr),...cats.map((c,i)=>CV(i+1,ri,catLabels[c],XF.hdr)),CV(cats.length+1,ri,"Toplam",XF.hdr),CV(cats.length+2,ri,"K.İ Kalan",XF.hdr)];
+  rows.push(hdr);ri++;
+
+  // Personel satırları
+  PERSONEL.forEach((p,pi)=>{
+    const s=stats[p]||{};
+    const tot=cats.reduce((a,c)=>a+(s[c]||0),0);
+    const kiData=ki.find(k=>k.person===p);
+    const kiRem=kiData?kiData.remaining:0;
+    const alt=pi%2===0?5:4; // alt veya lavender
+    const row=[CV(0,ri,p,XF.name),...cats.map((c,i)=>{const v=s[c]||0;return v>0?CVN(i+1,ri,v,XF[c]):CV(i+1,ri,"",XF.empty);}),CVN(cats.length+1,ri,tot||"",tot>0?XF.total:XF.empty),CVN(cats.length+2,ri,kiRem||"",kiRem>0?XF.ki_g:XF.empty)];
+    rows.push(row);ri++;
+  });
+
+  // Toplam satırı
+  const totals=[CV(0,ri,"TOPLAM",XF.total),...cats.map((c,i)=>{const v=PERSONEL.reduce((a,p)=>a+(stats[p]?.[c]||0),0);return v>0?CVN(i+1,ri,v,XF.total):CV(i+1,ri,"",XF.total);}),CVN(cats.length+1,ri,PERSONEL.reduce((a,p)=>a+(Object.values(stats[p]||{}).reduce((x,y)=>x+(typeof y==="number"?y:0),0)),0),XF.total),CV(cats.length+2,ri,"",XF.total)];
+  rows.push(totals);ri++;
+
+  // K.İ detay
+  if(ki.length>0){
+    ri++; // boş satır
+    const kiHdr=[CV(0,ri,"K.İ (Kullanılmayan İzin) Detayı",XF.title)];
+    for(let i=1;i<=3;i++)kiHdr.push(CV(i,ri,"",XF.title));
+    rows.push(kiHdr);merges.push(MG(ri,0,ri,3));ri++;
+    const kiCols=[CV(0,ri,"Personel",XF.hdr),CV(1,ri,"Kazanılan",XF.hdr),CV(2,ri,"Kullanılan",XF.hdr),CV(3,ri,"Kalan",XF.hdr)];
+    rows.push(kiCols);ri++;
+    ki.forEach((k,i)=>{
+      const row=[CV(0,ri,k.person,XF.name),CVN(1,ri,k.given||"",XF.num),CVN(2,ri,k.used||"",XF.num),CVN(3,ri,k.remaining||"",k.remaining>0?XF.ki_g:XF.num)];
+      rows.push(row);ri++;
+    });
+  }
+
+  const colCount=cats.length+3;
+  const cols=`<col min="1" max="1" width="22" customWidth="1"/>${Array.from({length:colCount-1},(_,i)=>`<col min="${i+2}" max="${i+2}" width="14" customWidth="1"/>`).join("")}`;
+  const rwXml=rows.map((cells,r)=>`<row r="${r+1}" ht="${r===0?24:r===1?20:16}" customHeight="1">${cells.join("")}</row>`).join("");
+  const mgXml=merges.length?`<mergeCells count="${merges.length}">${merges.map(m=>`<mergeCell ref="${m}"/>`).join("")}</mergeCells>`:"";
+  const shXml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetFormatPr defaultRowHeight="15"/><cols>${cols}</cols><sheetData>${rwXml}</sheetData>${mgXml}</worksheet>`;
+  const ssXml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="${ss.length}" uniqueCount="${ss.length}">${ss.map(s=>`<si><t xml:space="preserve">${esc(s)}</t></si>`).join("")}</sst>`;
+  const wb=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="İstatistik" sheetId="1" r:id="rId1"/></sheets></workbook>`;
+  const wbR=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/><Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings" Target="sharedStrings.xml"/></Relationships>`;
+  const rels=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>`;
+  const ct=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/><Override PartName="/xl/sharedStrings.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml"/></Types>`;
+
+  const zip=new JSZip();
+  zip.file("[Content_Types].xml",ct);zip.folder("_rels").file(".rels",rels);
+  const xl=zip.folder("xl");xl.file("workbook.xml",wb);xl.folder("_rels").file("workbook.xml.rels",wbR);
+  xl.folder("worksheets").file("sheet1.xml",shXml);xl.file("styles.xml",sty);xl.file("sharedStrings.xml",ssXml);
+  const blob=await zip.generateAsync({type:"blob",mimeType:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);
+  a.download=`Istatistik_${label.replace(/[\s–—\/]/g,"_")}.xlsx`;a.click();
+}
 
 </script>
 </body>
