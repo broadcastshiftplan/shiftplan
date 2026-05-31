@@ -28,6 +28,7 @@ db.exec(`
     year       INTEGER NOT NULL,
     locked     INTEGER DEFAULT 0,
     published  INTEGER DEFAULT 0,
+    draft_mode INTEGER DEFAULT 0,
     created_at TEXT DEFAULT (datetime('now','localtime'))
   );
   CREATE TABLE IF NOT EXISTS schedule (
@@ -173,6 +174,7 @@ seedHolidays();
 (function runMigrations() {
   const migrations = [
     "ALTER TABLE weeks ADD COLUMN published INTEGER DEFAULT 0",
+    "ALTER TABLE weeks ADD COLUMN draft_mode INTEGER DEFAULT 0",
     "ALTER TABLE ki_entries ADD COLUMN date_given TEXT DEFAULT (date('now','localtime'))",
     "ALTER TABLE ki_entries ADD COLUMN week_id INTEGER",
     "ALTER TABLE shift_requests ADD COLUMN needs_approval INTEGER DEFAULT 0",
@@ -206,8 +208,9 @@ const createWeek = (l,s,e,y)   => {
   return r;
 };
 const lockWeek     = id => db.prepare('UPDATE weeks SET locked=1 WHERE id=?').run(id);
-const publishWeek  = id => db.prepare('UPDATE weeks SET published=1 WHERE id=?').run(id);
+const publishWeek  = id => db.prepare('UPDATE weeks SET published=1, draft_mode=0 WHERE id=?').run(id);
 const unpublishWeek= id => db.prepare('UPDATE weeks SET published=0 WHERE id=?').run(id);
+const draftWeek    = id => db.prepare('UPDATE weeks SET draft_mode=1 WHERE id=?').run(id);
 const unlockWeek = id           => db.prepare('UPDATE weeks SET locked=0 WHERE id=?').run(id);
 const deleteWeek = id           => db.prepare('DELETE FROM weeks WHERE id=?').run(id);
 
@@ -357,7 +360,7 @@ function autoPopulateFromPlans(weekId, startDate, endDate) {
 module.exports = {
   db, getSetting, setSetting,
   getUsers, getUserByUsername, createUser, updateUserPass, deleteUser,
-  getWeeks, getPublishedWeeks, getWeek, getWeekByDate, createWeek, lockWeek, unlockWeek, publishWeek, unpublishWeek, deleteWeek,
+  getWeeks, getPublishedWeeks, getWeek, getWeekByDate, createWeek, lockWeek, unlockWeek, publishWeek, unpublishWeek, draftWeek, deleteWeek,
   getSectionCounts, setSectionCount,
   getRowMeta, setRowMeta,
   getSchedule, upsertCell, getNotes, upsertNote,
