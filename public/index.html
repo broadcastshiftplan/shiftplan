@@ -1483,7 +1483,7 @@ async function exportExcel(){
   const wd=i=>{const d=new Date(sd);d.setDate(sd.getDate()+i);return`${String(d.getDate()).padStart(2,"0")}.${String(d.getMonth()+1).padStart(2,"0")}`;};
 
   const fills=[{t:"none"},{t:"gray125"},{t:"solid",fg:"FF1F3864"},{t:"solid",fg:"FF2E75B6"},{t:"solid",fg:"FF17375E"},
-    {t:"solid",fg:"FF3D3D3D"},{t:"solid",fg:"FF2E4057"},{t:"solid",fg:"FFFAEEDA"},{t:"solid",fg:"FFE8F5E0"},
+    {t:"solid",fg:"FF3D3D3D"},{t:"solid",fg:"FFE8EAF6"},{t:"solid",fg:"FF2E4057"},{t:"solid",fg:"FFFAEEDA"},{t:"solid",fg:"FFE8F5E0"},
     {t:"solid",fg:"FFEEEDFE"},{t:"solid",fg:"FF2C3E50"},{t:"solid",fg:"FFE1F5EE"},{t:"solid",fg:"FFFFF2E0"},
     {t:"solid",fg:"FFFAE8E8"},{t:"solid",fg:"FFFCE4FC"},{t:"solid",fg:"FFEEE8FF"},{t:"solid",fg:"FFF7C1C1"},{t:"solid",fg:"FFF4F7FB"},
     {t:"solid",fg:"FF2E7D32"}]; // tatil yeşili
@@ -1493,8 +1493,8 @@ async function exportExcel(){
     {sz:10,n:"Arial",b:1,c:"FF412402"},{sz:10,n:"Arial",b:1,c:"FF1A5C00"},{sz:10,n:"Arial",b:1,c:"FF26215C"},
     {sz:10,n:"Arial",b:1,c:"FFD3D1C7"},{sz:10,n:"Arial",b:1,c:"FF04342C"},{sz:10,n:"Arial",b:1,c:"FF7F3A00"},
     {sz:10,n:"Arial",b:1,c:"FF7B1818"},{sz:10,n:"Arial",b:1,c:"FF5B0A5B"},{sz:10,n:"Arial",b:1,c:"FF3D1D8A"},
-    {sz:10,n:"Arial",b:1,c:"FF501313"},{sz:9,n:"Arial",c:"FF555555"}];
-  const FN={d:0,t:1,w:2,sabah:3,prime:4,aksam:5,gece:6,dis:7,izin:8,yillik:9,dogum:10,ki:11,warn:12,note:13};
+    {sz:10,n:"Arial",b:1,c:"FF501313"},{sz:9,n:"Arial",c:"FF555555"},{sz:11,n:"Arial",b:1,c:"FF283593"}];
+  const FN={d:0,t:1,w:2,sabah:3,prime:4,aksam:5,gece:6,dis:7,izin:8,yillik:9,dogum:10,ki:11,warn:12,note:13,lav:14};
   const mf2=f=>`<font>${f.b?"<b/>":""}${f.c?`<color rgb="${f.c}"/>`:"<color theme=\"1\"/>"}<sz val="${f.sz}"/><name val="${f.n}"/></font>`;
   const tS=`<left style="thin"><color rgb="FFC0C0C0"/></left><right style="thin"><color rgb="FFC0C0C0"/></right><top style="thin"><color rgb="FFC0C0C0"/></top><bottom style="thin"><color rgb="FFC0C0C0"/></bottom>`;
   const brdX=`<borders count="2"><border>${tS}</border><border><left style="medium"><color rgb="FF808080"/></left><right style="medium"><color rgb="FF808080"/></right><top style="medium"><color rgb="FF808080"/></top><bottom style="medium"><color rgb="FF808080"/></bottom></border></borders>`;
@@ -1507,7 +1507,7 @@ async function exportExcel(){
     pSb:ax(F.sabah,FN.sabah,0),pPr:ax(F.prime,FN.prime,0),pAk:ax(F.aksam,FN.aksam,0),pGe:ax(F.gece,FN.gece,0),
     pDi:ax(F.dis,FN.dis,0),pIz:ax(F.izin,FN.izin,0),pYl:ax(F.yillik,FN.yillik,0),pDo:ax(F.dogum,FN.dogum,0),pKi:ax(F.ki,FN.ki,0),
     pWn:ax(F.warn,FN.warn,0),pEm:ax(0,FN.d,0),
-    bSc:ax(F.sec,FN.w,0,"left"),bAl:ax(F.alt,FN.d,0,"left"),
+    bSc:ax(6,FN.lav,1,"center","center",true),bAl:ax(6,FN.lav,1,"center","center",true),
     nC:ax(F.alt,FN.note,0,"left","top",true),nL:ax(F.alt,FN.note,0,"left")};
   const xfsXml=`<cellXfs count="${xfs.length}">${xfs.map(x=>`<xf numFmtId="0" fontId="${x.fn}" fillId="${x.fi}" borderId="${x.bi}" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="${x.h}" vertical="${x.v}" wrapText="${x.w?1:0}"/></xf>`).join("")}</cellXfs>`;
   const sty=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><numFmts count="0"/><fonts count="${fonts.length}">${fonts.map(mf2).join("")}</fonts><fills count="${fills.length}">${fills.map(mf).join("")}</fills>${brdX}${xfsXml}<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>`;
@@ -1537,13 +1537,43 @@ async function exportExcel(){
   rows.push(hdr);ri++;
 
   const dynRows=buildDynRows();
+  // Excel için rowspan/merge hesapla
+  const xlGroups=[];let xlCur=null;
   dynRows.forEach(row=>{
-    if(row._s){const xS=row._bot?XF.bt:XF.sc;const t=[CV(0,ri,`▶  ${row._s}`,xS)];for(let i=1;i<9;i++)t.push(CV(i,ri,"",xS));rows.push(t);merges.push(MG(ri,0,ri,8));ri++;return;}
+    if(!row.id||row._s||row._div||row._dyn_ctrl)return;
+    const sec=row._dyn_section||row.c||row.id;
+    if(!xlCur||xlCur.sec!==sec){xlCur={sec,label:row.b||"",startRi:null,rows:[]};xlGroups.push(xlCur);}
+    xlCur.rows.push(row.id);
+  });
+  const xlMergeMap={};
+  xlGroups.forEach(g=>{g.rows.forEach((rid,i)=>{xlMergeMap[rid]={label:g.label,count:g.rows.length,idx:i};});});
+
+  let xlGroupStartRi={};
+  dynRows.forEach(row=>{
+    if(row._s){const xS=row._bot?XF.bt:XF.sc;const t=[CV(0,ri,row._s,xS)];for(let i=1;i<9;i++)t.push(CV(i,ri,"",xS));rows.push(t);merges.push(MG(ri,0,ri,8));ri++;return;}
     if(row._div){const t=[CV(0,ri,"─── HAFTALIK İZİN · DIŞ GÖREV · YILLIK · K.İ ───",XF.dv)];for(let i=1;i<9;i++)t.push(CV(i,ri,"",XF.dv));rows.push(t);merges.push(MG(ri,0,ri,8));ri++;return;}
     if(row._dyn_ctrl)return;
     if(!row.id)return;
     const cx=catXF[row.c]||{t:XF.tSb,p:XF.pSb};
-    const t=[CV(0,ri,row.b||"",row.b?XF.bSc:XF.bAl),CV(1,ri,row.s,cx.t)];
+    const mg=xlMergeMap[row.id];
+    // Sol sütun — sadece ilk satırda yaz, merge ile birleştir
+    let bolumCell;
+    if(mg&&mg.idx===0){
+      xlGroupStartRi[row.id]=ri;
+      bolumCell=CV(0,ri,mg.label,XF.bSc);
+    } else if(mg&&mg.idx>0){
+      // Aynı grup içindeki diğer satırlar — boş hücre (merge olacak)
+      const grp=xlGroups.find(g=>g.rows.includes(row.id));
+      if(grp&&mg.idx===mg.count-1){
+        // Son satırda merge ekle
+        const firstRi=Object.entries(xlGroupStartRi).find(([rid])=>grp.rows[0]===rid)?.[1];
+        if(firstRi!==undefined)merges.push(MG(firstRi,0,ri,0));
+      }
+      bolumCell=CV(0,ri,"",XF.bAl);
+    } else {
+      bolumCell=CV(0,ri,row.b||"",row.b?XF.bSc:XF.bAl);
+    }
+    const t=[bolumCell,CV(1,ri,row.s,cx.t)];
     DAYS.forEach((_,gi)=>{const p=(sched[row.id]||[])?.[gi]||"";t.push(CV(2+gi,ri,p,p?cx.p:XF.pEm));});
     rows.push(t);ri++;
   });
