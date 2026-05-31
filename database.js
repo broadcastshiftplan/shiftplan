@@ -27,6 +27,7 @@ db.exec(`
     end_date   TEXT NOT NULL,
     year       INTEGER NOT NULL,
     locked     INTEGER DEFAULT 0,
+    published  INTEGER DEFAULT 0,
     created_at TEXT DEFAULT (datetime('now','localtime'))
   );
   CREATE TABLE IF NOT EXISTS schedule (
@@ -171,6 +172,7 @@ seedHolidays();
 // ── Migration: Eski veritabanına eksik kolonları ekle ─────────────────────
 (function runMigrations() {
   const migrations = [
+    "ALTER TABLE weeks ADD COLUMN published INTEGER DEFAULT 0",
     "ALTER TABLE ki_entries ADD COLUMN date_given TEXT DEFAULT (date('now','localtime'))",
     "ALTER TABLE ki_entries ADD COLUMN week_id INTEGER",
     "ALTER TABLE shift_requests ADD COLUMN needs_approval INTEGER DEFAULT 0",
@@ -195,14 +197,17 @@ const updateUserPass    = (id,h)    => db.prepare('UPDATE users SET password_has
 const deleteUser        = id        => db.prepare('DELETE FROM users WHERE id=?').run(id);
 
 // ── Haftalar ───────────────────────────────────────────────────────────────
-const getWeeks   = ()           => db.prepare('SELECT * FROM weeks ORDER BY start_date DESC').all();
+const getWeeks        = ()    => db.prepare('SELECT * FROM weeks ORDER BY start_date DESC').all();
+const getPublishedWeeks = ()  => db.prepare('SELECT * FROM weeks WHERE published=1 ORDER BY start_date DESC').all();
 const getWeek    = id           => db.prepare('SELECT * FROM weeks WHERE id=?').get(id);
 const getWeekByDate = date      => db.prepare('SELECT * FROM weeks WHERE start_date<=? AND end_date>=?').get(date,date);
 const createWeek = (l,s,e,y)   => {
   const r = db.prepare('INSERT INTO weeks(label,start_date,end_date,year) VALUES(?,?,?,?)').run(l,s,e,y);
   return r;
 };
-const lockWeek   = id           => db.prepare('UPDATE weeks SET locked=1 WHERE id=?').run(id);
+const lockWeek     = id => db.prepare('UPDATE weeks SET locked=1 WHERE id=?').run(id);
+const publishWeek  = id => db.prepare('UPDATE weeks SET published=1 WHERE id=?').run(id);
+const unpublishWeek= id => db.prepare('UPDATE weeks SET published=0 WHERE id=?').run(id);
 const unlockWeek = id           => db.prepare('UPDATE weeks SET locked=0 WHERE id=?').run(id);
 const deleteWeek = id           => db.prepare('DELETE FROM weeks WHERE id=?').run(id);
 
@@ -352,7 +357,7 @@ function autoPopulateFromPlans(weekId, startDate, endDate) {
 module.exports = {
   db, getSetting, setSetting,
   getUsers, getUserByUsername, createUser, updateUserPass, deleteUser,
-  getWeeks, getWeek, getWeekByDate, createWeek, lockWeek, unlockWeek, deleteWeek,
+  getWeeks, getPublishedWeeks, getWeek, getWeekByDate, createWeek, lockWeek, unlockWeek, publishWeek, unpublishWeek, deleteWeek,
   getSectionCounts, setSectionCount,
   getRowMeta, setRowMeta,
   getSchedule, upsertCell, getNotes, upsertNote,
