@@ -611,6 +611,8 @@ function showApp(){
     const wb=document.getElementById("wbar");
     wb.innerHTML=`<select class="wsel" id="wsel" onchange="loadWeek(this.value)"></select>
       <button class="btn btn-green" onclick="openNewWeek()"><i class="ti ti-plus" aria-hidden="true"></i> Yeni Hafta</button>
+      <button class="btn" style="background:#7B1FA2;color:#fff" onclick="doPublishWeek()" id="btn-publish"><i class="ti ti-camera" aria-hidden="true"></i> Yayınla</button>
+      <button class="btn btn-ghost" style="background:#555;color:#fff" onclick="doDraftWeek()" id="btn-draft"><i class="ti ti-pencil" aria-hidden="true"></i> Taslak</button>
       <button class="btn btn-ghost" style="background:var(--blue2);color:#fff" onclick="doLockWeek()"><i class="ti ti-lock" aria-hidden="true"></i> Kilitle</button>
       <button class="btn btn-ghost" style="background:#555;color:#fff" onclick="doUnlockWeek()"><i class="ti ti-lock-open" aria-hidden="true"></i> Aç</button>
       <button class="btn btn-red btn-sm" onclick="doDelWeek()"><i class="ti ti-trash" aria-hidden="true"></i></button>`;
@@ -676,7 +678,7 @@ async function loadWeeks(){
   weeks=await api("GET","/api/weeks");
   const sel=document.getElementById("wsel");
   if(!sel)return;
-  sel.innerHTML=weeks.length?weeks.map(w=>`<option value="${w.id}">${w.label}${w.locked?" 🔒":""}</option>`).join(""):"<option value=''>— Yeni Hafta Aç —</option>";
+  sel.innerHTML=weeks.length?weeks.map(w=>`<option value="${w.id}">${w.label}${w.locked?" 🔒":""}${w.published?" 📷":" 📝"}</option>`).join(""):"<option value=''>— Yeni Hafta Aç —</option>";
   if(weeks.length){cWeekId=weeks[0].id;sel.value=cWeekId;await loadWeek(cWeekId);}
 }
 
@@ -684,7 +686,15 @@ async function loadWeek(wid){
   if(!wid){cWeekId=null;buildTable();return;}
   cWeekId=parseInt(wid);
   const w=weeks.find(x=>x.id==cWeekId);
-  if(w)document.getElementById("t-sub").textContent=w.label;
+  if(w){
+    document.getElementById("t-sub").textContent=w.label;
+    if(ROLE==="admin"){
+      const btnP=document.getElementById("btn-publish");
+      const btnD=document.getElementById("btn-draft");
+      if(btnP)btnP.style.display=w.published?"none":"inline-flex";
+      if(btnD)btnD.style.display=w.published?"inline-flex":"none";
+    }
+  }
   const [data,counts,meta]=await Promise.all([
     api("GET",`/api/schedule/${cWeekId}`),
     api("GET",`/api/weeks/${cWeekId}/sections`),
@@ -742,6 +752,18 @@ async function createWeek(){
 
 async function doLockWeek(){if(!cWeekId)return;if(!confirm("Kilitleyin mi?"))return;await api("PATCH",`/api/weeks/${cWeekId}/lock`);await loadWeeks();}
 async function doUnlockWeek(){if(!cWeekId)return;if(!confirm("Kilidi açmak istediğinizden emin misiniz?"))return;await api("PATCH",`/api/weeks/${cWeekId}/unlock`);await loadWeeks();}
+async function doPublishWeek(){
+  if(!cWeekId)return;
+  await api("PATCH",`/api/weeks/${cWeekId}/publish`);
+  await loadWeeks();
+  alert("✅ Hafta yayınlandı! Personel artık görebilir.");
+}
+async function doDraftWeek(){
+  if(!cWeekId)return;
+  if(!confirm("Taslağa alınca personel bu haftayı göremez. Devam?"))return;
+  await api("PATCH",`/api/weeks/${cWeekId}/unpublish`);
+  await loadWeeks();
+}
 async function doDelWeek(){if(!cWeekId)return;if(!confirm("Sil?"))return;await api("DELETE",`/api/weeks/${cWeekId}`);cWeekId=null;await loadWeeks();loadArchive();}
 function cm(){document.querySelectorAll(".mb").forEach(m=>m.classList.remove("open"));}
 
@@ -1045,6 +1067,15 @@ if(isAdmin){
       document.getElementById("pn-cizelge").insertBefore(n,document.querySelector(".leg"));
     }
   }else{const n=document.getElementById("locked-n");if(n)n.remove();}
+  // Taslak uyarısı
+  const weekObj=weeks.find(x=>x.id==cWeekId);
+  if(weekObj&&!weekObj.published&&isAdmin){
+    if(!document.getElementById("draft-n")){
+      const n=document.createElement("div");n.id="draft-n";n.className="alert info";n.style.marginBottom="10px";
+      n.innerHTML=`<i class="ti ti-pencil" style="flex-shrink:0" aria-hidden="true"></i> <b>Taslak</b> — Bu hafta henüz yayınlanmadı. Personel göremez. Hazır olunca 📷 <b>Yayınla</b> butonuna basın.`;
+      document.getElementById("pn-cizelge").insertBefore(n,document.querySelector(".leg"));
+    }
+  }else{const n=document.getElementById("draft-n");if(n)n.remove();}
 }
 
 function onSel(el){
