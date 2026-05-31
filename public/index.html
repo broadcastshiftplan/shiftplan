@@ -920,8 +920,8 @@ function buildDynRows(){
 
   // DIŞ GÖREV — sabit 2
   rows.push({_s:"DIŞ GÖREV",_bot:1});
-  rows.push({id:"dis_1",b:"",s:"08:00 – 17:00",c:"dis"});
-  rows.push({id:"dis_2",b:"",s:"08:00 – 17:00",c:"dis"});
+  rows.push({id:"dis_1",b:"DIŞ GÖREV",s:"08:00 – 17:00",c:"dis",_dyn_section:"dis",_idx:0});
+  rows.push({id:"dis_2",b:"DIŞ GÖREV",s:"08:00 – 17:00",c:"dis",_dyn_section:"dis",_idx:1});
 
   // YILLIK/RAPOR — dinamik
   rows.push({_s:"YILLIK / RAPOR / EĞİTİM",_bot:1});
@@ -1497,10 +1497,14 @@ async function exportExcel(){
   const FN={d:0,t:1,w:2,sabah:3,prime:4,aksam:5,gece:6,dis:7,izin:8,yillik:9,dogum:10,ki:11,warn:12,note:13,lav:14};
   const mf2=f=>`<font>${f.b?"<b/>":""}${f.c?`<color rgb="${f.c}"/>`:"<color theme=\"1\"/>"}<sz val="${f.sz}"/><name val="${f.n}"/></font>`;
   const tS=`<left style="thin"><color rgb="FFC0C0C0"/></left><right style="thin"><color rgb="FFC0C0C0"/></right><top style="thin"><color rgb="FFC0C0C0"/></top><bottom style="thin"><color rgb="FFC0C0C0"/></bottom>`;
-  const brdX=`<borders count="2"><border>${tS}</border><border><left style="medium"><color rgb="FF808080"/></left><right style="medium"><color rgb="FF808080"/></right><top style="medium"><color rgb="FF808080"/></top><bottom style="medium"><color rgb="FF808080"/></bottom></border></borders>`;
+  const brdX=`<borders count="3">
+  <border>${tS}</border>
+  <border><left style="medium"><color rgb="FF808080"/></left><right style="medium"><color rgb="FF808080"/></right><top style="medium"><color rgb="FF808080"/></top><bottom style="medium"><color rgb="FF808080"/></bottom></border>
+  <border><left style="thick"><color rgb="FF1F3864"/></left><right style="thick"><color rgb="FF1F3864"/></right><top style="thick"><color rgb="FF1F3864"/></top><bottom style="thick"><color rgb="FF1F3864"/></bottom></border>
+</borders>`;
   const xfs=[];const ax=(fi,fn,bi,h,v,w)=>{xfs.push({fi,fn,bi,h:h||"center",v:v||"center",w:!!w});return xfs.length-1;};
   ax(0,FN.d,0);
-  const XF={ti:ax(F.navy,FN.t,1),dy:ax(F.day,FN.w,1,"center","center",true),dyH:ax(F.hol,FN.w,1,"center","center",true),
+  const XF={ti:ax(F.navy,FN.t,2),dy:ax(F.day,FN.w,1,"center","center",true),dyH:ax(F.hol,FN.w,1,"center","center",true),
     sa:ax(F.saat,FN.w,1),sc:ax(F.sec,FN.w,1,"left"),bt:ax(F.bot,FN.w,1,"left"),dv:ax(F.saat,FN.w,1),
     tSb:ax(F.sabah,FN.sabah,1),tPr:ax(F.prime,FN.prime,1),tAk:ax(F.aksam,FN.aksam,1),tGe:ax(F.gece,FN.gece,1),
     tDi:ax(F.dis,FN.dis,1),tIz:ax(F.izin,FN.izin,1),tYl:ax(F.yillik,FN.yillik,1),tDo:ax(F.dogum,FN.dogum,1),tKi:ax(F.ki,FN.ki,1),
@@ -1579,15 +1583,22 @@ async function exportExcel(){
   });
 
   const ns=[CV(0,ri,"Günlük Görev & Açıklama",XF.bt)];for(let i=1;i<9;i++)ns.push(CV(i,ri,"",XF.bt));rows.push(ns);merges.push(MG(ri,0,ri,8));ri++;
-  [["Görev"],["Ekipman / Arıza"]].forEach(([lbl],ni)=>{
-    const t=[CV(0,ri,lbl,XF.nL),CV(1,ri,"",XF.nC)];
+  [["Görev / Program"],["Ekipman / Arıza"]].forEach(([lbl],ni)=>{
+    const t=[CV(0,ri,lbl,XF.bSc),CV(1,ri,"",XF.nC)];
     DAYS.forEach((_,gi)=>t.push(CV(2+gi,ri,(notes[ni]||[])?.[gi]||"",XF.nC)));rows.push(t);ri++;
   });
 
   const cols=`<col min="1" max="1" width="18" customWidth="1"/><col min="2" max="2" width="20" customWidth="1"/>${Array.from({length:7},(_,i)=>`<col min="${i+3}" max="${i+3}" width="16" customWidth="1"/>`).join("")}`;
-  const rwXml=rows.map((cells,r)=>`<row r="${r+1}" ht="${r===0?22:r===1?26:16}" customHeight="1">${cells.join("")}</row>`).join("");
+  const totalDataRows=rows.length;
+  const rwXml=rows.map((cells,r)=>`<row r="${r+1}" ht="${r===0?24:r===1?28:r>=totalDataRows-2?36:16}" customHeight="1">${cells.join("")}</row>`).join("");
   const mgXml=merges.length?`<mergeCells count="${merges.length}">${merges.map(m=>`<mergeCell ref="${m}"/>`).join("")}</mergeCells>`:"";
-  const shXml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetFormatPr defaultRowHeight="15"/><cols>${cols}</cols><sheetData>${rwXml}</sheetData>${mgXml}</worksheet>`;
+  // Tüm tabloyu saran kalın lacivert çerçeve için conditional formatting
+  const totalRows=ri;
+  const cfXml=`<conditionalFormatting sqref="A1:I${totalRows}"><cfRule type="expression" dxfId="0" priority="1"><formula>TRUE</formula></cfRule></conditionalFormatting>`;
+  // Table tanımı — dış çerçeve için
+  const tableXml=`<tableParts count="0"/>`;
+  const lastCol="I";const sheetRef=`A1:${lastCol}${ri}`;
+  const shXml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetView workbookViewId="0" showGridLines="1"><selection activeCell="A1" sqref="A1"/></sheetView><sheetFormatPr defaultRowHeight="15"/><cols>${cols}</cols><sheetData>${rwXml}</sheetData>${mgXml}</worksheet>`;
   const ssXml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="${ss.length}" uniqueCount="${ss.length}">${ss.map(s=>`<si><t xml:space="preserve">${esc(s)}</t></si>`).join("")}</sst>`;
   const wb=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Nöbet Çizelgesi" sheetId="1" r:id="rId1"/></sheets></workbook>`;
   const wbR=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/><Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings" Target="sharedStrings.xml"/></Relationships>`;
