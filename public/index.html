@@ -678,7 +678,7 @@ async function loadWeeks(){
   weeks=await api("GET","/api/weeks");
   const sel=document.getElementById("wsel");
   if(!sel)return;
-  sel.innerHTML=weeks.length?weeks.map(w=>`<option value="${w.id}">${w.label}${w.locked?" 🔒":""}${w.published?" 📷":" 📝"}</option>`).join(""):"<option value=''>— Yeni Hafta Aç —</option>";
+  sel.innerHTML=weeks.length?weeks.map(w=>`<option value="${w.id}">${w.label}${w.locked?" 🔒":""}${!w.published?" 📝":w.draft_mode?" ✏️📷":" 📷"}</option>`).join(""):"<option value=''>— Yeni Hafta Aç —</option>";
   if(weeks.length){cWeekId=weeks[0].id;sel.value=cWeekId;await loadWeek(cWeekId);}
 }
 
@@ -691,8 +691,10 @@ async function loadWeek(wid){
     if(ROLE==="admin"){
       const btnP=document.getElementById("btn-publish");
       const btnD=document.getElementById("btn-draft");
-      if(btnP)btnP.style.display=w.published?"none":"inline-flex";
-      if(btnD)btnD.style.display=w.published?"inline-flex":"none";
+      // Yayınla: henüz yayınlanmamış VEYA taslak modunda
+      if(btnP)btnP.style.display=(w.published&&!w.draft_mode)?"none":"inline-flex";
+      // Taslak: yayınlanmış ve taslak modunda değil
+      if(btnD)btnD.style.display=(w.published&&!w.draft_mode)?"inline-flex":"none";
     }
   }
   const [data,counts,meta]=await Promise.all([
@@ -760,8 +762,8 @@ async function doPublishWeek(){
 }
 async function doDraftWeek(){
   if(!cWeekId)return;
-  if(!confirm("Taslağa alınca personel bu haftayı göremez. Devam?"))return;
-  await api("PATCH",`/api/weeks/${cWeekId}/unpublish`);
+  if(!confirm("Taslak moduna alınacak. Personel mevcut yayınlanmış hali görmeye devam eder, siz düzenleme yapabilirsiniz. Devam?"))return;
+  await api("PATCH",`/api/weeks/${cWeekId}/draft`);
   await loadWeeks();
 }
 async function doDelWeek(){if(!cWeekId)return;if(!confirm("Sil?"))return;await api("DELETE",`/api/weeks/${cWeekId}`);cWeekId=null;await loadWeeks();loadArchive();}
@@ -1069,10 +1071,13 @@ if(isAdmin){
   }else{const n=document.getElementById("locked-n");if(n)n.remove();}
   // Taslak uyarısı
   const weekObj=weeks.find(x=>x.id==cWeekId);
-  if(weekObj&&!weekObj.published&&isAdmin){
+  if(weekObj&&isAdmin&&(!weekObj.published||weekObj.draft_mode)){
     if(!document.getElementById("draft-n")){
       const n=document.createElement("div");n.id="draft-n";n.className="alert info";n.style.marginBottom="10px";
-      n.innerHTML=`<i class="ti ti-pencil" style="flex-shrink:0" aria-hidden="true"></i> <b>Taslak</b> — Bu hafta henüz yayınlanmadı. Personel göremez. Hazır olunca 📷 <b>Yayınla</b> butonuna basın.`;
+      const msg=weekObj.draft_mode
+        ?`<i class="ti ti-pencil" style="flex-shrink:0" aria-hidden="true"></i> <b>Düzenleme Modu</b> — Personel mevcut yayınlanmış hali görüyor. Düzenlemeleriniz bitince 📷 <b>Yayınla</b> butonuna basın.`
+        :`<i class="ti ti-pencil" style="flex-shrink:0" aria-hidden="true"></i> <b>Taslak</b> — Bu hafta henüz yayınlanmadı. Personel göremez. Hazır olunca 📷 <b>Yayınla</b> butonuna basın.`;
+      n.innerHTML=msg;
       document.getElementById("pn-cizelge").insertBefore(n,document.querySelector(".leg"));
     }
   }else{const n=document.getElementById("draft-n");if(n)n.remove();}
