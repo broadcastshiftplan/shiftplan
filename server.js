@@ -3,8 +3,6 @@ const express   = require('express');
 const bcrypt    = require('bcryptjs');
 const path      = require('path');
 const nodemailer= require('nodemailer');
-let _resend = null;
-function getResend(){ if(!_resend){ const {Resend}=require('resend'); _resend=new Resend(process.env.RESEND_API_KEY||getSetting('resendKey')); } return _resend; }
 const { sign, requireAuth, requireAdmin } = require('./auth');
 const {
   getSetting, setSetting,
@@ -37,12 +35,15 @@ async function sendMail(to, subject, html) {
   try {
     const resendKey = process.env.RESEND_API_KEY || getSetting('resendKey');
     if(resendKey) {
-      // Resend ile gönder
-      const {Resend} = require('resend');
-      const r = new Resend(resendKey);
+      // Resend HTTP API ile gönder (paket gereksiz)
       const from = getSetting('mailUser') || process.env.MAIL_USER || 'onboarding@resend.dev';
-      const {error} = await r.emails.send({ from: `Nöbet Çizelgesi <${from}>`, to, subject, html });
-      if(error) return {ok:false, error:error.message};
+      const resp = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ from: `Nöbet Çizelgesi <${from}>`, to, subject, html })
+      });
+      const data = await resp.json();
+      if(!resp.ok) return {ok:false, error:data.message||'Resend API hatası'};
       console.log(`[Mail/Resend] Gönderildi → ${to}`);
       return {ok:true};
     }
