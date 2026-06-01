@@ -452,6 +452,65 @@ app.get('/api/weeks/:id/viewers', requireAdmin, (req,res) => {
   res.json(viewers);
 });
 
+
+// ── Talep İstatistikleri ──────────────────────────────────────────────────
+app.get('/api/request-stats', requireAdmin, (req,res) => {
+  const year  = req.query.year  ? parseInt(req.query.year)  : null;
+  const month = req.query.month ? parseInt(req.query.month) : null;
+
+  let where = "WHERE 1=1";
+  const params = [];
+  if(year){
+    where += " AND strftime('%Y', created_at) = ?";
+    params.push(String(year));
+  }
+  if(month){
+    where += " AND strftime('%m', created_at) = ?";
+    params.push(String(month).padStart(2,'0'));
+  }
+
+  // Genel özet
+  const summary = db.prepare(`
+    SELECT
+      COUNT(*) as total,
+      SUM(CASE WHEN status='approved' THEN 1 ELSE 0 END) as approved,
+      SUM(CASE WHEN status='rejected' THEN 1 ELSE 0 END) as rejected,
+      SUM(CASE WHEN status='pending'  THEN 1 ELSE 0 END) as pending
+    FROM shift_requests ${where}
+  `).get(...params);
+
+  // Personel bazlı
+  const byPerson = db.prepare(`
+    SELECT person,
+      COUNT(*) as total,
+      SUM(CASE WHEN status='approved' THEN 1 ELSE 0 END) as approved,
+      SUM(CASE WHEN status='rejected' THEN 1 ELSE 0 END) as rejected,
+      SUM(CASE WHEN status='pending'  THEN 1 ELSE 0 END) as pending
+    FROM shift_requests ${where}
+    GROUP BY person ORDER BY total DESC
+  `).all(...params);
+
+  // En çok istenen vardiyalar
+  const byShift = db.prepare(`
+    SELECT shift_text,
+      COUNT(*) as total,
+      SUM(CASE WHEN status='approved' THEN 1 ELSE 0 END) as approved
+    FROM shift_requests ${where}
+    GROUP BY shift_text ORDER BY total DESC LIMIT 10
+  `).all(...params);
+
+  // Aylık trend (son 12 ay)
+  const monthly = db.prepare(`
+    SELECT strftime('%Y-%m', created_at) as month,
+      COUNT(*) as total,
+      SUM(CASE WHEN status='approved' THEN 1 ELSE 0 END) as approved
+    FROM shift_requests
+    GROUP BY month ORDER BY month DESC LIMIT 12
+  `).all();
+
+  res.json({ summary, byPerson, byShift, monthly });
+});
+
 // ── SODEXO ───────────────────────────────────────────────────────────────
 app.get('/api/sodexo', requireAdmin, (req, res) => {
   const year  = parseInt(req.query.year)  || new Date().getFullYear();
