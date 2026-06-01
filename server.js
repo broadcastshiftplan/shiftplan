@@ -15,7 +15,8 @@ const {
   getKiEntries, addKiEntry, deleteKiEntry, getKiSummary,
   getVacationPlans, toggleVacationPlan, deleteVacationPlan, autoPopulateFromPlans,
   getRequests, getRequestById, createRequest, resolveRequest, checkConflict,
-  getStats, getYears, getSodexoPeriod, getSodexoNights, setSodexoApproval, db
+  getStats, getYears, takeSnapshot, getChanges, hasSnapshot, markWeekViewed, hasViewedWeek, clearWeekViews,
+  getSodexoPeriod, getSodexoNights, setSodexoApproval, db
 } = require('./database');
 
 const app  = express();
@@ -142,8 +143,11 @@ app.post('/api/weeks', requireAdmin, (req,res) => {
 });
 app.patch('/api/weeks/:id/lock',    requireAdmin, (req,res) => { lockWeek(req.params.id);     res.json({ok:true}); });
 app.patch('/api/weeks/:id/publish', requireAdmin, (req,res) => {
-  publishWeek(req.params.id);
-  lockWeek(req.params.id);
+  const id = req.params.id;
+  publishWeek(id);
+  lockWeek(id);
+  takeSnapshot(id);   // Yayınlanan hali kaydet
+  clearWeekViews(id); // Personelin "gördü" işaretini sıfırla
   res.json({ok:true});
 });
 app.patch('/api/weeks/:id/unpublish',requireAdmin, (req,res) => { unpublishWeek(req.params.id); res.json({ok:true}); });
@@ -399,6 +403,26 @@ app.get('/api/vacation-plans/week', requireAuth, (req, res) => {
   res.json(plans);
 });
 
+
+
+
+// ── Değişiklik & Görüntüleme ──────────────────────────────────────────────
+app.get('/api/weeks/:id/changes', requireAuth, (req,res) => {
+  const weekId = req.params.id;
+  const w = getWeek(weekId);
+  if(!w) return res.status(404).json({error:'Hafta yok'});
+  // Admin her zaman görür, user sadece yayınlanmış haftalarda
+  if(req.user.role !== 'admin' && !w.published) return res.json([]);
+  // Kullanıcı zaten gördüyse boş dön (renk kalkmış)
+  if(req.user.role !== 'admin' && hasViewedWeek(weekId, req.user.username)) return res.json([]);
+  const changes = getChanges(weekId);
+  res.json(changes);
+});
+
+app.post('/api/weeks/:id/view', requireAuth, (req,res) => {
+  markWeekViewed(req.params.id, req.user.username);
+  res.json({ok:true});
+});
 
 
 // ── SODEXO ───────────────────────────────────────────────────────────────
