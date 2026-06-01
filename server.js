@@ -118,9 +118,16 @@ app.put('/api/users/:id/password', requireAdmin, async (req,res) => {
   res.json({ok:true});
 });
 app.patch('/api/users/:id/active', requireAdmin, (req,res) => {
-  const {active} = req.body;
-  setUserActive(req.params.id, active);
-  res.json({ok:true});
+  try {
+    const {active} = req.body;
+    // Kolon yoksa ekle
+    try { db.prepare('ALTER TABLE users ADD COLUMN active INTEGER DEFAULT 1').run(); } catch(e){}
+    db.prepare('UPDATE users SET active=? WHERE id=?').run(active?1:0, req.params.id);
+    res.json({ok:true});
+  } catch(e) {
+    console.error('setUserActive error:', e);
+    res.status(500).json({error: e.message});
+  }
 });
 
 app.delete('/api/users/:id', requireAdmin, (req,res) => {
