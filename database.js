@@ -112,6 +112,28 @@ db.exec(`
     UNIQUE(person, date)
   );
 
+  CREATE TABLE IF NOT EXISTS schedule_snapshot (
+    week_id    INTEGER NOT NULL,
+    row_id     TEXT NOT NULL,
+    day_index  INTEGER NOT NULL,
+    person     TEXT DEFAULT '',
+    PRIMARY KEY(week_id, row_id, day_index)
+  );
+
+  CREATE TABLE IF NOT EXISTS week_views (
+    week_id    INTEGER NOT NULL,
+    username   TEXT NOT NULL,
+    viewed_at  TEXT DEFAULT (datetime('now','localtime')),
+    PRIMARY KEY(week_id, username)
+  );
+
+  CREATE TABLE IF NOT EXISTS row_meta_snapshot (
+    week_id    INTEGER NOT NULL,
+    row_id     TEXT NOT NULL,
+    shift_time TEXT DEFAULT '',
+    PRIMARY KEY(week_id, row_id)
+  );
+
   CREATE TABLE IF NOT EXISTS ki_entries (
     id         INTEGER PRIMARY KEY AUTOINCREMENT,
     person     TEXT NOT NULL,
@@ -463,6 +485,62 @@ const setSodexoApproval = (person, date, approved, by) => {
   .run(person, date, approved?1:0, by||'', approved?1:0, by||'');
 };
 
+
+// ── Snapshot & Değişiklik Takibi ───────────────────────────────────────────
+function takeSnapshot(weekId) {
+  // Mevcut schedule'ı snapshot'a kopyala
+  db.prepare('DELETE FROM schedule_snapshot WHERE week_id=?').run(weekId);
+  db.prepare('DELETE FROM row_meta_snapshot WHERE week_id=?').run(weekId);
+  db.prepare(`INSERT INTO schedule_snapshot(week_id,row_id,day_index,person)
+    SELECT week_id,row_id,day_index,person FROM schedule WHERE week_id=?`).run(weekId);
+  db.prepare(`INSERT INTO row_meta_snapshot(week_id,row_id,shift_time)
+    SELECT week_id,row_id,shift_time FROM row_meta WHERE week_id=?`).run(weekId);
+}
+
+function getChanges(weekId) {
+  // Mevcut ile snapshot karşılaştır — farklı olan hücreler
+  const changed = db.prepare(`
+    SELECT s.row_id, s.day_index, s.person as current_person,
+           COALESCE(sn.person,'') as snapshot_person
+    FROM schedule s
+    LEFT JOIN schedule_snapshot sn ON sn.week_id=s.week_id AND sn.row_id=s.row_id AND sn.day_index=s.day_index
+    WHERE s.week_id=? AND (s.person != COALESCE(sn.person,'') OR (s.person='' AND sn.person IS NOT NULL AND sn.person!=''))
+  `).all(weekId);
+  
+  // Snapshot'ta olup şimdi olmayan hücreler (silinen)
+  const deleted = db.prepare(`
+    SELECT sn.row_id, sn.day_index, '' as current_person, sn.person as snapshot_person
+    FROM schedule_snapshot sn
+    LEFT JOIN schedule s ON s.week_id=sn.week_id AND s.row_id=sn.row_id AND s.day_index=sn.day_index
+    WHERE sn.week_id=? AND sn.person!='' AND (s.person IS NULL OR s.person='')
+    AND NOT EXISTS (SELECT 1 FROM schedule sc WHERE sc.week_id=sn.week_id AND sc.row_id=sn.row_id AND sc.day_index=sn.day_index AND sc.person!='')
+  `).all(weekId);
+  
+  return [...changed, ...deleted];
+}
+
+function hasSnapshot(weekId) {
+  const r = db.prepare('SELECT COUNT(*) as cnt FROM schedule_snapshot WHERE week_id=?').get(weekId);
+  return r.cnt > 0;
+}
+
+function markWeekViewed(weekId, username) {
+  db.prepare(`INSERT INTO week_views(week_id,username,viewed_at)
+    VALUES(?,?,datetime('now','localtime'))
+    ON CONFLICT(week_id,username) DO UPDATE SET viewed_at=datetime('now','localtime')`)
+  .run(weekId, username);
+}
+
+function hasViewedWeek(weekId, username) {
+  const r = db.prepare('SELECT viewed_at FROM week_views WHERE week_id=? AND username=?').get(weekId, username);
+  return !!r;
+}
+
+function clearWeekViews(weekId) {
+  // Yeni yayında görüntüleme sıfırla
+  db.prepare('DELETE FROM week_views WHERE week_id=?').run(weekId);
+}
+
 module.exports = {
   db, getSetting, setSetting,
   getUsers, getUserByUsername, createUser, updateUserPass, deleteUser,
@@ -474,6 +552,6 @@ module.exports = {
   getBirthdays, addBirthday, deleteBirthday,
   getKiEntries, addKiEntry, deleteKiEntry, getKiSummary,
   getRequests, getRequestById, createRequest, resolveRequest, checkConflict,
-  getStats, getYears, getSodexoPeriod, getSodexoNights, setSodexoApproval,
+  getStats, getYears, takeSnapshot, getChanges, hasSnapshot, markWeekViewed, hasViewedWeek, clearWeekViews, getSodexoPeriod, getSodexoNights, setSodexoApproval,
   getVacationPlans, toggleVacationPlan, deleteVacationPlan, autoPopulateFromPlans
 };
