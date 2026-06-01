@@ -739,7 +739,7 @@ async function loadWeek(wid){
       if(btnD)btnD.style.display=(w.published&&!w.draft_mode)?"inline-flex":"none";
     }
   }
-  const [data,counts,meta]=await Promise.all([
+  const [data,counts,meta,changes]=await Promise.all([
     api("GET",`/api/schedule/${cWeekId}`),
     api("GET",`/api/weeks/${cWeekId}/sections`),
     api("GET",`/api/schedule/${cWeekId}`).then(d=>d.meta||{})
@@ -1082,14 +1082,18 @@ function buildTable(){
         return total>11;
       })();
       if(isAdmin&&!locked){
+        const chgA=window._changes&&window._changes[`${row.id}-${gi}`];
         const cls=p?(dup||is11h?"s-dup":row.c==="tekmon"?"s-tekmon":`s-${row.c}`):"s-empty";
         const stl=dup||is11h?"":p?`background:#${cl.bg};color:#${cl.fg};border:1px solid #${cl.bd}`:"";
         const flashCls=is11h?"flash-warn":"";
         const finalStl=stl||"";
-        return `<td class="td-c" style="background:${alt}"><select class="sel ${cls} ${flashCls}"${finalStl?` style="${finalStl}"`:""} data-rid="${row.id}" data-gi="${gi}" onchange="onSel(this)"><option value="">—</option>${PERSONEL.map(pe=>`<option value="${pe}"${pe===p?" selected":""}>${pe}</option>`).join("")}</select></td>`;
+        const chgStyleA=chgA?`outline:2px solid #E65100;outline-offset:-2px;`:``;
+        return `<td class="td-c" style="background:${alt}${chgA?';'+chgStyleA:''}"><select class="sel ${cls} ${flashCls}"${finalStl?` style="${finalStl}"`:""} data-rid="${row.id}" data-gi="${gi}" onchange="onSel(this)" title="${chgA?`Değişti: ${chgA.snapshot_person||'boş'} → ${chgA.current_person||'boş'}`:''}" ><option value="">—</option>${PERSONEL.map(pe=>`<option value="${pe}"${pe===p?" selected":""}>${pe}</option>`).join("")}</select></td>`;
       }else{
         const bg=p?`#${cl.bg}`:alt;const fg=p?`#${cl.fg}`:"var(--txt3)";
-        return `<td class="td-c" style="background:${bg};color:${fg};font-weight:${p?500:400};font-size:11px;padding:5px 4px">${p||"—"}</td>`;
+        const chg=window._changes&&window._changes[`${row.id}-${gi}`];
+        const chgStyle=chg?`;outline:2px solid #E65100;outline-offset:-2px;`:`` ;
+        return `<td class="td-c" style="background:${bg};color:${fg};font-weight:${p?500:400};font-size:11px;padding:5px 4px${chgStyle}" title="${chg?`Değişti: ${chg.snapshot_person||'boş'} → ${chg.current_person||'boş'}`:`${p||''}`}">${p||"—"}</td>`;
       }
     }).join("")}</tr>`;
   });
@@ -1537,8 +1541,8 @@ async function exportExcel(){
     {t:"solid",fg:"FF3D3D3D"},{t:"solid",fg:"FFE8EAF6"},{t:"solid",fg:"FF2E4057"},{t:"solid",fg:"FFFAEEDA"},{t:"solid",fg:"FFE8F5E0"},
     {t:"solid",fg:"FFEEEDFE"},{t:"solid",fg:"FF2C3E50"},{t:"solid",fg:"FFE1F5EE"},{t:"solid",fg:"FFFFF2E0"},
     {t:"solid",fg:"FFFAE8E8"},{t:"solid",fg:"FFFCE4FC"},{t:"solid",fg:"FFEEE8FF"},{t:"solid",fg:"FFF7C1C1"},{t:"solid",fg:"FFF4F7FB"},
-    {t:"solid",fg:"FF2E7D32"}]; // tatil yeşili
-  const F={navy:2,day:3,saat:4,sec:5,lav:6,bot:7,sabah:8,prime:9,aksam:10,gece:11,dis:12,izin:13,yillik:14,dogum:15,ki:16,warn:17,alt:18,hol:19};
+    {t:"solid",fg:"FF2E7D32"},{t:"solid",fg:"FFFFF3E0"}]; // tatil yeşili
+  const F={navy:2,day:3,saat:4,sec:5,lav:6,bot:7,sabah:8,prime:9,aksam:10,gece:11,dis:12,izin:13,yillik:14,dogum:15,ki:16,warn:17,alt:18,hol:19,chg:20};
   const mf=f=>f.t==="none"?`<fill><patternFill patternType="none"/></fill>`:f.t==="gray125"?`<fill><patternFill patternType="gray125"/></fill>`:`<fill><patternFill patternType="solid"><fgColor rgb="${f.fg}"/><bgColor indexed="64"/></patternFill></fill>`;
   const fonts=[{sz:10,n:"Arial"},{sz:13,n:"Arial",b:1,c:"FFFFFFFF"},{sz:10,n:"Arial",b:1,c:"FFFFFFFF"},
     {sz:10,n:"Arial",b:1,c:"FF412402"},{sz:10,n:"Arial",b:1,c:"FF1A5C00"},{sz:10,n:"Arial",b:1,c:"FF26215C"},
@@ -1561,7 +1565,7 @@ async function exportExcel(){
     tDi:ax(F.dis,FN.dis,1),tIz:ax(F.izin,FN.izin,1),tYl:ax(F.yillik,FN.yillik,1),tDo:ax(F.dogum,FN.dogum,1),tKi:ax(F.ki,FN.ki,1),
     pSb:ax(F.sabah,FN.sabah,0),pPr:ax(F.prime,FN.prime,0),pAk:ax(F.aksam,FN.aksam,0),pGe:ax(F.gece,FN.gece,0),
     pDi:ax(F.dis,FN.dis,0),pIz:ax(F.izin,FN.izin,0),pYl:ax(F.yillik,FN.yillik,0),pDo:ax(F.dogum,FN.dogum,0),pKi:ax(F.ki,FN.ki,0),
-    pWn:ax(F.warn,FN.warn,0),pEm:ax(0,FN.d,0),
+    pWn:ax(F.warn,FN.warn,0),pEm:ax(0,FN.d,0),chg:ax(F.chg,FN.sabah,1),
     bSc:ax(F.lav,FN.lav,1,"center","center",true),bAl:ax(F.lav,FN.lav,1,"center","center",true),
     nC:ax(F.alt,FN.note,0,"left","top",true),nL:ax(F.alt,FN.note,0,"left")};
   const xfsXml=`<cellXfs count="${xfs.length}">${xfs.map(x=>`<xf numFmtId="0" fontId="${x.fn}" fillId="${x.fi}" borderId="${x.bi}" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="${x.h}" vertical="${x.v}" wrapText="${x.w?1:0}"/></xf>`).join("")}</cellXfs>`;
@@ -1633,7 +1637,11 @@ async function exportExcel(){
       bolumCell=CV(0,ri,row.b||"",row.b?XF.bSc:XF.bAl);
     }
     const t=[bolumCell,CV(1,ri,row.s,cx.t)];
-    DAYS.forEach((_,gi)=>{const p=(sched[row.id]||[])?.[gi]||"";t.push(CV(2+gi,ri,p,p?cx.p:XF.pEm));});
+    DAYS.forEach((_,gi)=>{
+      const p=(sched[row.id]||[])?.[gi]||"";
+      const isChg=window._changes&&window._changes[`${row.id}-${gi}`];
+      t.push(CV(2+gi,ri,p,isChg?XF.chg:(p?cx.p:XF.pEm)));
+    });
     rows.push(t);ri++;
   });
 
