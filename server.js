@@ -427,10 +427,9 @@ app.get('/api/weeks/:id/changes', requireAuth, (req,res) => {
   if(req.user.role !== 'admin' && !w.published) return res.json([]);
   // Personel sadece draft_mode=0 iken (yeni yayınlanmış) değişiklikleri görür
   if(req.user.role !== 'admin' && w.draft_mode) return res.json([]);
-  if(req.user.role !== 'admin' && hasViewedWeek(weekId, req.user.username)) return res.json([]);
+  if(req.user.role !== 'admin' && !req.query.force && hasViewedWeek(weekId, req.user.username)) return res.json([]);
   const snap = hasSnapshot(weekId);
   const changes = getChanges(weekId);
-  console.log(`[changes] weekId=${weekId} hasSnapshot=${snap} changes=${changes.length} role=${req.user.role}`);
   if(req.query.debug) {
     // Raw data for debugging
     const snapRows = db.prepare('SELECT * FROM schedule_snapshot WHERE week_id=? LIMIT 5').all(weekId);
