@@ -207,6 +207,7 @@ seedHolidays();
   const migrations = [
     // Kolon eklemeleri (zaten varsa hata vermez)
     "ALTER TABLE weeks ADD COLUMN published INTEGER DEFAULT 0",
+    "ALTER TABLE users ADD COLUMN active INTEGER DEFAULT 1",
     "ALTER TABLE weeks ADD COLUMN draft_mode INTEGER DEFAULT 0",
     "ALTER TABLE ki_entries ADD COLUMN date_given TEXT DEFAULT (date('now','localtime'))",
     "ALTER TABLE ki_entries ADD COLUMN week_id INTEGER",
