@@ -48,7 +48,8 @@ async function sendMail(to, subject, html) {
         })
       });
       const data = await resp.json();
-      if(!resp.ok) return {ok:false, error:data.message||'Brevo API hatası'};
+      console.log('[Brevo] status:', resp.status, 'response:', JSON.stringify(data));
+      if(!resp.ok) return {ok:false, error:data.message||data.error||JSON.stringify(data)};
       console.log(`[Mail/Brevo] Gönderildi → ${to}`);
       return {ok:true};
     }
