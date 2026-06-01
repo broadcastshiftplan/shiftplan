@@ -100,6 +100,8 @@ app.post('/api/auth/change-password', requireAuth, async (req,res) => {
 });
 
 // ── KULLANICILAR ─────────────────────────────────────────────────────────
+app.get('/api/personnel', requireAuth, (req,res) => res.json(getActivePersonnel()));
+
 app.get('/api/users', requireAdmin, (req,res) => res.json(getUsers()));
 app.post('/api/users', requireAdmin, async (req,res) => {
   const { username, password, full_name, role } = req.body;
@@ -114,6 +116,12 @@ app.put('/api/users/:id/password', requireAdmin, async (req,res) => {
   updateUserPass(req.params.id, await bcrypt.hash(password,10));
   res.json({ok:true});
 });
+app.patch('/api/users/:id/active', requireAdmin, (req,res) => {
+  const {active} = req.body;
+  setUserActive(req.params.id, active);
+  res.json({ok:true});
+});
+
 app.delete('/api/users/:id', requireAdmin, (req,res) => {
   if (parseInt(req.params.id)===req.user.id) return res.status(400).json({error:'Kendinizi silemezsiniz'});
   // En az 1 admin kalsın
