@@ -412,6 +412,8 @@ app.get('/api/weeks/:id/changes', requireAuth, (req,res) => {
   const w = getWeek(weekId);
   if(!w) return res.status(404).json({error:'Hafta yok'});
   if(req.user.role !== 'admin' && !w.published) return res.json([]);
+  // Personel sadece draft_mode=0 iken (yeni yayınlanmış) değişiklikleri görür
+  if(req.user.role !== 'admin' && w.draft_mode) return res.json([]);
   if(req.user.role !== 'admin' && hasViewedWeek(weekId, req.user.username)) return res.json([]);
   const snap = hasSnapshot(weekId);
   const changes = getChanges(weekId);
