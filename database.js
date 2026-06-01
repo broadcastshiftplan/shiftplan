@@ -214,6 +214,7 @@ seedHolidays();
     "ALTER TABLE shift_requests ADD COLUMN resolved_by TEXT",
     // Eski row_id formatlarını temizle (schedule)
     "DELETE FROM schedule WHERE row_id IN ('p1a','p1b','p1c','p1d','p1e','p1f','p1g','p3a','p3b','p3c','p3d','p3e','p3f','p3g','tma','tmb','tmc','tmd','tme','tmf','tmg','ob1','r01','r02','r03','r04','r05','r06','r07','r08','r09','r10','r11','r12','r12b','r13','r14','r15','r16','r17','r18','bday','iz1','iz2','iz3','dg1','dg2','yl1','yl2','yl3','dgi1','ki1','ki2','pcr_4','pcr_5','pcr_6','pcr_7')",
+    "DELETE FROM schedule_snapshot WHERE row_id IN ('pcr_4','pcr_5','pcr_6','pcr_7','p1a','p1b','p1c','p1d','p1e','p1f','p1g','tma','tmb','tmc','tmd','tme','tmf','tmg')",
     // Eski row_id formatlarını temizle (row_meta)
     "DELETE FROM row_meta WHERE row_id IN ('p1a','p1b','p1c','p1d','p1e','p1f','p1g','p3a','p3b','p3c','p3d','p3e','p3f','p3g','tma','tmb','tmc','tmd','tme','tmf','tmg','r01','r02','r03','r04','r05','r06','r07','r08','r09','r10','r11','r12','pcr_4','pcr_5','pcr_6','pcr_7')",
   ];
@@ -498,6 +499,8 @@ function takeSnapshot(weekId) {
 }
 
 function getChanges(weekId) {
+  // Geçersiz row_id'leri temizle
+  db.prepare("DELETE FROM schedule_snapshot WHERE week_id=? AND row_id IN ('pcr_4','pcr_5','pcr_6','pcr_7','p1a','tmd')").run(weekId);
   // Mevcut ile snapshot karşılaştır — farklı olan hücreler
   const changed = db.prepare(`
     SELECT s.row_id, s.day_index, s.person as current_person,
