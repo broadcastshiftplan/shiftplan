@@ -756,12 +756,33 @@ async function loadWeek(wid){
   sectionCounts=counts;
   buildTable();
   if(ROLE==="admin")refreshWarnings();
-  // Personel için görüntülendi işaretle — 5sn sonra sunucuya gönder
-  // Vurgu bu oturumda kalır, bir sonraki sayfa yüklemesinde kaybolur
-  if(ROLE==='user' && cWeekId && changes && Array.isArray(changes) && changes.length){
-    setTimeout(async()=>{
-      await api("POST",`/api/weeks/${cWeekId}/view`).catch(()=>{});
-    }, 5000);
+  // Personel için 12 saat vurgu takibi
+  if(ROLE==='user' && cWeekId){
+    const lsKey=`chg_viewed_${cWeekId}`;
+    if(changes && Array.isArray(changes) && changes.length){
+      // İlk kez görüyor — zamanı kaydet
+      if(!localStorage.getItem(lsKey)){
+        localStorage.setItem(lsKey, Date.now().toString());
+        // 5sn sonra sunucuya bildir
+        setTimeout(async()=>{
+          await api("POST",`/api/weeks/${cWeekId}/view`).catch(()=>{});
+        }, 5000);
+      } else {
+        // Daha önce görmüş — 12 saat geçti mi?
+        const seenAt = parseInt(localStorage.getItem(lsKey));
+        const hoursElapsed = (Date.now()-seenAt)/(1000*60*60);
+        if(hoursElapsed >= 12){
+          // 12 saat doldu — vurguları temizle
+          localStorage.removeItem(lsKey);
+          window._changes={};
+          buildTable();
+        }
+        // 12 saat dolmadıysa vurgular kalır (zaten window._changes dolu)
+      }
+    } else {
+      // Değişiklik yoksa localStorage'ı temizle
+      localStorage.removeItem(lsKey);
+    }
   }
 }
 
