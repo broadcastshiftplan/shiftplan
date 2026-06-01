@@ -17,6 +17,7 @@ const {
   getRequests, getRequestById, createRequest, resolveRequest, checkConflict,
   getStats, getYears, takeSnapshot, getChanges, hasSnapshot, getSnapshotSchedule, markWeekViewed, hasViewedWeek, clearWeekViews, getWeekViewers,
   getActivePersonnel, setUserActive,
+  getTasks, getTask, createTask, updateTask, updateTaskProgress, getTaskLogs, deleteTask, getUpcomingTaskAlerts,
   getSodexoPeriod, getSodexoNights, setSodexoApproval, db
 } = require('./database');
 
@@ -33,17 +34,23 @@ process.on('unhandledRejection', e => console.error('[ERR]', e?.message||e));
 async function sendMail(to, subject, html) {
   if(!to) return {ok:false, error:'Alıcı adresi yok'};
   try {
-    const gmailUser = (getSetting('mailUser') || process.env.MAIL_USER || '').trim();
-    const gmailPass = (getSetting('mailPass') || process.env.MAIL_PASS || '').trim();
-    if(!gmailUser || !gmailPass) return {ok:false, error:'Gmail adresi veya uygulama şifresi girilmemiş'};
-    const t = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 465,
-      secure: true,
-      auth: { user: gmailUser, pass: gmailPass },
-      tls: { rejectUnauthorized: false }
+    const brevoKey = (process.env.BREVO_API_KEY || getSetting('brevoKey') || '').trim();
+    const senderMail = (getSetting('mailUser') || process.env.MAIL_USER || 'broadcastshiftplan@gmail.com').trim();
+    if(!brevoKey) return {ok:false, error:'Brevo API key girilmemiş (Ayarlar veya Railway BREVO_API_KEY)'};
+    console.log('[Mail] brevoKey uzunluk:', brevoKey.length, 'gönderen:', senderMail, 'alıcı:', to);
+    const resp = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: { 'api-key': brevoKey, 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({
+        sender: { name: 'Nöbet Çizelgesi', email: senderMail },
+        to: [{ email: to }],
+        subject,
+        htmlContent: html
+      })
     });
-    await t.sendMail({ from: `"Nöbet Çizelgesi" <${gmailUser}>`, to, subject, html });
+    const txt = await resp.text();
+    console.log('[Mail] Brevo response:', resp.status, txt.slice(0,200));
+    if(!resp.ok) return {ok:false, error:`Brevo ${resp.status}: ${txt.slice(0,100)}`};
     console.log(`[Mail] Gönderildi → ${to}`);
     return {ok:true};
   } catch(e) {
@@ -334,6 +341,7 @@ app.get('/api/settings', requireAdmin, (req,res) => res.json({
   mailUser: getSetting('mailUser')||'',
   mailTo:   getSetting('mailTo')||'',
   mailPass: getSetting('mailPass')?'••••••••':'',
+  brevoKey: getSetting('brevoKey')||process.env.BREVO_API_KEY?'(kayıtlı)':'',
 
 }));
 app.post('/api/settings', requireAdmin, (req,res) => {
@@ -341,7 +349,9 @@ app.post('/api/settings', requireAdmin, (req,res) => {
   if (mailUser!==undefined) setSetting('mailUser',mailUser);
   if (mailTo!==undefined)   setSetting('mailTo',mailTo);
   if (mailPass&&mailPass!=='••••••••') setSetting('mailPass',mailPass);
+  if (brevoKey&&brevoKey!=='(kayıtlı)') setSetting('brevoKey',brevoKey);
   if (mailPass&&mailPass!=='••••••••') setSetting('mailPass',mailPass);
+  if (brevoKey&&brevoKey!=='(kayıtlı)') setSetting('brevoKey',brevoKey);
   res.json({ok:true});
 });
 app.post('/api/settings/test-mail', requireAdmin, async (req,res) => {
@@ -534,6 +544,56 @@ app.get('/api/request-stats', requireAdmin, (req,res) => {
   `).all();
 
   res.json({ summary, byPerson, byShift, monthly });
+});
+
+
+// ── GÖREV YÖNETİMİ ────────────────────────────────────────────────────────
+app.get('/api/tasks', requireAuth, (req,res) => {
+  const tasks = getTasks(req.user.username, req.user.role);
+  // assignees string'ini array'e çevir
+  tasks.forEach(t => {
+    t.assignees = t.assignees ? t.assignees.split(',') : [];
+    // Bitiş günü hesapla
+    if(t.due_date) {
+      const diff = Math.ceil((new Date(t.due_date)-new Date())/(1000*60*60*24));
+      t.days_left = diff;
+      if(t.status !== 'completed') {
+        if(diff < 0) t.status = 'overdue';
+        else if(diff <= t.reminder_days_before) t.status = 'warning';
+      }
+    }
+  });
+  res.json(tasks);
+});
+
+app.get('/api/tasks/:id', requireAuth, (req,res) => {
+  const t = getTask(req.params.id);
+  if(!t) return res.status(404).json({error:'Görev bulunamadı'});
+  t.assignees = t.assignees ? t.assignees.split(',') : [];
+  const logs = getTaskLogs(req.params.id);
+  res.json({...t, logs});
+});
+
+app.post('/api/tasks', requireAdmin, (req,res) => {
+  const id = createTask({...req.body, created_by: req.user.username});
+  res.json({id, ok:true});
+});
+
+app.put('/api/tasks/:id', requireAdmin, (req,res) => {
+  updateTask(req.params.id, req.body);
+  res.json({ok:true});
+});
+
+app.post('/api/tasks/:id/progress', requireAuth, (req,res) => {
+  const {progress, note} = req.body;
+  if(progress === undefined || !note) return res.status(400).json({error:'progress ve note zorunlu'});
+  updateTaskProgress(req.params.id, parseInt(progress), req.user.username, req.user.name, note);
+  res.json({ok:true});
+});
+
+app.delete('/api/tasks/:id', requireAdmin, (req,res) => {
+  deleteTask(req.params.id);
+  res.json({ok:true});
 });
 
 // ── SODEXO ───────────────────────────────────────────────────────────────
