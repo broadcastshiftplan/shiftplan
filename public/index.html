@@ -277,10 +277,10 @@ textarea.nt{width:100%;box-sizing:border-box;border:1px solid #e0e0e0;border-rad
 <!-- İSTATİSTİK -->
 <div id="pn-istatistik" style="display:none">
   <div class="wbar" style="margin-bottom:8px">
-    <button class="btn btn-blue" id="st-tab-nobet" onclick="switchStatTab('nobet')" style="background:var(--navy)">
+    <button class="btn" id="st-tab-nobet" onclick="switchStatTab('nobet')" style="background:var(--navy);color:#fff">
       <i class="ti ti-chart-bar" aria-hidden="true"></i> Nöbet İstatistiği
     </button>
-    <button class="btn btn-ghost" id="st-tab-talep" onclick="switchStatTab('talep')">
+    <button class="btn" id="st-tab-talep" onclick="switchStatTab('talep')" style="background:var(--alt);color:var(--txt2);border:1px solid var(--bd2)">
       <i class="ti ti-inbox" aria-hidden="true"></i> Talep İstatistiği
     </button>
   </div>
@@ -2580,10 +2580,15 @@ async function showViewers(){
 function switchStatTab(tab){
   document.getElementById('st-nobet').style.display = tab==='nobet'?'block':'none';
   document.getElementById('st-talep').style.display = tab==='talep'?'block':'none';
-  document.getElementById('st-tab-nobet').style.background = tab==='nobet'?'var(--navy)':'';
-  document.getElementById('st-tab-nobet').className = tab==='nobet'?'btn btn-blue':'btn btn-ghost';
-  document.getElementById('st-tab-talep').style.background = tab==='talep'?'var(--navy)':'';
-  document.getElementById('st-tab-talep').className = tab==='talep'?'btn btn-blue':'btn btn-ghost';
+  const btnN = document.getElementById('st-tab-nobet');
+  const btnT = document.getElementById('st-tab-talep');
+  // Aktif buton: navy zemin beyaz yazı
+  btnN.style.cssText = tab==='nobet'
+    ? 'background:var(--navy);color:#fff'
+    : 'background:var(--alt);color:var(--txt2);border:1px solid var(--bd2)';
+  btnT.style.cssText = tab==='talep'
+    ? 'background:var(--navy);color:#fff'
+    : 'background:var(--alt);color:var(--txt2);border:1px solid var(--bd2)';
   if(tab==='talep') loadReqStats();
 }
 
