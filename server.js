@@ -31,39 +31,27 @@ process.on('unhandledRejection', e => console.error('[ERR]', e?.message||e));
 
 // ── Mail ─────────────────────────────────────────────────────────────────
 async function sendMail(to, subject, html) {
-  if (!to) return {ok:false, error:'Alıcı adresi yok'};
+  if(!to) return {ok:false, error:'Alıcı adresi yok'};
   try {
-    // Brevo SMTP
-    const brevoSmtpPass = (process.env.BREVO_SMTP_PASS || getSetting('brevoSmtpPass') || '').trim();
-    const brevoLogin    = (process.env.BREVO_LOGIN    || getSetting('brevoLogin')    || 'ad3a63001@smtp-brevo.com').trim();
-    if(brevoSmtpPass) {
-      const senderMail = getSetting('mailUser') || process.env.MAIL_USER || 'broadcastshiftplan@gmail.com';
-      const t = nodemailer.createTransport({
-        host: 'smtp-relay.brevo.com',
-        port: 587,
-        secure: false,
-        auth: { user: brevoLogin, pass: brevoSmtpPass },
-        tls: { rejectUnauthorized: false },
-        connectionTimeout: 15000
-      });
-      await t.sendMail({ from: `"Nöbet Çizelgesi" <${senderMail}>`, to, subject, html });
-      console.log(`[Mail/Brevo-SMTP] Gönderildi → ${to}`);
-      return {ok:true};
-    }
-    // Fallback: nodemailer
-    const user = getSetting('mailUser') || process.env.MAIL_USER;
-    const pass = getSetting('mailPass') || process.env.MAIL_PASS;
-    if (!user || !pass) return {ok:false, error:'Mail ayarları eksik. Resend API key veya Gmail şifresi giriniz.'};
+    const gmailUser = (getSetting('mailUser') || process.env.MAIL_USER || '').trim();
+    const gmailPass = (getSetting('mailPass') || process.env.MAIL_PASS || '').trim();
+    if(!gmailUser || !gmailPass) return {ok:false, error:'Gmail adresi veya uygulama şifresi girilmemiş'};
     const t = nodemailer.createTransport({
-      host: 'smtp.gmail.com', port: 465, secure: true,
-      auth: { user, pass }, tls: { rejectUnauthorized: false },
-      connectionTimeout: 10000
+      host: 'smtp.gmail.com',
+      port: 587,
+      secure: false,
+      auth: { user: gmailUser, pass: gmailPass },
+      tls: { rejectUnauthorized: false }
     });
-    await t.sendMail({ from: `"Nöbet Çizelgesi" <${user}>`, to, subject, html });
-    console.log(`[Mail/SMTP] Gönderildi → ${to}`);
+    await t.sendMail({ from: `"Nöbet Çizelgesi" <${gmailUser}>`, to, subject, html });
+    console.log(`[Mail] Gönderildi → ${to}`);
     return {ok:true};
-  } catch(e) { console.error('[Mail]', e.message); return {ok:false,error:e.message}; }
+  } catch(e) {
+    console.error('[Mail] Hata:', e.message);
+    return {ok:false, error:e.message};
+  }
 }
+
 
 // ── Doğum günü ───────────────────────────────────────────────────────────
 function checkBirthdays() {
@@ -346,14 +334,14 @@ app.get('/api/settings', requireAdmin, (req,res) => res.json({
   mailUser: getSetting('mailUser')||'',
   mailTo:   getSetting('mailTo')||'',
   mailPass: getSetting('mailPass')?'••••••••':'',
-  brevoKey: getSetting('brevoKey')||process.env.BREVO_API_KEY?'••••••••••••••••':'',
+
 }));
 app.post('/api/settings', requireAdmin, (req,res) => {
   const { mailUser, mailTo, mailPass, brevoKey } = req.body;
   if (mailUser!==undefined) setSetting('mailUser',mailUser);
   if (mailTo!==undefined)   setSetting('mailTo',mailTo);
   if (mailPass&&mailPass!=='••••••••') setSetting('mailPass',mailPass);
-  if (req.body.brevoSmtpPass&&req.body.brevoSmtpPass!=='••••••••') setSetting('brevoSmtpPass',req.body.brevoSmtpPass);
+  if (mailPass&&mailPass!=='••••••••') setSetting('mailPass',mailPass);
   res.json({ok:true});
 });
 app.post('/api/settings/test-mail', requireAdmin, async (req,res) => {
