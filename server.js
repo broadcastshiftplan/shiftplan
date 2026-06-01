@@ -15,7 +15,8 @@ const {
   getKiEntries, addKiEntry, deleteKiEntry, getKiSummary,
   getVacationPlans, toggleVacationPlan, deleteVacationPlan, autoPopulateFromPlans,
   getRequests, getRequestById, createRequest, resolveRequest, checkConflict,
-  getStats, getYears, takeSnapshot, getChanges, hasSnapshot, markWeekViewed, hasViewedWeek, clearWeekViews,
+  getStats, getYears, takeSnapshot, getChanges, hasSnapshot, getSnapshotSchedule, markWeekViewed, hasViewedWeek, clearWeekViews, getWeekViewers,
+  getActivePersonnel, setUserActive,
   getSodexoPeriod, getSodexoNights, setSodexoApproval, db
 } = require('./database');
 
