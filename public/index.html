@@ -551,8 +551,8 @@ textarea.nt{width:100%;box-sizing:border-box;border:1px solid #e0e0e0;border-rad
 <!-- GÖREVLER -->
 <div id="pn-gorevler" style="display:none">
   <!-- Admin: Yeni görev butonu -->
-  <div class="wbar" id="task-wbar" style="background:var(--srf);padding:10px 14px;border-radius:10px;border:1px solid var(--bd);margin-bottom:12px">
-    <button class="btn btn-green admin-only" onclick="openTaskModal()" style="font-size:13px;padding:7px 14px">
+  <div id="task-wbar" style="position:sticky;top:0;z-index:10;background:var(--bg);padding:10px 0;margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;border-bottom:1px solid var(--bd)">
+    <button class="btn btn-green admin-only" onclick="openTaskModal()" style="font-size:13px;padding:7px 16px">
       <i class="ti ti-plus" aria-hidden="true"></i> Yeni Görev
     </button>
     <select class="wsel admin-only" id="task-filter-person" style="min-width:160px" onchange="loadTasks()">
