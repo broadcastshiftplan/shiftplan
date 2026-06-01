@@ -489,9 +489,9 @@ textarea.nt{width:100%;box-sizing:border-box;border:1px solid #e0e0e0;border-rad
       <div class="form-row" style="flex:2;min-width:180px"><label class="form-label">Varsayılan Alıcı (herhangi mail)</label>
         <input class="inp" id="s-to" placeholder="yonetici@sirket.com.tr"></div>
     </div>
-    <div class="form-row"><label class="form-label">Resend API Key <span style="background:#2E7D32;color:#fff;font-size:10px;padding:1px 6px;border-radius:4px;margin-left:4px">ÖNERİLEN</span></label>
-      <input class="inp" type="password" id="s-resend" placeholder="re_xxxxxxxxxxxx">
-      <div class="hint">resend.com → API Keys → Create API Key (Railway'de RESEND_API_KEY env var da kullanılabilir)</div></div>
+    <div class="form-row"><label class="form-label">Brevo API Key <span style="background:#2E7D32;color:#fff;font-size:10px;padding:1px 6px;border-radius:4px;margin-left:4px">ÖNERİLEN</span></label>
+      <input class="inp" type="password" id="s-brevo" placeholder="xsmtpsib-...">
+      <div class="hint">app.brevo.com → Profil → SMTP & API → API Keys (Railway'de BREVO_API_KEY env var da kullanılabilir)</div></div>
     <div class="form-row"><label class="form-label">Gmail Uygulama Şifresi <span style="color:var(--txt3);font-size:11px">(Resend yoksa)</span></label>
       <input class="inp" type="password" id="s-pass" placeholder="xxxx xxxx xxxx xxxx">
       <div class="hint">Google Hesabı → Güvenlik → 2 Adımlı Doğrulama → Uygulama Şifreleri</div></div>
@@ -1602,11 +1602,11 @@ async function loadSettings(){
     document.getElementById("s-user").value=s.mailUser||"";
     document.getElementById("s-to").value=s.mailTo||"";
     document.getElementById("s-pass").value=s.mailPass??"";
-    const sr=document.getElementById("s-resend");if(sr)sr.value=s.resendKey?"••••••••••••••••":"";
+    const sr=document.getElementById("s-brevo");if(sr)sr.value=s.brevoKey?"••••••••••••••••":"";
   }catch(e){}
 }
 async function saveSettings(){
-  await api("POST","/api/settings",{mailUser:document.getElementById("s-user").value,mailTo:document.getElementById("s-to").value,mailPass:document.getElementById("s-pass").value,resendKey:document.getElementById("s-resend").value});
+  await api("POST","/api/settings",{mailUser:document.getElementById("s-user").value,mailTo:document.getElementById("s-to").value,mailPass:document.getElementById("s-pass").value,brevoKey:document.getElementById("s-brevo").value});
   document.getElementById("mail-status").innerHTML=`<span style="color:#2E7D32">✓ Kaydedildi.</span>`;
 }
 async function testMail(){
