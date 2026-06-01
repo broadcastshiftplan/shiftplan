@@ -1092,13 +1092,14 @@ function buildTable(){
         const stl=dup||is11h?"":p?`background:#${cl.bg};color:#${cl.fg};border:1px solid #${cl.bd}`:"";
         const flashCls=is11h?"flash-warn":"";
         const finalStl=stl||"";
-        const chgStyleA=chgA?`outline:2px solid #E65100;outline-offset:-2px;`:``;
-        return `<td class="td-c" style="background:${alt}${chgA?';'+chgStyleA:''}"><select class="sel ${cls} ${flashCls}"${finalStl?` style="${finalStl}"`:""} data-rid="${row.id}" data-gi="${gi}" onchange="onSel(this)" title="${chgA?`Değişti: ${chgA.snapshot_person||'boş'} → ${chgA.current_person||'boş'}`:''}" ><option value="">—</option>${PERSONEL.map(pe=>`<option value="${pe}"${pe===p?" selected":""}>${pe}</option>`).join("")}</select></td>`;
+        const chgStyleA=chgA?`border:2px solid #E65100!important;`:`` ;
+        return `<td class="td-c" style="background:${alt};${chgA?'outline:2px solid #E65100;outline-offset:-2px;':''}"><select class="sel ${cls} ${flashCls}"${finalStl?` style="${finalStl}"`:""} data-rid="${row.id}" data-gi="${gi}" onchange="onSel(this)" title="${chgA?`Değişti: ${chgA.snapshot_person||'boş'} → ${chgA.current_person||'boş'}`:''}" ><option value="">—</option>${PERSONEL.map(pe=>`<option value="${pe}"${pe===p?" selected":""}>${pe}</option>`).join("")}</select></td>`;
       }else{
         const bg=p?`#${cl.bg}`:alt;const fg=p?`#${cl.fg}`:"var(--txt3)";
         const chg=window._changes&&window._changes[`${row.id}-${gi}`];
-        const chgStyle=chg?`;outline:2px solid #E65100;outline-offset:-2px;`:`` ;
-        return `<td class="td-c" style="background:${bg};color:${fg};font-weight:${p?500:400};font-size:11px;padding:5px 4px${chgStyle}" title="${chg?`Değişti: ${chg.snapshot_person||'boş'} → ${chg.current_person||'boş'}`:`${p||''}`}">${p||"—"}</td>`;
+        const chgBg=chg?(p?`#${cl.bg}`:`#FFF3E0`):bg;
+        const chgBorder=chg?`outline:2px solid #E65100;outline-offset:-2px;`:``;
+        return `<td class="td-c" style="background:${chgBg};color:${fg};font-weight:${p?500:400};font-size:11px;padding:5px 4px;${chgBorder}" title="${chg?`Değişti: ${chg.snapshot_person||'boş'} → ${chg.current_person||'boş'}`:`${p||''}`}">${p||"—"}${chg?` <span style="font-size:9px;color:#E65100">●</span>`:``}</td>`;
       }
     }).join("")}</tr>`;
   });
