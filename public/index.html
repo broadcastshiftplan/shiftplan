@@ -748,10 +748,8 @@ async function loadWeek(wid){
   sched={};
   Object.keys(data.sched||{}).forEach(rid=>{sched[rid]=data.sched[rid];});
   window._changes={};
-  console.log('[loadWeek] changes from API:', changes);
   if(changes&&Array.isArray(changes)&&changes.length){
     changes.forEach(c=>{window._changes[`${c.row_id}-${c.day_index}`]=c;});
-    console.log('[loadWeek] _changes set:', Object.keys(window._changes));
   }
   notes=data.notes||[Array(7).fill(""),Array(7).fill("")];
   rowMeta=data.meta||{};
@@ -1135,10 +1133,22 @@ if(isAdmin){
   }else{const n=document.getElementById("draft-n");if(n)n.remove();}
 }
 
+async function refreshChanges(){
+  if(!cWeekId)return;
+  try{
+    const ch=await api("GET",`/api/weeks/${cWeekId}/changes`).catch(()=>[]);
+    window._changes={};
+    if(ch&&Array.isArray(ch)&&ch.length){
+      ch.forEach(c=>{window._changes[`${c.row_id}-${c.day_index}`]=c;});
+    }
+  }catch(e){}
+}
+
 function onSel(el){
   const rid=el.dataset.rid,gi=parseInt(el.dataset.gi),val=el.value;
   if(!sched[rid])sched[rid]=Array(7).fill("");
-  sched[rid][gi]=val;saveCell(rid,gi,val);buildTable();if(ROLE==="admin")refreshWarnings();
+  sched[rid][gi]=val;saveCell(rid,gi,val);
+  refreshChanges().then(()=>{buildTable();if(ROLE==="admin")refreshWarnings();});
 }
 function onNote(ta){
   const ni=parseInt(ta.dataset.ni),gi=parseInt(ta.dataset.gi);
