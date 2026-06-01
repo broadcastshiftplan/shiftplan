@@ -276,12 +276,23 @@ textarea.nt{width:100%;box-sizing:border-box;border:1px solid #e0e0e0;border-rad
 
 <!-- İSTATİSTİK -->
 <div id="pn-istatistik" style="display:none">
-  <div class="wbar">
-    <label style="font-size:12px;color:var(--txt2);font-weight:500">Yıl:</label>
-    <select class="wsel" id="yr-sel" style="min-width:110px" onchange="loadStats()"><option value="">Tüm</option></select>
-    <button class="btn btn-blue" onclick="loadStats()"><i class="ti ti-refresh" aria-hidden="true"></i></button>
-    <button class="btn btn-green" onclick="exportStatsExcel()"><i class="ti ti-file-spreadsheet" aria-hidden="true"></i> Excel İndir</button>
+  <div class="wbar" style="margin-bottom:8px">
+    <button class="btn btn-blue" id="st-tab-nobet" onclick="switchStatTab('nobet')" style="background:var(--navy)">
+      <i class="ti ti-chart-bar" aria-hidden="true"></i> Nöbet İstatistiği
+    </button>
+    <button class="btn btn-ghost" id="st-tab-talep" onclick="switchStatTab('talep')">
+      <i class="ti ti-inbox" aria-hidden="true"></i> Talep İstatistiği
+    </button>
   </div>
+
+  <!-- Nöbet İstatistiği -->
+  <div id="st-nobet">
+    <div class="wbar">
+      <label style="font-size:12px;color:var(--txt2);font-weight:500">Yıl:</label>
+      <select class="wsel" id="yr-sel" style="min-width:110px" onchange="loadStats()"><option value="">Tüm</option></select>
+      <button class="btn btn-blue" onclick="loadStats()"><i class="ti ti-refresh" aria-hidden="true"></i></button>
+      <button class="btn btn-green" onclick="exportStatsExcel()"><i class="ti ti-file-spreadsheet" aria-hidden="true"></i> Excel İndir</button>
+    </div>
   <div class="sc-grid" id="sc-cards"></div>
   <div style="overflow-x:auto;border:1px solid var(--bd);border-radius:10px;margin-bottom:16px">
     <table class="stat-t" id="stat-t"></table>
@@ -311,6 +322,51 @@ textarea.nt{width:100%;box-sizing:border-box;border:1px solid #e0e0e0;border-rad
       </tr></thead><tbody id="ki-body"></tbody></table>
     </div>
   </div>
+  </div><!-- /st-nobet -->
+
+  <!-- Talep İstatistiği -->
+  <div id="st-talep" style="display:none">
+    <div class="wbar">
+      <label style="font-size:12px;color:var(--txt2);font-weight:500">Yıl:</label>
+      <select class="wsel" id="req-yr-sel" style="min-width:110px" onchange="loadReqStats()">
+        <option value="">Tüm</option>
+      </select>
+      <label style="font-size:12px;color:var(--txt2);font-weight:500">Ay:</label>
+      <select class="wsel" id="req-mo-sel" style="min-width:120px" onchange="loadReqStats()">
+        <option value="">Tüm</option>
+        <option value="1">Ocak</option><option value="2">Şubat</option>
+        <option value="3">Mart</option><option value="4">Nisan</option>
+        <option value="5">Mayıs</option><option value="6">Haziran</option>
+        <option value="7">Temmuz</option><option value="8">Ağustos</option>
+        <option value="9">Eylül</option><option value="10">Ekim</option>
+        <option value="11">Kasım</option><option value="12">Aralık</option>
+      </select>
+      <button class="btn btn-blue" onclick="loadReqStats()"><i class="ti ti-refresh" aria-hidden="true"></i></button>
+    </div>
+
+    <!-- Özet kartlar -->
+    <div class="sc-grid" id="req-sc-cards" style="margin-bottom:16px"></div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+      <!-- Personel bazlı tablo -->
+      <div class="card" style="overflow-x:auto">
+        <div class="card-title"><i class="ti ti-users" aria-hidden="true"></i> Personel Bazlı</div>
+        <table style="border-collapse:collapse;width:100%;font-size:12px" id="req-person-t"></table>
+      </div>
+      <!-- En çok istenen vardiyalar -->
+      <div class="card" style="overflow-x:auto">
+        <div class="card-title"><i class="ti ti-clock" aria-hidden="true"></i> En Çok İstenen Vardiyalar</div>
+        <table style="border-collapse:collapse;width:100%;font-size:12px" id="req-shift-t"></table>
+      </div>
+    </div>
+
+    <!-- Aylık trend -->
+    <div class="card">
+      <div class="card-title"><i class="ti ti-trending-up" aria-hidden="true"></i> Aylık Trend</div>
+      <div id="req-monthly" style="overflow-x:auto"></div>
+    </div>
+  </div><!-- /st-talep -->
+
 </div>
 
 
@@ -1493,6 +1549,9 @@ async function loadYears(){
   const allYrs=[...new Set([...yrs,...[2025,2026,2027,2028,2029,2030]])].sort((a,b)=>b-a);
   const sel=document.getElementById("yr-sel");
   sel.innerHTML=`<option value="">Tüm</option>${allYrs.map(y=>`<option value="${y}">${y}</option>`).join("")}`;
+  // Talep istatistiği yıl seçici
+  const sel2=document.getElementById("req-yr-sel");
+  if(sel2) sel2.innerHTML=`<option value="">Tüm</option>${allYrs.map(y=>`<option value="${y}">${y}</option>`).join("")}`;
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -2513,6 +2572,116 @@ async function showViewers(){
   msg += viewers.map(v=>`✅ ${v.username} — ${v.viewed_at.slice(0,16)}`).join("\n");
   if(notSeen.length>0) msg += `\n\n⏳ Henüz görmedi:\n${notSeen.map(p=>`• ${p}`).join("\n")}`;
   alert(msg);
+}
+
+// ═══════════════════════════════════════════════════════════
+// TALEPİSTATİSTİĞİ
+// ═══════════════════════════════════════════════════════════
+function switchStatTab(tab){
+  document.getElementById('st-nobet').style.display = tab==='nobet'?'block':'none';
+  document.getElementById('st-talep').style.display = tab==='talep'?'block':'none';
+  document.getElementById('st-tab-nobet').style.background = tab==='nobet'?'var(--navy)':'';
+  document.getElementById('st-tab-nobet').className = tab==='nobet'?'btn btn-blue':'btn btn-ghost';
+  document.getElementById('st-tab-talep').style.background = tab==='talep'?'var(--navy)':'';
+  document.getElementById('st-tab-talep').className = tab==='talep'?'btn btn-blue':'btn btn-ghost';
+  if(tab==='talep') loadReqStats();
+}
+
+async function loadReqStats(){
+  const yr = document.getElementById('req-yr-sel').value;
+  const mo = document.getElementById('req-mo-sel').value;
+  let url = '/api/request-stats';
+  const params = [];
+  if(yr) params.push(`year=${yr}`);
+  if(mo) params.push(`month=${mo}`);
+  if(params.length) url += '?' + params.join('&');
+
+  const d = await api('GET', url);
+  const {summary, byPerson, byShift, monthly} = d;
+
+  // Özet kartlar
+  const approveRate = summary.total > 0 ? Math.round((summary.approved/summary.total)*100) : 0;
+  document.getElementById('req-sc-cards').innerHTML = [
+    ['📋 Toplam Talep', summary.total, 'tüm talepler'],
+    ['✅ Onaylanan', summary.approved, `%${approveRate} karşılandı`],
+    ['❌ Reddedilen', summary.rejected, 'karşılanamadı'],
+    ['⏳ Bekleyen', summary.pending, 'değerlendiriliyor'],
+  ].map(([l,v,s])=>`<div class="sc"><div class="sc-lbl">${l}</div><div class="sc-val">${v||0}</div><div class="sc-sub">${s}</div></div>`).join('');
+
+  // Personel tablosu
+  const pHdr = `<thead><tr>
+    <th style="background:var(--blue2);color:#fff;padding:6px 10px;text-align:left">Personel</th>
+    <th style="background:var(--blue2);color:#fff;padding:6px 8px;text-align:center">Toplam</th>
+    <th style="background:#2E7D32;color:#fff;padding:6px 8px;text-align:center">Onaylı</th>
+    <th style="background:#A32D2D;color:#fff;padding:6px 8px;text-align:center">Red</th>
+    <th style="background:var(--navy);color:#fff;padding:6px 8px;text-align:center">Oran</th>
+  </tr></thead>`;
+  const pBody = byPerson.length ? byPerson.map((p,i)=>{
+    const rate = p.total>0 ? Math.round((p.approved/p.total)*100) : 0;
+    const alt = i%2===0?'#fff':'var(--alt)';
+    return `<tr>
+      <td style="padding:5px 10px;font-weight:500;background:${alt}">${p.person}</td>
+      <td style="text-align:center;background:${alt}">${p.total}</td>
+      <td style="text-align:center;background:${alt};color:#2E7D32;font-weight:600">${p.approved}</td>
+      <td style="text-align:center;background:${alt};color:#A32D2D;font-weight:600">${p.rejected}</td>
+      <td style="text-align:center;background:${alt}">
+        <div style="display:flex;align-items:center;gap:4px">
+          <div style="flex:1;height:6px;border-radius:3px;background:#eee;overflow:hidden">
+            <div style="width:${rate}%;height:100%;background:${rate>=70?'#2E7D32':rate>=40?'#E65100':'#A32D2D'};border-radius:3px"></div>
+          </div>
+          <span style="font-size:10px;min-width:24px">${rate}%</span>
+        </div>
+      </td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="5" style="text-align:center;color:var(--txt3);padding:12px">Veri yok</td></tr>';
+  document.getElementById('req-person-t').innerHTML = pHdr + '<tbody>' + pBody + '</tbody>';
+
+  // Vardiya tablosu
+  const sHdr = `<thead><tr>
+    <th style="background:var(--blue2);color:#fff;padding:6px 10px;text-align:left">Vardiya</th>
+    <th style="background:var(--blue2);color:#fff;padding:6px 8px;text-align:center">Talep</th>
+    <th style="background:#2E7D32;color:#fff;padding:6px 8px;text-align:center">Onaylı</th>
+  </tr></thead>`;
+  const sBody = byShift.length ? byShift.map((s,i)=>{
+    const alt = i%2===0?'#fff':'var(--alt)';
+    return `<tr>
+      <td style="padding:5px 10px;background:${alt}">${s.shift_text}</td>
+      <td style="text-align:center;background:${alt};font-weight:600">${s.total}</td>
+      <td style="text-align:center;background:${alt};color:#2E7D32;font-weight:600">${s.approved}</td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="3" style="text-align:center;color:var(--txt3);padding:12px">Veri yok</td></tr>';
+  document.getElementById('req-shift-t').innerHTML = sHdr + '<tbody>' + sBody + '</tbody>';
+
+  // Aylık trend — yatay bar chart
+  const maxM = Math.max(...monthly.map(m=>m.total), 1);
+  const MONTHS_TR2 = {'01':'Oca','02':'Şub','03':'Mar','04':'Nis','05':'May','06':'Haz','07':'Tem','08':'Ağu','09':'Eyl','10':'Eki','11':'Kas','12':'Ara'};
+  document.getElementById('req-monthly').innerHTML = `<table style="border-collapse:collapse;width:100%;font-size:12px">
+    <thead><tr>
+      <th style="background:var(--blue2);color:#fff;padding:5px 10px;text-align:left;min-width:80px">Ay</th>
+      <th style="background:var(--blue2);color:#fff;padding:5px 8px;text-align:left">Talepler</th>
+      <th style="background:var(--blue2);color:#fff;padding:5px 8px;text-align:center;width:60px">Toplam</th>
+    </tr></thead>
+    <tbody>
+    ${monthly.map((m,i)=>{
+      const [yr2,mo2] = m.month.split('-');
+      const w = Math.round((m.total/maxM)*200);
+      const wa = Math.round((m.approved/maxM)*200);
+      const alt = i%2===0?'#fff':'var(--alt)';
+      return `<tr>
+        <td style="padding:5px 10px;font-weight:500;background:${alt};white-space:nowrap">${MONTHS_TR2[mo2]} ${yr2}</td>
+        <td style="padding:5px 8px;background:${alt}">
+          <div style="position:relative;height:16px;border-radius:3px;overflow:hidden;background:#eee;width:${w}px;min-width:4px">
+            <div style="position:absolute;left:0;top:0;height:100%;width:${Math.round((wa/m.total)*100)}%;background:#2E7D32;border-radius:3px"></div>
+            <div style="position:absolute;left:0;top:0;height:100%;width:100%;display:flex;align-items:center;padding:0 4px">
+              <span style="font-size:9px;color:#fff;font-weight:600;white-space:nowrap">${m.approved}✓ / ${m.total-m.approved}✗</span>
+            </div>
+          </div>
+        </td>
+        <td style="text-align:center;font-weight:600;background:${alt}">${m.total}</td>
+      </tr>`;
+    }).join('')}
+    </tbody>
+  </table>`;
 }
 
 </script>
