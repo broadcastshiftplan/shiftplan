@@ -756,13 +756,12 @@ async function loadWeek(wid){
   sectionCounts=counts;
   buildTable();
   if(ROLE==="admin")refreshWarnings();
-  // Personel için görüntülendi işaretle — 3sn sonra vurgu kalkar
+  // Personel için görüntülendi işaretle — 5sn sonra sunucuya gönder
+  // Vurgu bu oturumda kalır, bir sonraki sayfa yüklemesinde kaybolur
   if(ROLE==='user' && cWeekId && changes && Array.isArray(changes) && changes.length){
     setTimeout(async()=>{
       await api("POST",`/api/weeks/${cWeekId}/view`).catch(()=>{});
-      window._changes={};
-      buildTable();
-    }, 3000);
+    }, 5000);
   }
 }
 
@@ -1138,7 +1137,32 @@ if(isAdmin){
       n.innerHTML=`<i class="ti ti-pencil" style="flex-shrink:0" aria-hidden="true"></i> <b>Taslak</b> — Bu hafta henüz yayınlanmadı. Personel göremez. Hazır olunca 📷 <b>Yayınla</b> butonuna basın.`;
       document.getElementById("pn-cizelge").insertBefore(n,document.querySelector(".leg"));
     }
-  }else{const n=document.getElementById("draft-n");if(n)n.remove();}
+  } else if(weekObj&&weekObj.published&&weekObj.draft_mode&&isAdmin){
+    if(!document.getElementById("draft-n")){
+      const n=document.createElement("div");n.id="draft-n";n.className="alert warn";n.style.marginBottom="10px";
+      document.getElementById("pn-cizelge").insertBefore(n,document.querySelector(".leg"));
+    }
+    const chgCount=Object.keys(window._changes||{}).length;
+    api("GET",`/api/weeks/${cWeekId}/viewers`).then(viewers=>{
+      const vTxt=viewers.length>0
+        ?` — <b style="color:#2E7D32">👁 ${viewers.length} kişi gördü:</b> ${viewers.map(v=>`${v.username} <span style="opacity:.6;font-size:10px">${v.viewed_at.slice(11,16)}</span>`).join(" · ")}`
+        :` — <span style="opacity:.7">Henüz kimse görmedi</span>`;
+      const el=document.getElementById("draft-n");
+      if(el)el.innerHTML=`<i class="ti ti-pencil" style="flex-shrink:0"></i> <b>Taslak Modu</b> — Personel eski hali görüyor${chgCount>0?`, <b style="color:#E65100">${chgCount} değişiklik</b> var`:""}.${vTxt} Bitince 📷 <b>Yayınla</b>.`;
+    }).catch(()=>{
+      const el=document.getElementById("draft-n");
+      if(el)el.innerHTML=`<i class="ti ti-pencil" style="flex-shrink:0"></i> <b>Taslak Modu</b> — Personel eski hali görüyor. Bitince 📷 <b>Yayınla</b>.`;
+    });
+  }else if(weekObj&&weekObj.published&&!weekObj.draft_mode&&isAdmin){
+    // Yayınlanmış — kim gördü bilgisi
+    const n=document.getElementById("draft-n");if(n)n.remove();
+    api("GET",`/api/weeks/${cWeekId}/viewers`).then(viewers=>{
+      if(viewers.length===0)return;
+      let vn=document.getElementById("view-n");
+      if(!vn){vn=document.createElement("div");vn.id="view-n";vn.className="alert ok";vn.style.marginBottom="10px";document.getElementById("pn-cizelge").insertBefore(vn,document.querySelector(".leg"));}
+      vn.innerHTML=`<i class="ti ti-eye" style="flex-shrink:0"></i> <b>Görüntüleyenler (${viewers.length}/${PERSONEL.length}):</b> ${viewers.map(v=>`${v.username} <span style="opacity:.6;font-size:10px">${v.viewed_at.slice(11,16)}</span>`).join(" · ")}`;
+    }).catch(()=>{});
+  }else{const n=document.getElementById("draft-n");if(n)n.remove();const vn=document.getElementById("view-n");if(vn)vn.remove();}
 }
 
 async function refreshChanges(){
