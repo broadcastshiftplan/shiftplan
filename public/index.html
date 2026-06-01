@@ -327,7 +327,6 @@ textarea.nt{width:100%;box-sizing:border-box;border:1px solid #e0e0e0;border-rad
       </select>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
         <span class="leg-i"><span class="leg-d" style="background:#E8F5E9;border:1px solid #81C784"></span> Yıllık İzin (seçildi)</span>
-        <span class="leg-i"><span class="leg-d" style="background:var(--ki-b);border:1px solid var(--ki-d)"></span> K.İ (seçildi)</span>
         <span class="leg-i"><span class="leg-d" style="background:var(--alt);border:1px solid var(--bd)"></span> Seçilmedi</span>
       </div>
       <span id="plan-saved" style="font-size:12px;color:#2E7D32;display:none">✓ Kaydedildi</span>
@@ -654,6 +653,7 @@ function showApp(){
     wb.innerHTML=`<select class="wsel" id="wsel" onchange="loadWeek(this.value)"></select>
       <button class="btn btn-green" onclick="openNewWeek()"><i class="ti ti-plus" aria-hidden="true"></i> Yeni Hafta</button>
       <button class="btn" style="background:#7B1FA2;color:#fff" onclick="doPublishWeek()" id="btn-publish"><i class="ti ti-camera" aria-hidden="true"></i> Yayınla</button>
+      <button class="btn btn-ghost" style="background:#1B5E20;color:#fff;display:none" id="btn-viewers" onclick="showViewers()"><i class="ti ti-eye" aria-hidden="true"></i> <span id="viewers-count">0</span> Gördü</button>
       <button class="btn btn-ghost" style="background:#555;color:#fff" onclick="doDraftWeek()" id="btn-draft"><i class="ti ti-pencil" aria-hidden="true"></i> Taslağa Al</button>
       <button class="btn btn-ghost" style="background:var(--blue2);color:#fff" onclick="doLockWeek()"><i class="ti ti-lock" aria-hidden="true"></i> Kilitle</button>
       <button class="btn btn-ghost" style="background:#555;color:#fff" onclick="doUnlockWeek()"><i class="ti ti-lock-open" aria-hidden="true"></i> Aç</button>
@@ -737,6 +737,16 @@ async function loadWeek(wid){
       if(btnP)btnP.style.display=(!w.published||w.draft_mode)?"inline-flex":"none";
       // Taslağa Al: yayınlanmış ve taslak modunda değilse göster
       if(btnD)btnD.style.display=(w.published&&!w.draft_mode)?"inline-flex":"none";
+      // Kim gördü butonu: yayınlanmış ve draft değil
+      const btnV=document.getElementById("btn-viewers");
+      if(btnV){
+        if(w.published&&!w.draft_mode){
+          api("GET",`/api/weeks/${cWeekId}/viewers`).then(vw=>{
+            if(vw.length>0){btnV.style.display="inline-flex";document.getElementById("viewers-count").textContent=vw.length;}
+            else{btnV.style.display="none";}
+          }).catch(()=>{btnV.style.display="none";});
+        } else { btnV.style.display="none"; }
+      }
     }
   }
   const [data,counts,meta,changes]=await Promise.all([
@@ -758,30 +768,38 @@ async function loadWeek(wid){
   if(ROLE==="admin")refreshWarnings();
   // Personel için 12 saat vurgu takibi
   if(ROLE==='user' && cWeekId){
-    const lsKey=`chg_viewed_${cWeekId}`;
+    const lsKey=`chg_seen_${cWeekId}`;
+    const seenAt = localStorage.getItem(lsKey) ? parseInt(localStorage.getItem(lsKey)) : null;
+    const hoursElapsed = seenAt ? (Date.now()-seenAt)/(1000*60*60) : 999;
+
     if(changes && Array.isArray(changes) && changes.length){
-      // İlk kez görüyor — zamanı kaydet
-      if(!localStorage.getItem(lsKey)){
+      // API'den değişiklik geldi
+      if(!seenAt){
+        // İlk kez görüyor — localStorage'a kaydet, sunucuya BİLDİRME (12 saat bekle)
         localStorage.setItem(lsKey, Date.now().toString());
-        // 5sn sonra sunucuya bildir
-        setTimeout(async()=>{
-          await api("POST",`/api/weeks/${cWeekId}/view`).catch(()=>{});
-        }, 5000);
-      } else {
-        // Daha önce görmüş — 12 saat geçti mi?
-        const seenAt = parseInt(localStorage.getItem(lsKey));
-        const hoursElapsed = (Date.now()-seenAt)/(1000*60*60);
-        if(hoursElapsed >= 12){
-          // 12 saat doldu — vurguları temizle
-          localStorage.removeItem(lsKey);
-          window._changes={};
-          buildTable();
-        }
-        // 12 saat dolmadıysa vurgular kalır (zaten window._changes dolu)
+      } else if(hoursElapsed >= 12){
+        // 12 saat doldu — sunucuya bildir ve temizle
+        localStorage.removeItem(lsKey);
+        api("POST",`/api/weeks/${cWeekId}/view`).catch(()=>{});
+        window._changes={};
+        buildTable();
       }
-    } else {
-      // Değişiklik yoksa localStorage'ı temizle
-      localStorage.removeItem(lsKey);
+      // 12 saat dolmadıysa vurgular kalır
+    } else if(!changes || !changes.length){
+      // API boş döndü ama localStorage'da kayıt var ve 12 saat dolmamış
+      // → Changes'i localStorage'dan yeniden yükle (sayfayı yeniledikten sonra)
+      if(seenAt && hoursElapsed < 12){
+        // Sunucu görüldü saydı ama biz henüz saymıyoruz — force fetch
+        api("GET",`/api/weeks/${cWeekId}/changes?force=1`).then(forceChanges=>{
+          if(forceChanges && forceChanges.length){
+            window._changes={};
+            forceChanges.forEach(c=>{window._changes[`${c.row_id}-${c.day_index}`]=c;});
+            buildTable();
+          }
+        }).catch(()=>{});
+      } else {
+        localStorage.removeItem(lsKey);
+      }
     }
   }
 }
@@ -1853,8 +1871,6 @@ function renderYearPlan(weeks){
       let cellBg, cellTitle, cellContent;
       if(planType === 'yillik'){
         cellBg = '#E8F5E9'; cellContent = '<span style="font-size:14px">✓</span>'; cellTitle = 'Yıllık İzin Planlandı';
-      } else if(planType === 'ki'){
-        cellBg = 'var(--ki-b)'; cellContent = '<span style="font-size:12px">K</span>'; cellTitle = 'K.İ Planlandı';
       } else {
         cellBg = canEdit ? '#fff' : rowBg; cellContent = ''; cellTitle = canEdit ? 'Tıkla: Yıllık İzin ekle' : '';
       }
@@ -1888,11 +1904,10 @@ async function togglePlan(person, weekStart, type){
   const key = `${person}|${weekStart}`;
   const current = vacPlanData[key] || null;
 
-  // Cycle: null → yillik → ki → null
+  // Cycle: null → yillik → null
   let newType;
   if(!current) newType = 'yillik';
-  else if(current === 'yillik') newType = 'ki';
-  else newType = null; // ki → null (sil)
+  else newType = null;
 
   try {
     if(newType){
@@ -2489,6 +2504,17 @@ async function exportSodexoExcel(){
   const a=document.createElement("a");a.href=URL.createObjectURL(blob);
   a.download=`Sodexo_${label.replace(/[\s\u2013\u2014\/]/g,"_")}.xlsx`;a.click();
 }
+async function showViewers(){
+  const viewers = await api("GET",`/api/weeks/${cWeekId}/viewers`).catch(()=>[]);
+  const all = PERSONEL.length;
+  const seen = viewers.length;
+  const notSeen = PERSONEL.filter(p=>!viewers.find(v=>v.username===p&&p));
+  let msg = `📋 Görüntüleyen Personel (${seen}/${all})\n\n`;
+  msg += viewers.map(v=>`✅ ${v.username} — ${v.viewed_at.slice(0,16)}`).join("\n");
+  if(notSeen.length>0) msg += `\n\n⏳ Henüz görmedi:\n${notSeen.map(p=>`• ${p}`).join("\n")}`;
+  alert(msg);
+}
+
 </script>
 </body>
 </html>
