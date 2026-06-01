@@ -170,9 +170,21 @@ app.put('/api/weeks/:id/sections', requireAdmin, (req,res) => {
 
 // ── ÇİZELGE ──────────────────────────────────────────────────────────────
 app.get('/api/schedule/:weekId', requireAuth, (req,res) => {
-  const rows    = getSchedule(req.params.weekId);
-  const nts     = getNotes(req.params.weekId);
-  const metaRows= getRowMeta(req.params.weekId);
+  const weekId = req.params.weekId;
+  const w = getWeek(weekId);
+
+  // Draft modda personele snapshot göster (eski yayınlanmış hali)
+  if(w && w.draft_mode && req.user.role !== 'admin' && hasSnapshot(weekId)){
+    const snap = getSnapshotSchedule(weekId);
+    const nts = getNotes(weekId);
+    const na = [Array(7).fill(''),Array(7).fill('')];
+    nts.forEach(n => { na[n.note_index][n.day_index]=n.content; });
+    return res.json({ sched: snap.sched, notes: na, meta: snap.meta });
+  }
+
+  const rows    = getSchedule(weekId);
+  const nts     = getNotes(weekId);
+  const metaRows= getRowMeta(weekId);
   const sched = {};
   rows.forEach(r => { if(!sched[r.row_id])sched[r.row_id]=Array(7).fill(''); sched[r.row_id][r.day_index]=r.person; });
   const na = [Array(7).fill(''),Array(7).fill('')];
@@ -433,6 +445,13 @@ app.post('/api/weeks/:id/view', requireAuth, (req,res) => {
   res.json({ok:true});
 });
 
+
+
+// Kim gördü?
+app.get('/api/weeks/:id/viewers', requireAdmin, (req,res) => {
+  const viewers = getWeekViewers(req.params.id);
+  res.json(viewers);
+});
 
 // ── SODEXO ───────────────────────────────────────────────────────────────
 app.get('/api/sodexo', requireAdmin, (req, res) => {
