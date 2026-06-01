@@ -584,6 +584,8 @@ module.exports = {
   getBirthdays, addBirthday, deleteBirthday,
   getKiEntries, addKiEntry, deleteKiEntry, getKiSummary,
   getRequests, getRequestById, createRequest, resolveRequest, checkConflict,
-  getStats, getYears, takeSnapshot, getChanges, hasSnapshot, markWeekViewed, hasViewedWeek, clearWeekViews, getSodexoPeriod, getSodexoNights, setSodexoApproval,
+  getStats, getYears, takeSnapshot, getChanges, hasSnapshot, getSnapshotSchedule, markWeekViewed, hasViewedWeek, clearWeekViews, getWeekViewers,
+  getActivePersonnel, setUserActive,
+  getSodexoPeriod, getSodexoNights, setSodexoApproval,
   getVacationPlans, toggleVacationPlan, deleteVacationPlan, autoPopulateFromPlans
 };
