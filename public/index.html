@@ -756,6 +756,14 @@ async function loadWeek(wid){
   sectionCounts=counts;
   buildTable();
   if(ROLE==="admin")refreshWarnings();
+  // Personel için görüntülendi işaretle — 3sn sonra vurgu kalkar
+  if(ROLE==='user' && cWeekId && changes && Array.isArray(changes) && changes.length){
+    setTimeout(async()=>{
+      await api("POST",`/api/weeks/${cWeekId}/view`).catch(()=>{});
+      window._changes={};
+      buildTable();
+    }, 3000);
+  }
 }
 
 async function saveCell(rid,gi,val){
@@ -1148,6 +1156,8 @@ function onSel(el){
   const rid=el.dataset.rid,gi=parseInt(el.dataset.gi),val=el.value;
   if(!sched[rid])sched[rid]=Array(7).fill("");
   sched[rid][gi]=val;saveCell(rid,gi,val);
+  // Önce tabloyu çiz (hızlı geri bildirim), sonra changes güncelle
+  buildTable();if(ROLE==="admin")refreshWarnings();
   refreshChanges().then(()=>{buildTable();if(ROLE==="admin")refreshWarnings();});
 }
 function onNote(ta){
