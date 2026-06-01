@@ -146,14 +146,15 @@ app.patch('/api/weeks/:id/publish', requireAdmin, (req,res) => {
   const id = req.params.id;
   publishWeek(id);
   lockWeek(id);
-  takeSnapshot(id);   // Yayınlanan hali kaydet
-  clearWeekViews(id); // Personelin "gördü" işaretini sıfırla
+  clearWeekViews(id); // Personelin "gördü" işaretini sıfırla (snapshot değişmez)
   res.json({ok:true});
 });
 app.patch('/api/weeks/:id/unpublish',requireAdmin, (req,res) => { unpublishWeek(req.params.id); res.json({ok:true}); });
 app.patch('/api/weeks/:id/draft', requireAdmin, (req,res) => {
-  draftWeek(req.params.id);
-  unlockWeek(req.params.id);
+  const id = req.params.id;
+  takeSnapshot(id);  // Değişiklik öncesi hali kaydet
+  draftWeek(id);
+  unlockWeek(id);
   res.json({ok:true});
 });
 app.patch('/api/weeks/:id/unlock', requireAdmin, (req,res) => { unlockWeek(req.params.id); res.json({ok:true}); });
