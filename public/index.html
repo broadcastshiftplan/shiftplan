@@ -201,6 +201,24 @@ textarea.nt{width:100%;box-sizing:border-box;border:1px solid #e0e0e0;border-rad
   <button class="tab" id="tb-profil"            onclick="sw('profil')" style="display:none"><i class="ti ti-user" aria-hidden="true"></i> Profil</button>
 </div>
 
+<div id="task-wbar" style="display:none;background:var(--srf);border-bottom:1px solid var(--bd);padding:8px 16px;gap:8px;align-items:center;flex-wrap:wrap">
+  <button class="btn btn-green admin-only" onclick="openTaskModal()" style="font-size:13px;padding:7px 16px">
+    <i class="ti ti-plus" aria-hidden="true"></i> Yeni Görev
+  </button>
+  <select class="wsel admin-only" id="task-filter-person" style="min-width:160px" onchange="loadTasks()">
+    <option value="">Tüm Personel</option>
+  </select>
+  <select class="wsel" id="task-filter-status" style="min-width:140px" onchange="loadTasks()">
+    <option value="">Tüm Durumlar</option>
+    <option value="active">🟢 Aktif</option>
+    <option value="warning">🟡 Yaklaşan</option>
+    <option value="overdue">🔴 Süresi Dolmuş</option>
+    <option value="completed">✅ Tamamlandı</option>
+  </select>
+  <button class="btn btn-blue admin-only" onclick="exportTasksExcel()">
+    <i class="ti ti-file-spreadsheet" aria-hidden="true"></i> Excel
+  </button>
+</div>
 <div class="main">
 
 <!-- ÇİZELGE -->
@@ -551,24 +569,6 @@ textarea.nt{width:100%;box-sizing:border-box;border:1px solid #e0e0e0;border-rad
 <!-- GÖREVLER -->
 <div id="pn-gorevler" style="display:none">
   <!-- Admin: Yeni görev butonu -->
-  <div id="task-wbar" style="position:sticky;top:0;z-index:10;background:var(--bg);padding:10px 0;margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;border-bottom:1px solid var(--bd)">
-    <button class="btn btn-green admin-only" onclick="openTaskModal()" style="font-size:13px;padding:7px 16px">
-      <i class="ti ti-plus" aria-hidden="true"></i> Yeni Görev
-    </button>
-    <select class="wsel admin-only" id="task-filter-person" style="min-width:160px" onchange="loadTasks()">
-      <option value="">Tüm Personel</option>
-    </select>
-    <select class="wsel" id="task-filter-status" style="min-width:140px" onchange="loadTasks()">
-      <option value="">Tüm Durumlar</option>
-      <option value="active">🟢 Aktif</option>
-      <option value="warning">🟡 Yaklaşan</option>
-      <option value="overdue">🔴 Süresi Dolmuş</option>
-      <option value="completed">✅ Tamamlandı</option>
-    </select>
-    <button class="btn btn-blue admin-only" onclick="exportTasksExcel()">
-      <i class="ti ti-file-spreadsheet" aria-hidden="true"></i> Excel
-    </button>
-  </div>
   <div id="task-list"></div>
 </div>
 
@@ -1967,7 +1967,13 @@ function sw(id){
   if(id==="kullanicilar"){loadUsers();}
   if(id==="ayarlar"&&ROLE==="admin"){loadSettings();loadHolidays();}
   if(id==="profil"){loadMyKi();}
-  if(id==="gorevler"){loadTasks();}
+  if(id==="gorevler"){
+    document.getElementById('task-wbar').style.display='flex';
+    loadTasks();
+  } else {
+    const tw=document.getElementById('task-wbar');
+    if(tw) tw.style.display='none';
+  }
 }
 
 // ═══════════════════════════════════════════════════════════
