@@ -742,10 +742,15 @@ async function loadWeek(wid){
   const [data,counts,meta,changes]=await Promise.all([
     api("GET",`/api/schedule/${cWeekId}`),
     api("GET",`/api/weeks/${cWeekId}/sections`),
-    api("GET",`/api/schedule/${cWeekId}`).then(d=>d.meta||{})
+    api("GET",`/api/schedule/${cWeekId}`).then(d=>d.meta||{}),
+    api("GET",`/api/weeks/${cWeekId}/changes`).catch(()=>[]),
   ]);
   sched={};
   Object.keys(data.sched||{}).forEach(rid=>{sched[rid]=data.sched[rid];});
+  window._changes={};
+  if(changes&&changes.length){
+    changes.forEach(c=>{window._changes[`${c.row_id}-${c.day_index}`]=c;});
+  }
   notes=data.notes||[Array(7).fill(""),Array(7).fill("")];
   rowMeta=data.meta||{};
   sectionCounts=counts;
