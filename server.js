@@ -38,8 +38,8 @@ async function sendMail(to, subject, html) {
     if(!gmailUser || !gmailPass) return {ok:false, error:'Gmail adresi veya uygulama şifresi girilmemiş'};
     const t = nodemailer.createTransport({
       host: 'smtp.gmail.com',
-      port: 587,
-      secure: false,
+      port: 465,
+      secure: true,
       auth: { user: gmailUser, pass: gmailPass },
       tls: { rejectUnauthorized: false }
     });
