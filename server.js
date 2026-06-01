@@ -411,11 +411,12 @@ app.get('/api/weeks/:id/changes', requireAuth, (req,res) => {
   const weekId = req.params.id;
   const w = getWeek(weekId);
   if(!w) return res.status(404).json({error:'Hafta yok'});
-  // Admin her zaman görür, user sadece yayınlanmış haftalarda
   if(req.user.role !== 'admin' && !w.published) return res.json([]);
-  // Kullanıcı zaten gördüyse boş dön (renk kalkmış)
   if(req.user.role !== 'admin' && hasViewedWeek(weekId, req.user.username)) return res.json([]);
+  const snap = hasSnapshot(weekId);
   const changes = getChanges(weekId);
+  console.log(`[changes] weekId=${weekId} hasSnapshot=${snap} changes=${changes.length} role=${req.user.role}`);
+  if(req.query.debug) return res.json({hasSnapshot:snap, changes, weekId, role:req.user.role});
   res.json(changes);
 });
 
