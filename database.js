@@ -544,6 +544,32 @@ function clearWeekViews(weekId) {
   db.prepare('DELETE FROM week_views WHERE week_id=?').run(weekId);
 }
 
+
+function getSnapshotSchedule(weekId) {
+  // schedule_snapshot'tan sched objesi oluştur
+  const rows = db.prepare(
+    'SELECT row_id, day_index, person FROM schedule_snapshot WHERE week_id=?'
+  ).all(weekId);
+  const sched = {};
+  rows.forEach(r => {
+    if(!sched[r.row_id]) sched[r.row_id] = Array(7).fill('');
+    sched[r.row_id][r.day_index] = r.person || '';
+  });
+  // row_meta_snapshot'tan meta oluştur
+  const metaRows = db.prepare(
+    'SELECT row_id, shift_time FROM row_meta_snapshot WHERE week_id=?'
+  ).all(weekId);
+  const meta = {};
+  metaRows.forEach(r => { meta[r.row_id] = r.shift_time; });
+  return { sched, meta };
+}
+
+function getWeekViewers(weekId) {
+  return db.prepare(
+    'SELECT username, viewed_at FROM week_views WHERE week_id=? ORDER BY viewed_at DESC'
+  ).all(weekId);
+}
+
 module.exports = {
   db, getSetting, setSetting,
   getUsers, getUserByUsername, createUser, updateUserPass, deleteUser,
