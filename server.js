@@ -33,18 +33,23 @@ process.on('unhandledRejection', e => console.error('[ERR]', e?.message||e));
 async function sendMail(to, subject, html) {
   if (!to) return {ok:false, error:'Alıcı adresi yok'};
   try {
-    const resendKey = process.env.RESEND_API_KEY || getSetting('resendKey');
-    if(resendKey) {
-      // Resend HTTP API ile gönder (paket gereksiz)
-      const from = getSetting('mailUser') || process.env.MAIL_USER || 'onboarding@resend.dev';
-      const resp = await fetch('https://api.resend.com/emails', {
+    const brevoKey = process.env.BREVO_API_KEY || getSetting('brevoKey');
+    if(brevoKey) {
+      // Brevo (Sendinblue) API ile gönder
+      const senderMail = getSetting('mailUser') || process.env.MAIL_USER || 'noreply@nobet.app';
+      const resp = await fetch('https://api.brevo.com/v3/smtp/email', {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ from: `Nöbet Çizelgesi <${from}>`, to, subject, html })
+        headers: { 'api-key': brevoKey, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sender: { name: 'Nöbet Çizelgesi', email: senderMail },
+          to: [{ email: to }],
+          subject,
+          htmlContent: html
+        })
       });
       const data = await resp.json();
-      if(!resp.ok) return {ok:false, error:data.message||'Resend API hatası'};
-      console.log(`[Mail/Resend] Gönderildi → ${to}`);
+      if(!resp.ok) return {ok:false, error:data.message||'Brevo API hatası'};
+      console.log(`[Mail/Brevo] Gönderildi → ${to}`);
       return {ok:true};
     }
     // Fallback: nodemailer
@@ -349,7 +354,7 @@ app.post('/api/settings', requireAdmin, (req,res) => {
   if (mailUser!==undefined) setSetting('mailUser',mailUser);
   if (mailTo!==undefined)   setSetting('mailTo',mailTo);
   if (mailPass&&mailPass!=='••••••••') setSetting('mailPass',mailPass);
-  if (req.body.resendKey&&req.body.resendKey!=='••••••••••••••••') setSetting('resendKey',req.body.resendKey);
+  if (req.body.brevoKey&&req.body.brevoKey!=='••••••••••••••••') setSetting('brevoKey',req.body.brevoKey);
   res.json({ok:true});
 });
 app.post('/api/settings/test-mail', requireAdmin, async (req,res) => {
