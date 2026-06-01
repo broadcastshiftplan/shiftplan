@@ -3,6 +3,8 @@ const express   = require('express');
 const bcrypt    = require('bcryptjs');
 const path      = require('path');
 const nodemailer= require('nodemailer');
+let _resend = null;
+function getResend(){ if(!_resend){ const {Resend}=require('resend'); _resend=new Resend(process.env.RESEND_API_KEY||getSetting('resendKey')); } return _resend; }
 const { sign, requireAuth, requireAdmin } = require('./auth');
 const {
   getSetting, setSetting,
@@ -31,22 +33,30 @@ process.on('unhandledRejection', e => console.error('[ERR]', e?.message||e));
 
 // ── Mail ─────────────────────────────────────────────────────────────────
 async function sendMail(to, subject, html) {
-  const user = getSetting('mailUser') || process.env.MAIL_USER;
-  const pass = getSetting('mailPass') || process.env.MAIL_PASS;
-  if (!user || !pass || !to) return {ok:false, error:'Mail ayarları eksik'};
+  if (!to) return {ok:false, error:'Alıcı adresi yok'};
   try {
+    const resendKey = process.env.RESEND_API_KEY || getSetting('resendKey');
+    if(resendKey) {
+      // Resend ile gönder
+      const {Resend} = require('resend');
+      const r = new Resend(resendKey);
+      const from = getSetting('mailUser') || process.env.MAIL_USER || 'onboarding@resend.dev';
+      const {error} = await r.emails.send({ from: `Nöbet Çizelgesi <${from}>`, to, subject, html });
+      if(error) return {ok:false, error:error.message};
+      console.log(`[Mail/Resend] Gönderildi → ${to}`);
+      return {ok:true};
+    }
+    // Fallback: nodemailer
+    const user = getSetting('mailUser') || process.env.MAIL_USER;
+    const pass = getSetting('mailPass') || process.env.MAIL_PASS;
+    if (!user || !pass) return {ok:false, error:'Mail ayarları eksik. Resend API key veya Gmail şifresi giriniz.'};
     const t = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 465,
-      secure: true,
-      auth: { user, pass },
-      tls: { rejectUnauthorized: false },
-      connectionTimeout: 10000,
-      greetingTimeout: 5000,
-      socketTimeout: 10000,
+      host: 'smtp.gmail.com', port: 465, secure: true,
+      auth: { user, pass }, tls: { rejectUnauthorized: false },
+      connectionTimeout: 10000
     });
     await t.sendMail({ from: `"Nöbet Çizelgesi" <${user}>`, to, subject, html });
-    console.log(`[Mail] Gönderildi → ${to}`);
+    console.log(`[Mail/SMTP] Gönderildi → ${to}`);
     return {ok:true};
   } catch(e) { console.error('[Mail]', e.message); return {ok:false,error:e.message}; }
 }
@@ -338,17 +348,14 @@ app.post('/api/settings', requireAdmin, (req,res) => {
   if (mailUser!==undefined) setSetting('mailUser',mailUser);
   if (mailTo!==undefined)   setSetting('mailTo',mailTo);
   if (mailPass&&mailPass!=='••••••••') setSetting('mailPass',mailPass);
+  if (req.body.resendKey&&req.body.resendKey!=='••••••••••••••••') setSetting('resendKey',req.body.resendKey);
   res.json({ok:true});
 });
 app.post('/api/settings/test-mail', requireAdmin, async (req,res) => {
   const to = getSetting('mailTo')||process.env.MAIL_TO;
   if (!to) return res.json({ok:false,error:'Alıcı mail girilmemiş'});
-  const user = getSetting('mailUser')||process.env.MAIL_USER;
-  const pass = getSetting('mailPass')||process.env.MAIL_PASS;
-  if (!user) return res.json({ok:false,error:'Gmail adresi girilmemiş'});
-  if (!pass) return res.json({ok:false,error:'Uygulama şifresi girilmemiş'});
   const result = await sendMail(to,'✅ Nöbet Çizelgesi — Test Maili',
-    `<h2>✅ Bağlantı başarılı!</h2><p>Bu mesaj <b>${user}</b> adresinden gönderilmiştir.</p>`);
+    '<h2>✅ Bağlantı başarılı!</h2><p>Nöbet Çizelgesi mail sistemi çalışıyor.</p>');
   res.json(result || {ok:false,error:'Bilinmeyen hata'});
 });
 
