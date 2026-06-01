@@ -36,7 +36,7 @@ async function sendMail(to, subject, html) {
     const brevoKey = process.env.BREVO_API_KEY || getSetting('brevoKey');
     if(brevoKey) {
       // Brevo (Sendinblue) API ile gönder
-      const senderMail = getSetting('mailUser') || process.env.MAIL_USER || 'noreply@nobet.app';
+      const senderMail = getSetting('mailUser') || process.env.MAIL_USER || 'broadcastshiftplan@gmail.com';
       const resp = await fetch('https://api.brevo.com/v3/smtp/email', {
         method: 'POST',
         headers: { 'api-key': brevoKey, 'Content-Type': 'application/json' },
