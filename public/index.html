@@ -195,6 +195,7 @@ textarea.nt{width:100%;box-sizing:border-box;border:1px solid #e0e0e0;border-rad
   <button class="tab admin-only" id="tb-arsiv"  onclick="sw('arsiv')"><i class="ti ti-archive" aria-hidden="true"></i> Arşiv</button>
   <button class="tab admin-only" id="tb-kullanicilar" onclick="sw('kullanicilar')"><i class="ti ti-users" aria-hidden="true"></i> Kullanıcılar</button>
   <button class="tab admin-only" id="tb-ayarlar" onclick="sw('ayarlar')"><i class="ti ti-settings" aria-hidden="true"></i> Ayarlar</button>
+  <button class="tab" id="tb-gorevler" onclick="sw('gorevler')"><i class="ti ti-clipboard-list" aria-hidden="true"></i> Görevler <span class="badge" id="task-badge" style="display:none">0</span></button>
   <button class="tab" id="tb-profil"            onclick="sw('profil')" style="display:none"><i class="ti ti-user" aria-hidden="true"></i> Profil</button>
 </div>
 
@@ -543,6 +544,98 @@ textarea.nt{width:100%;box-sizing:border-box;border:1px solid #e0e0e0;border-rad
 
 </div><!-- /main -->
 </div><!-- /app -->
+
+
+<!-- GÖREVLER -->
+<div id="pn-gorevler" style="display:none">
+  <!-- Admin: Yeni görev butonu -->
+  <div class="wbar" id="task-wbar">
+    <button class="btn btn-green admin-only" onclick="openTaskModal()">
+      <i class="ti ti-plus" aria-hidden="true"></i> Yeni Görev
+    </button>
+    <select class="wsel admin-only" id="task-filter-person" style="min-width:160px" onchange="loadTasks()">
+      <option value="">Tüm Personel</option>
+    </select>
+    <select class="wsel" id="task-filter-status" style="min-width:140px" onchange="loadTasks()">
+      <option value="">Tüm Durumlar</option>
+      <option value="active">🟢 Aktif</option>
+      <option value="warning">🟡 Yaklaşan</option>
+      <option value="overdue">🔴 Süresi Dolmuş</option>
+      <option value="completed">✅ Tamamlandı</option>
+    </select>
+    <button class="btn btn-green admin-only" onclick="exportTasksExcel()">
+      <i class="ti ti-file-spreadsheet" aria-hidden="true"></i> Excel
+    </button>
+  </div>
+  <div id="task-list"></div>
+</div>
+
+<!-- GÖREV MODAL -->
+<div class="mb" id="m-task">
+  <div class="modal" style="width:560px">
+    <h3><i class="ti ti-clipboard-list" aria-hidden="true"></i> <span id="m-task-title">Yeni Görev</span></h3>
+    <input type="hidden" id="task-edit-id">
+    <div class="form-row"><label class="form-label">Görev Başlığı</label>
+      <input class="inp" id="t-title" placeholder="Görev adı..."></div>
+    <div class="form-row"><label class="form-label">Açıklama</label>
+      <textarea class="inp ta" id="t-desc" rows="3" placeholder="Detaylar..."></textarea></div>
+    <div class="fl">
+      <div class="form-row" style="flex:1"><label class="form-label">Öncelik</label>
+        <select class="sel-f" id="t-priority">
+          <option value="dusuk">🟢 Düşük</option>
+          <option value="normal" selected>🔵 Normal</option>
+          <option value="yuksek">🟠 Yüksek</option>
+          <option value="kritik">🔴 Kritik</option>
+        </select></div>
+      <div class="form-row" style="flex:1"><label class="form-label">Başlangıç</label>
+        <input type="date" class="inp" id="t-start"></div>
+      <div class="form-row" style="flex:1"><label class="form-label">Bitiş</label>
+        <input type="date" class="inp" id="t-due"></div>
+    </div>
+    <div class="fl">
+      <div class="form-row" style="flex:1"><label class="form-label">Hatırlatma Günü</label>
+        <select class="sel-f" id="t-reminder-day">
+          <option value="pazartesi">Pazartesi</option>
+          <option value="sali">Salı</option>
+          <option value="carsamba">Çarşamba</option>
+          <option value="persembe">Perşembe</option>
+          <option value="cuma">Cuma</option>
+        </select></div>
+      <div class="form-row" style="flex:1"><label class="form-label">Bitiş öncesi uyarı (gün)</label>
+        <input type="number" class="inp" id="t-reminder-days" value="3" min="1" max="30"></div>
+    </div>
+    <div class="form-row"><label class="form-label">Atanan Personel</label>
+      <div id="t-assignees" style="display:flex;flex-wrap:wrap;gap:6px;padding:8px;border:1px solid var(--bd2);border-radius:6px;min-height:40px"></div>
+    </div>
+    <div id="t-err" style="font-size:12px;color:#A32D2D;margin-top:4px"></div>
+    <div class="modal-acts">
+      <button class="btn btn-ghost" style="background:#888;color:#fff" onclick="cm()">İptal</button>
+      <button class="btn btn-green" onclick="saveTask()"><i class="ti ti-check" aria-hidden="true"></i> Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<!-- İLERLEME GÜNCELLEME MODAL -->
+<div class="mb" id="m-progress">
+  <div class="modal">
+    <h3><i class="ti ti-chart-line" aria-hidden="true"></i> İlerleme Güncelle</h3>
+    <input type="hidden" id="prog-task-id">
+    <div id="prog-task-name" style="font-size:13px;font-weight:600;color:var(--navy);margin-bottom:12px"></div>
+    <div class="form-row"><label class="form-label">Mevcut İlerleme: <span id="prog-val-lbl">%0</span></label>
+      <input type="range" id="prog-val" min="0" max="100" step="5" value="0"
+        style="width:100%;margin:8px 0" oninput="document.getElementById('prog-val-lbl').textContent='%'+this.value">
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--txt3)">
+        <span>%0</span><span>%25</span><span>%50</span><span>%75</span><span>%100</span>
+      </div>
+    </div>
+    <div class="form-row"><label class="form-label">Ne yapıldı? <span style="color:#A32D2D">*</span></label>
+      <textarea class="inp ta" id="prog-note" rows="3" placeholder="Bu güncelleme ile neler yapıldı, neler tamamlandı..."></textarea></div>
+    <div class="modal-acts">
+      <button class="btn btn-ghost" style="background:#888;color:#fff" onclick="cm()">İptal</button>
+      <button class="btn btn-blue" onclick="saveProgress()"><i class="ti ti-send" aria-hidden="true"></i> Güncelle</button>
+    </div>
+  </div>
+</div>
 
 <!-- MODALLER -->
 <div class="mb" id="m-week">
@@ -1859,7 +1952,7 @@ async function exportExcel(){
 // ═══════════════════════════════════════════════════════════
 // TABS
 // ═══════════════════════════════════════════════════════════
-const PANES=["cizelge","uyarilar","talepler","dogumgunu","yillikplan","sodexo","istatistik","arsiv","kullanicilar","ayarlar","profil"];
+const PANES=["cizelge","uyarilar","talepler","dogumgunu","yillikplan","sodexo","istatistik","arsiv","kullanicilar","ayarlar","gorevler","profil"];
 function sw(id){
   PANES.forEach(p=>{const el=document.getElementById(`pn-${p}`);if(el)el.style.display=p===id?"block":"none";const b=document.getElementById(`tb-${p}`);if(b)b.classList.toggle("active",p===id);});
   if(id==="yillikplan"){loadYearPlan();}
@@ -1871,6 +1964,7 @@ function sw(id){
   if(id==="kullanicilar"){loadUsers();}
   if(id==="ayarlar"&&ROLE==="admin"){loadSettings();loadHolidays();}
   if(id==="profil"){loadMyKi();}
+  if(id==="gorevler"){loadTasks();}
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -2718,6 +2812,289 @@ async function loadReqStats(){
     }).join('')}
     </tbody>
   </table>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+// GÖREV YÖNETİMİ
+// ═══════════════════════════════════════════════════════════
+const PRIORITY={
+  dusuk: {lbl:'Düşük',   bg:'#E8F5E9',fg:'#2E7D32',icon:'ti-arrow-down'},
+  normal:{lbl:'Normal',  bg:'#E3F2FD',fg:'#1565C0',icon:'ti-minus'},
+  yuksek:{lbl:'Yüksek',  bg:'#FFF3E0',fg:'#E65100',icon:'ti-arrow-up'},
+  kritik:{lbl:'Kritik',  bg:'#FFEBEE',fg:'#C62828',icon:'ti-alert-triangle'},
+};
+const STATUS={
+  active:   {lbl:'Aktif',          bg:'#E8F5E9',fg:'#2E7D32'},
+  warning:  {lbl:'Yaklaşan Bitiş', bg:'#FFF9E6',fg:'#F57F17'},
+  overdue:  {lbl:'Süresi Dolmuş',  bg:'#FFEBEE',fg:'#C62828'},
+  completed:{lbl:'Tamamlandı',     bg:'#F3E5F5',fg:'#6A1B9A'},
+};
+
+async function loadTasks(){
+  const tasks = await api('GET','/api/tasks');
+  const filterPerson = document.getElementById('task-filter-person')?.value||'';
+  const filterStatus = document.getElementById('task-filter-status')?.value||'';
+
+  // Filtre
+  let filtered = tasks;
+  if(filterPerson) filtered = filtered.filter(t=>t.assignees.includes(filterPerson));
+  if(filterStatus) filtered = filtered.filter(t=>t.status===filterStatus);
+
+  // Badge
+  const overdue = tasks.filter(t=>t.status==='overdue'||t.status==='warning').length;
+  const badge = document.getElementById('task-badge');
+  if(badge){badge.style.display=overdue>0?'inline-block':'none';badge.textContent=overdue;}
+
+  // Personel filtre dropdown (admin)
+  const fpEl = document.getElementById('task-filter-person');
+  if(fpEl && ROLE==='admin' && fpEl.options.length<=1){
+    PERSONEL.forEach(p=>{const o=document.createElement('option');o.value=p;o.textContent=p;fpEl.appendChild(o);});
+  }
+
+  const el = document.getElementById('task-list');
+  if(!filtered.length){
+    el.innerHTML=`<div style="text-align:center;color:var(--txt3);padding:32px;font-size:14px">
+      <i class="ti ti-clipboard-x" style="font-size:32px;display:block;margin-bottom:8px"></i>Görev bulunamadı.</div>`;
+    return;
+  }
+
+  el.innerHTML = filtered.map(t=>{
+    const pr = PRIORITY[t.priority]||PRIORITY.normal;
+    const st = STATUS[t.status]||STATUS.active;
+    const prog = t.progress||0;
+    const progColor = prog>=100?'#6A1B9A':prog>=75?'#2E7D32':prog>=50?'#E65100':'#1565C0';
+    const daysLbl = t.days_left===undefined?''
+      : t.days_left<0?`<span style="color:#C62828;font-weight:600">${Math.abs(t.days_left)} gün geçti</span>`
+      : t.days_left===0?`<span style="color:#C62828;font-weight:600">Bugün!</span>`
+      : t.days_left<=3?`<span style="color:#E65100;font-weight:600">${t.days_left} gün kaldı</span>`
+      : `<span style="color:var(--txt2)">${t.days_left} gün kaldı</span>`;
+
+    const assigneeList = t.assignees.map(u=>`<span style="background:var(--alt);border:1px solid var(--bd);border-radius:12px;padding:2px 8px;font-size:11px">${u}</span>`).join('');
+
+    return `<div class="card" style="margin-bottom:10px">
+      <div style="display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap">
+        <div style="flex:1;min-width:200px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">
+            <span style="font-size:15px;font-weight:600;color:var(--navy)">${t.title}</span>
+            <span style="background:${pr.bg};color:${pr.fg};padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600">
+              <i class="ti ${pr.icon}" style="font-size:10px"></i> ${pr.lbl}
+            </span>
+            <span style="background:${st.bg};color:${st.fg};padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600">${st.lbl}</span>
+          </div>
+          ${t.description?`<div style="font-size:12px;color:var(--txt2);margin-bottom:8px">${t.description}</div>`:''}
+          <div style="display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--txt2);margin-bottom:8px">
+            ${t.start_date?`<span><i class="ti ti-calendar-event" style="font-size:11px"></i> Başlangıç: ${t.start_date}</span>`:''}
+            ${t.due_date?`<span><i class="ti ti-calendar-due" style="font-size:11px"></i> Bitiş: ${t.due_date} ${daysLbl}</span>`:''}
+            <span><i class="ti ti-user" style="font-size:11px"></i> Atayan: ${t.created_by}</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">${assigneeList}</div>
+          <!-- İlerleme çubuğu -->
+          <div style="margin-bottom:6px">
+            <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px">
+              <span style="color:var(--txt2)">İlerleme</span>
+              <span style="font-weight:600;color:${progColor}">%${prog}</span>
+            </div>
+            <div style="height:8px;background:#eee;border-radius:4px;overflow:hidden">
+              <div style="height:100%;width:${prog}%;background:${progColor};border-radius:4px;transition:width .3s"></div>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0">
+          <button class="btn btn-blue btn-sm" onclick="openProgressModal(${t.id},'${t.title.replace(/'/g,"\'")}',${prog})">
+            <i class="ti ti-chart-line"></i> Güncelle
+          </button>
+          <button class="btn btn-sm" style="background:var(--alt);color:var(--txt2);border:1px solid var(--bd)" onclick="openTaskDetail(${t.id})">
+            <i class="ti ti-list"></i> Detay
+          </button>
+          ${ROLE==='admin'?`
+          <button class="btn btn-sm" style="background:#7B1FA2;color:#fff" onclick="openTaskModal(${t.id})">
+            <i class="ti ti-edit"></i>
+          </button>
+          <button class="btn btn-red btn-sm" onclick="deleteTask(${t.id})">
+            <i class="ti ti-trash"></i>
+          </button>`:''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openTaskModal(id){
+  document.getElementById('task-edit-id').value = id||'';
+  document.getElementById('m-task-title').textContent = id?'Görevi Düzenle':'Yeni Görev';
+  document.getElementById('t-title').value='';
+  document.getElementById('t-desc').value='';
+  document.getElementById('t-priority').value='normal';
+  document.getElementById('t-start').value='';
+  document.getElementById('t-due').value=new Date(Date.now()+7*24*60*60*1000).toISOString().slice(0,10);
+  document.getElementById('t-reminder-day').value='pazartesi';
+  document.getElementById('t-reminder-days').value='3';
+  document.getElementById('t-err').textContent='';
+
+  // Personel seçici
+  const aEl = document.getElementById('t-assignees');
+  aEl.innerHTML = PERSONEL.map(p=>`
+    <label style="display:flex;align-items:center;gap:4px;padding:3px 8px;border-radius:4px;background:var(--alt);cursor:pointer;font-size:12px">
+      <input type="checkbox" value="${p}" style="cursor:pointer"> ${p}
+    </label>`).join('');
+
+  if(id){
+    api('GET',`/api/tasks/${id}`).then(t=>{
+      document.getElementById('t-title').value=t.title;
+      document.getElementById('t-desc').value=t.description||'';
+      document.getElementById('t-priority').value=t.priority;
+      document.getElementById('t-start').value=t.start_date||'';
+      document.getElementById('t-due').value=t.due_date||'';
+      document.getElementById('t-reminder-day').value=t.reminder_day||'pazartesi';
+      document.getElementById('t-reminder-days').value=t.reminder_days_before||3;
+      // Atananları işaretle
+      t.assignees.forEach(u=>{
+        const cb = aEl.querySelector(`input[value="${u}"]`);
+        if(cb) cb.checked=true;
+      });
+    });
+  }
+  document.getElementById('m-task').classList.add('open');
+}
+
+async function saveTask(){
+  const id = document.getElementById('task-edit-id').value;
+  const title = document.getElementById('t-title').value.trim();
+  const errEl = document.getElementById('t-err');
+  if(!title){errEl.textContent='Başlık zorunludur.';return;}
+  const assignees = [...document.querySelectorAll('#t-assignees input:checked')].map(c=>c.value);
+  if(!assignees.length){errEl.textContent='En az bir personel seçin.';return;}
+  const data = {
+    title, description:document.getElementById('t-desc').value,
+    priority:document.getElementById('t-priority').value,
+    start_date:document.getElementById('t-start').value,
+    due_date:document.getElementById('t-due').value,
+    reminder_day:document.getElementById('t-reminder-day').value,
+    reminder_days_before:parseInt(document.getElementById('t-reminder-days').value)||3,
+    assignees, status:'active'
+  };
+  if(id) await api('PUT',`/api/tasks/${id}`,data);
+  else await api('POST','/api/tasks',data);
+  cm(); loadTasks();
+}
+
+function openProgressModal(id, title, currentProg){
+  document.getElementById('prog-task-id').value=id;
+  document.getElementById('prog-task-name').textContent=title;
+  document.getElementById('prog-val').value=currentProg;
+  document.getElementById('prog-val-lbl').textContent='%'+currentProg;
+  document.getElementById('prog-note').value='';
+  document.getElementById('m-progress').classList.add('open');
+}
+
+async function saveProgress(){
+  const id=document.getElementById('prog-task-id').value;
+  const progress=document.getElementById('prog-val').value;
+  const note=document.getElementById('prog-note').value.trim();
+  if(!note){alert('Açıklama zorunludur.');return;}
+  await api('POST',`/api/tasks/${id}/progress`,{progress:parseInt(progress),note});
+  cm(); loadTasks();
+}
+
+async function openTaskDetail(id){
+  const t = await api('GET',`/api/tasks/${id}`);
+  const pr = PRIORITY[t.priority]||PRIORITY.normal;
+  const logs = t.logs||[];
+  const logsHtml = logs.length ? logs.map(l=>`
+    <div style="border-left:3px solid var(--bd2);padding:8px 12px;margin-bottom:8px;background:var(--alt);border-radius:0 6px 6px 0">
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--txt2);margin-bottom:4px">
+        <b>${l.full_name}</b>
+        <span>${l.logged_at.slice(0,16)} — <b style="color:var(--navy)">%${l.progress}</b></span>
+      </div>
+      <div style="font-size:12px">${l.note}</div>
+    </div>`).join('')
+    : '<div style="color:var(--txt3);font-size:12px">Henüz güncelleme yok.</div>';
+
+  const assigneeList = t.assignees.map(u=>`<span style="background:var(--alt);border:1px solid var(--bd);border-radius:12px;padding:2px 8px;font-size:11px">${u}</span>`).join(' ');
+
+  const win = window.open('','_blank','width=700,height=600');
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+    <title>${t.title}</title>
+    <style>body{font-family:Arial,sans-serif;padding:20px;color:#333}
+    h2{color:#1F3864;border-bottom:2px solid #1F3864;padding-bottom:8px}
+    .log{border-left:3px solid #ddd;padding:8px 12px;margin-bottom:8px;background:#f9f9f9;border-radius:0 6px 6px 0}
+    </style></head><body>
+    <h2>${t.title}</h2>
+    <p><b>Öncelik:</b> <span style="background:${pr.bg};color:${pr.fg};padding:2px 8px;border-radius:4px">${pr.lbl}</span></p>
+    <p><b>Atayan:</b> ${t.created_by} | <b>Bitiş:</b> ${t.due_date||'-'} | <b>İlerleme:</b> %${t.progress}</p>
+    <p><b>Ekip:</b> ${assigneeList}</p>
+    ${t.description?`<p><b>Açıklama:</b> ${t.description}</p>`:''}
+    <h3 style="margin-top:20px">İlerleme Geçmişi</h3>
+    ${logsHtml}
+    </body></html>`);
+}
+
+async function deleteTask(id){
+  if(!confirm('Bu görevi silmek istediğinizden emin misiniz?'))return;
+  await api('DELETE',`/api/tasks/${id}`);
+  loadTasks();
+}
+
+async function exportTasksExcel(){
+  const tasks = await api('GET','/api/tasks');
+  const esc=s=>String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  const ss=[];const ssM={};
+  const S=v=>{const k=String(v||"");if(!(k in ssM)){ssM[k]=ss.length;ss.push(k);}return ssM[k];};
+
+  const fills=[{t:"none"},{t:"gray125"},{t:"solid",fg:"FF1F3864"},{t:"solid",fg:"FFE8EAF6"},{t:"solid",fg:"FFF4F7FB"}];
+  const mf=f=>f.t==="none"?'<fill><patternFill patternType="none"/></fill>':f.t==="gray125"?'<fill><patternFill patternType="gray125"/></fill>':`<fill><patternFill patternType="solid"><fgColor rgb="${f.fg}"/><bgColor indexed="64"/></patternFill></fill>`;
+  const fonts=[{sz:10,n:"Arial"},{sz:12,n:"Arial",b:1,c:"FFFFFFFF"},{sz:10,n:"Arial",b:1,c:"FFFFFFFF"},{sz:10,n:"Arial",b:1,c:"FF1F3864"},{sz:10,n:"Arial",c:"FF555555"}];
+  const mf2=f=>'<font>'+(f.b?'<b/>':'')+(f.c?'<color rgb="'+f.c+'"/>':'<color theme="1"/>')+'<sz val="'+f.sz+'"/><name val="'+f.n+'"/></font>';
+  const tS='<left style="thin"><color rgb="FFD0D0D0"/></left><right style="thin"><color rgb="FFD0D0D0"/></right><top style="thin"><color rgb="FFD0D0D0"/></top><bottom style="thin"><color rgb="FFD0D0D0"/></bottom>';
+  const brd=`<borders count="1"><border>${tS}</border></borders>`;
+  const xfs=[];const ax=(fi,fn,bi,h,v,w)=>{xfs.push({fi,fn,bi,h:h||"center",v:v||"center",w:!!w});return xfs.length-1;};
+  ax(0,0,0);
+  const X={title:ax(2,1,0,"center","center",true),hdr:ax(2,2,0,"left","center",false),name:ax(3,3,0,"left","center",false),cell:ax(4,4,0,"left","top",true)};
+  const xfsXml=`<cellXfs count="${xfs.length}">${xfs.map(x=>`<xf numFmtId="0" fontId="${x.fn}" fillId="${x.fi}" borderId="${x.bi}" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="${x.h}" vertical="${x.v}" wrapText="${x.w?1:0}"/></xf>`).join("")}</cellXfs>`;
+  const sty=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><numFmts count="0"/><fonts count="${fonts.length}">${fonts.map(mf2).join("")}</fonts><fills count="${fills.length}">${fills.map(mf).join("")}</fills>${brd}${xfsXml}<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>`;
+
+  const CL=c=>String.fromCharCode(65+c);
+  const CV=(col,r,val,xi)=>{const ref=`${CL(col)}${r+1}`;return `<c r="${ref}" t="s" s="${xi}"><v>${S(String(val||""))}</v></c>`;};
+  const MG=(r1,c1,r2,c2)=>`${CL(c1)}${r1+1}:${CL(c2)}${r2+1}`;
+
+  const rows=[];const merges=[];let ri=0;
+  // Başlık
+  const t0=[CV(0,ri,'YAYIN MÜHENDİSLİĞİ — GÖREV RAPORU',X.title)];
+  for(let i=1;i<8;i++)t0.push(CV(i,ri,'',X.title));
+  rows.push(t0);merges.push(MG(ri,0,ri,7));ri++;
+  // Kolon başlıkları
+  rows.push(['Başlık','Öncelik','Durum','Atayan','Ekip','Başlangıç','Bitiş','%'].map((h,i)=>CV(i,ri,h,X.hdr)));ri++;
+
+  // Görevler
+  tasks.forEach((t,pi)=>{
+    const pr=PRIORITY[t.priority]||PRIORITY.normal;
+    const st=STATUS[t.status]||STATUS.active;
+    rows.push([t.title,pr.lbl,st.lbl,t.created_by,t.assignees.join(', '),t.start_date||'',t.due_date||'',`%${t.progress}`].map((v,i)=>CV(i,ri,v,pi%2===0?X.name:X.cell)));ri++;
+
+    // Log satırları
+    if(t.logs && t.logs.length){
+      t.logs.forEach(l=>{
+        rows.push([`  ↳ ${l.logged_at.slice(0,16)}`,l.full_name,'','',l.note||'','','',`%${l.progress}`].map((v,i)=>CV(i,ri,v,X.cell)));ri++;
+      });
+    }
+  });
+
+  const cols=[20,12,14,14,24,12,12,8].map((w,i)=>`<col min="${i+1}" max="${i+1}" width="${w}" customWidth="1"/>`).join('');
+  const rwXml=rows.map((cells,r)=>`<row r="${r+1}" ht="${r<2?22:15}" customHeight="1">${cells.join('')}</row>`).join('');
+  const mgXml=merges.length?`<mergeCells count="${merges.length}">${merges.map(m=>`<mergeCell ref="${m}"/>`).join('')}</mergeCells>`:'';
+  const shXml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetFormatPr defaultRowHeight="15"/><cols>${cols}</cols><sheetData>${rwXml}</sheetData>${mgXml}</worksheet>`;
+  const ssXml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="${ss.length}" uniqueCount="${ss.length}">${ss.map(s=>`<si><t xml:space="preserve">${esc(s)}</t></si>`).join('')}</sst>`;
+  const wb='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Görevler" sheetId="1" r:id="rId1"/></sheets></workbook>';
+  const wbR='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/><Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings" Target="sharedStrings.xml"/></Relationships>';
+  const rels='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>';
+  const ct='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/><Override PartName="/xl/sharedStrings.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml"/></Types>';
+  const zip=new JSZip();
+  zip.file("[Content_Types].xml",ct);zip.folder("_rels").file(".rels",rels);
+  const xl=zip.folder("xl");xl.file("workbook.xml",wb);xl.folder("_rels").file("workbook.xml.rels",wbR);
+  xl.folder("worksheets").file("sheet1.xml",shXml);xl.file("styles.xml",sty);xl.file("sharedStrings.xml",ssXml);
+  const blob=await zip.generateAsync({type:"blob",mimeType:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);
+  a.download=`Gorevler_${new Date().toISOString().slice(0,10)}.xlsx`;a.click();
 }
 
 </script>
