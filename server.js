@@ -365,30 +365,49 @@ app.post('/api/settings/test-mail', requireAdmin, async (req,res) => {
 // ── VERİ YEDEK (JSON indirme) ─────────────────────────────────────────────
 app.get('/api/backup', requireAdmin, (req,res) => {
   try {
-    const weeks  = getWeeks();
-    const backup = { exportDate: new Date().toISOString(), weeks: [] };
-    weeks.forEach(w => {
-      try {
-        const sched  = getSchedule(w.id);
-        const nts    = getNotes(w.id);
-        const meta   = getRowMeta(w.id);
-        const counts = getSectionCounts(w.id);
-        backup.weeks.push({ ...w, sched, notes: nts, meta, counts });
-      } catch(e) { backup.weeks.push({ ...w, error: e.message }); }
-    });
-    try { backup.ki = getKiSummary().map(k => ({ person:k.person, entries:k.entries })); } catch(e) { backup.ki = []; }
-    try { backup.birthdays = getBirthdays(); } catch(e) { backup.birthdays = []; }
-    try { backup.holidays  = getHolidays();  } catch(e) { backup.holidays  = []; }
-    const fname = 'nobet-yedek-' + new Date().toISOString().slice(0,10) + '.json';
-    res.setHeader('Content-Disposition', 'attachment; filename=' + fname);
-    res.json(backup);
+    const dbPath = process.env.DB_DIR
+      ? require('path').join(process.env.DB_DIR, 'nobet.db')
+      : require('path').join(__dirname, 'nobet.db');
+    const date = new Date().toISOString().slice(0,10);
+    res.setHeader('Content-Disposition', `attachment; filename="nobet-backup-${date}.db"`);
+    res.setHeader('Content-Type', 'application/octet-stream');
+    require('fs').createReadStream(dbPath).pipe(res);
   } catch(e) {
     console.error('[Backup]', e.message);
-    res.status(500).json({ error: e.message });
+    res.status(500).json({error: e.message});
   }
 });
 
-// ── İSTATİSTİK ───────────────────────────────────────────────────────────
+app.post('/api/restore', requireAdmin, (req,res) => {
+  try {
+    const dbPath = process.env.DB_DIR
+      ? require('path').join(process.env.DB_DIR, 'nobet.db')
+      : require('path').join(__dirname, 'nobet.db');
+    const fs = require('fs');
+    const chunks = [];
+    req.on('data', chunk => chunks.push(chunk));
+    req.on('end', () => {
+      const buf = Buffer.concat(chunks);
+      // SQLite magic bytes kontrolü
+      if(buf.slice(0,6).toString() !== 'SQLite') {
+        return res.status(400).json({error:'Geçersiz dosya. Lütfen .db uzantılı yedek dosyası yükleyin.'});
+      }
+      // Mevcut DB'yi yedekle
+      const bakPath = dbPath + '.bak';
+      if(fs.existsSync(dbPath)) fs.copyFileSync(dbPath, bakPath);
+      // Yeni DB'yi yaz
+      fs.writeFileSync(dbPath, buf);
+      console.log('[Restore] Veritabanı geri yüklendi, boyut:', buf.length);
+      res.json({ok:true, message:'Veritabanı başarıyla geri yüklendi. Sayfayı yenileyin.'});
+    });
+    req.on('error', e => res.status(500).json({error:e.message}));
+  } catch(e) {
+    console.error('[Restore]', e.message);
+    res.status(500).json({error: e.message});
+  }
+});
+
+
 app.get('/api/stats', requireAuth, (req,res) => res.json(getStats(req.query.year?parseInt(req.query.year):null)));
 
 // Debug: personelin schedule kayıtlarını göster
