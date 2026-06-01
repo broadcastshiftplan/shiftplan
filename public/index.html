@@ -178,7 +178,9 @@ textarea.nt{width:100%;box-sizing:border-box;border:1px solid #e0e0e0;border-rad
     <span style="font-size:11px;opacity:.7;display:flex;align-items:center"><span class="dot" id="dot"></span><span id="sstat">Hazır</span></span>
     <button class="btn btn-red" id="btn-warnbar" onclick="sw('uyarilar')" style="display:none"><i class="ti ti-alert-triangle" aria-hidden="true"></i><span id="wbtnlbl">Uyarılar</span></button>
     <button class="btn btn-blue" onclick="exportExcel()"><i class="ti ti-file-spreadsheet" aria-hidden="true"></i> Excel</button>
-    <button class="btn btn-ghost btn-sm" onclick="downloadBackup()" title="Yedek Al"><i class="ti ti-download" aria-hidden="true"></i></button>
+    <button class="btn btn-ghost btn-sm" onclick="downloadBackup()" title="Tam Yedek Al (.db)"><i class="ti ti-download" aria-hidden="true"></i></button>
+    <input type="file" id="restore-file" accept=".db" style="display:none" onchange="restoreBackup(this)">
+    <button class="btn btn-ghost btn-sm admin-only" onclick="document.getElementById('restore-file').click()" title="Yedekten Geri Yükle"><i class="ti ti-upload" aria-hidden="true"></i></button>
     <span class="user-chip" id="user-chip"></span>
     <button class="btn btn-ghost btn-sm" onclick="sw('profil')"><i class="ti ti-user" aria-hidden="true"></i></button>
     <button class="btn btn-ghost btn-sm" onclick="doLogout()"><i class="ti ti-logout" aria-hidden="true"></i></button>
@@ -549,8 +551,8 @@ textarea.nt{width:100%;box-sizing:border-box;border:1px solid #e0e0e0;border-rad
 <!-- GÖREVLER -->
 <div id="pn-gorevler" style="display:none">
   <!-- Admin: Yeni görev butonu -->
-  <div class="wbar" id="task-wbar">
-    <button class="btn btn-green admin-only" onclick="openTaskModal()">
+  <div class="wbar" id="task-wbar" style="background:var(--srf);padding:10px 14px;border-radius:10px;border:1px solid var(--bd);margin-bottom:12px">
+    <button class="btn btn-green admin-only" onclick="openTaskModal()" style="font-size:13px;padding:7px 14px">
       <i class="ti ti-plus" aria-hidden="true"></i> Yeni Görev
     </button>
     <select class="wsel admin-only" id="task-filter-person" style="min-width:160px" onchange="loadTasks()">
@@ -563,7 +565,7 @@ textarea.nt{width:100%;box-sizing:border-box;border:1px solid #e0e0e0;border-rad
       <option value="overdue">🔴 Süresi Dolmuş</option>
       <option value="completed">✅ Tamamlandı</option>
     </select>
-    <button class="btn btn-green admin-only" onclick="exportTasksExcel()">
+    <button class="btn btn-blue admin-only" onclick="exportTasksExcel()">
       <i class="ti ti-file-spreadsheet" aria-hidden="true"></i> Excel
     </button>
   </div>
@@ -1796,9 +1798,10 @@ async function loadMyKi(){
 async function downloadBackup(){
   try{
     const r=await fetch("/api/backup",{headers:{Authorization:"Bearer "+TOKEN}});
+    if(!r.ok)throw new Error(await r.text());
     const blob=await r.blob();
     const a=document.createElement("a");a.href=URL.createObjectURL(blob);
-    a.download=`nobet-yedek-${new Date().toISOString().slice(0,10)}.json`;a.click();
+    a.download=`nobet-backup-${new Date().toISOString().slice(0,10)}.db`;a.click();
   }catch(e){alert("Yedek indirilemedi: "+e.message);}
 }
 
@@ -2899,16 +2902,16 @@ async function loadTasks(){
             </div>
           </div>
         </div>
-        <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0">
+        <div style=display:flex;flex-direction:row;gap:6px;flex-shrink:0;flex-wrap:wrap">
           <button class="btn btn-blue btn-sm" onclick="openProgressModal(${t.id},'${t.title.replace(/'/g,"\'")}',${prog})">
             <i class="ti ti-chart-line"></i> Güncelle
           </button>
           <button class="btn btn-sm" style="background:var(--alt);color:var(--txt2);border:1px solid var(--bd)" onclick="openTaskDetail(${t.id})">
-            <i class="ti ti-list"></i> Detay
+            <i class="ti ti-list"></i> Geçmiş
           </button>
           ${ROLE==='admin'?`
           <button class="btn btn-sm" style="background:#7B1FA2;color:#fff" onclick="openTaskModal(${t.id})">
-            <i class="ti ti-edit"></i>
+            <i class="ti ti-edit"></i> Düzenle
           </button>
           <button class="btn btn-red btn-sm" onclick="deleteTask(${t.id})">
             <i class="ti ti-trash"></i>
@@ -3095,6 +3098,25 @@ async function exportTasksExcel(){
   const blob=await zip.generateAsync({type:"blob",mimeType:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
   const a=document.createElement("a");a.href=URL.createObjectURL(blob);
   a.download=`Gorevler_${new Date().toISOString().slice(0,10)}.xlsx`;a.click();
+}
+
+async function restoreBackup(input){
+  const file = input.files[0];
+  if(!file) return;
+  if(!file.name.endsWith('.db')){alert('Lütfen .db uzantılı yedek dosyası seçin.');input.value='';return;}
+  if(!confirm(`"${file.name}" dosyasını geri yüklemek istediğinizden emin misiniz?\n\nMevcut veriler YERİNE YAZILACAK!`)){input.value='';return;}
+  try{
+    const buf = await file.arrayBuffer();
+    const r = await fetch('/api/restore',{
+      method:'POST',
+      headers:{Authorization:'Bearer '+TOKEN,'Content-Type':'application/octet-stream'},
+      body: buf
+    });
+    const d = await r.json();
+    if(d.ok){alert('✅ '+d.message);location.reload();}
+    else{alert('❌ Hata: '+(d.error||'Bilinmeyen hata'));}
+  }catch(e){alert('❌ Hata: '+e.message);}
+  input.value='';
 }
 
 </script>
