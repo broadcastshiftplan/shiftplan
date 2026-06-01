@@ -231,7 +231,9 @@ const getSetting = k => db.prepare('SELECT value FROM settings WHERE key=?').get
 const setSetting = (k,v) => db.prepare('INSERT OR REPLACE INTO settings(key,value) VALUES(?,?)').run(k,v);
 
 // ── Kullanıcılar ───────────────────────────────────────────────────────────
-const getUsers          = ()        => db.prepare('SELECT id,username,full_name,role,created_at FROM users ORDER BY role DESC,full_name').all();
+const getUsers          = ()        => db.prepare('SELECT id,username,full_name,role,COALESCE(active,1) as active FROM users ORDER BY role DESC,full_name').all();
+const getActivePersonnel= ()        => db.prepare("SELECT full_name FROM users WHERE role='user' AND COALESCE(active,1)=1 ORDER BY full_name").all().map(u=>u.full_name);
+const setUserActive     = (id,val)  => db.prepare('UPDATE users SET active=? WHERE id=?').run(val?1:0, id);
 const getUserByUsername = u         => db.prepare('SELECT * FROM users WHERE username=?').get(u);
 const createUser        = (u,h,n,r) => db.prepare('INSERT INTO users(username,password_hash,full_name,role) VALUES(?,?,?,?)').run(u,h,n,r||'user');
 const updateUserPass    = (id,h)    => db.prepare('UPDATE users SET password_hash=? WHERE id=?').run(h,id);
