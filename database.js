@@ -573,6 +573,78 @@ function getWeekViewers(weekId) {
   ).all(weekId);
 }
 
+
+// ── Görev Yönetimi ────────────────────────────────────────────────────────
+function getTasks(username, role) {
+  if(role === 'admin') {
+    return db.prepare(`SELECT t.*, GROUP_CONCAT(ta.username) as assignees
+      FROM tasks t LEFT JOIN task_assignees ta ON ta.task_id=t.id
+      GROUP BY t.id ORDER BY t.created_at DESC`).all();
+  }
+  return db.prepare(`SELECT t.*, GROUP_CONCAT(ta2.username) as assignees
+    FROM tasks t
+    JOIN task_assignees ta ON ta.task_id=t.id AND ta.username=?
+    LEFT JOIN task_assignees ta2 ON ta2.task_id=t.id
+    GROUP BY t.id ORDER BY t.created_at DESC`).all(username);
+}
+
+function getTask(id) {
+  const t = db.prepare(`SELECT t.*, GROUP_CONCAT(ta.username) as assignees
+    FROM tasks t LEFT JOIN task_assignees ta ON ta.task_id=t.id
+    WHERE t.id=? GROUP BY t.id`).get(id);
+  return t;
+}
+
+function createTask(data) {
+  const {title,description,priority,start_date,due_date,reminder_day,reminder_days_before,created_by,assignees} = data;
+  const r = db.prepare(`INSERT INTO tasks(title,description,priority,start_date,due_date,reminder_day,reminder_days_before,created_by)
+    VALUES(?,?,?,?,?,?,?,?)`).run(title,description,priority||'normal',start_date,due_date,reminder_day||'pazartesi',reminder_days_before||3,created_by);
+  const taskId = r.lastInsertRowid;
+  if(assignees && assignees.length) {
+    const ins = db.prepare('INSERT OR IGNORE INTO task_assignees(task_id,username) VALUES(?,?)');
+    assignees.forEach(u => ins.run(taskId, u));
+  }
+  return taskId;
+}
+
+function updateTask(id, data) {
+  const {title,description,priority,start_date,due_date,reminder_day,reminder_days_before,status,assignees} = data;
+  db.prepare(`UPDATE tasks SET title=?,description=?,priority=?,start_date=?,due_date=?,
+    reminder_day=?,reminder_days_before=?,status=? WHERE id=?`)
+    .run(title,description,priority,start_date,due_date,reminder_day,reminder_days_before,status,id);
+  if(assignees) {
+    db.prepare('DELETE FROM task_assignees WHERE task_id=?').run(id);
+    const ins = db.prepare('INSERT OR IGNORE INTO task_assignees(task_id,username) VALUES(?,?)');
+    assignees.forEach(u => ins.run(id, u));
+  }
+}
+
+function updateTaskProgress(id, progress, username, full_name, note) {
+  db.prepare('UPDATE tasks SET progress=?, status=? WHERE id=?')
+    .run(progress, progress>=100?'completed':'active', id);
+  db.prepare('INSERT INTO task_logs(task_id,username,full_name,note,progress) VALUES(?,?,?,?,?)')
+    .run(id, username, full_name, note, progress);
+}
+
+function getTaskLogs(taskId) {
+  return db.prepare('SELECT * FROM task_logs WHERE task_id=? ORDER BY logged_at DESC').all(taskId);
+}
+
+function deleteTask(id) {
+  db.prepare('DELETE FROM task_assignees WHERE task_id=?').run(id);
+  db.prepare('DELETE FROM task_logs WHERE task_id=?').run(id);
+  db.prepare('DELETE FROM tasks WHERE id=?').run(id);
+}
+
+function getUpcomingTaskAlerts() {
+  const today = new Date().toISOString().slice(0,10);
+  return db.prepare(`SELECT t.*, GROUP_CONCAT(ta.username) as assignees
+    FROM tasks t LEFT JOIN task_assignees ta ON ta.task_id=t.id
+    WHERE t.status != 'completed' AND t.due_date IS NOT NULL
+    AND julianday(t.due_date) - julianday(?) <= t.reminder_days_before
+    GROUP BY t.id`).all(today);
+}
+
 module.exports = {
   db, getSetting, setSetting,
   getUsers, getUserByUsername, createUser, updateUserPass, deleteUser,
@@ -586,6 +658,7 @@ module.exports = {
   getRequests, getRequestById, createRequest, resolveRequest, checkConflict,
   getStats, getYears, takeSnapshot, getChanges, hasSnapshot, getSnapshotSchedule, markWeekViewed, hasViewedWeek, clearWeekViews, getWeekViewers,
   getActivePersonnel, setUserActive,
+  getTasks, getTask, createTask, updateTask, updateTaskProgress, getTaskLogs, deleteTask, getUpcomingTaskAlerts,
   getSodexoPeriod, getSodexoNights, setSodexoApproval,
   getVacationPlans, toggleVacationPlan, deleteVacationPlan, autoPopulateFromPlans
 };
