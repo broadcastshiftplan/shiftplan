@@ -33,7 +33,7 @@ process.on('unhandledRejection', e => console.error('[ERR]', e?.message||e));
 async function sendMail(to, subject, html) {
   if (!to) return {ok:false, error:'Alıcı adresi yok'};
   try {
-    const brevoKey = process.env.BREVO_API_KEY || getSetting('brevoKey');
+    const brevoKey = (process.env.BREVO_API_KEY || getSetting('brevoKey') || '').trim();
     if(brevoKey) {
       // Brevo (Sendinblue) API ile gönder
       const senderMail = getSetting('mailUser') || process.env.MAIL_USER || 'broadcastshiftplan@gmail.com';
@@ -361,6 +361,8 @@ app.post('/api/settings', requireAdmin, (req,res) => {
 app.post('/api/settings/test-mail', requireAdmin, async (req,res) => {
   const to = getSetting('mailTo')||process.env.MAIL_TO;
   if (!to) return res.json({ok:false,error:'Alıcı mail girilmemiş'});
+  const brevoKey = process.env.BREVO_API_KEY || getSetting('brevoKey');
+  console.log('[TestMail] brevoKey length:', brevoKey?.length, 'from env:', !!process.env.BREVO_API_KEY);
   const result = await sendMail(to,'✅ Nöbet Çizelgesi — Test Maili',
     '<h2>✅ Bağlantı başarılı!</h2><p>Nöbet Çizelgesi mail sistemi çalışıyor.</p>');
   res.json(result || {ok:false,error:'Bilinmeyen hata'});
