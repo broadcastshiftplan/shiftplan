@@ -33,18 +33,22 @@ process.on('unhandledRejection', e => console.error('[ERR]', e?.message||e));
 async function sendMail(to, subject, html) {
   const user = getSetting('mailUser') || process.env.MAIL_USER;
   const pass = getSetting('mailPass') || process.env.MAIL_PASS;
-  if (!user || !pass || !to) return;
+  if (!user || !pass || !to) return {ok:false, error:'Mail ayarları eksik'};
   try {
     const t = nodemailer.createTransport({
       host: 'smtp.gmail.com',
-      port: 587,
-      secure: false,
+      port: 465,
+      secure: true,
       auth: { user, pass },
-      tls: { rejectUnauthorized: false }
+      tls: { rejectUnauthorized: false },
+      connectionTimeout: 10000,
+      greetingTimeout: 5000,
+      socketTimeout: 10000,
     });
-    await t.sendMail({ from: user, to, subject, html });
+    await t.sendMail({ from: `"Nöbet Çizelgesi" <${user}>`, to, subject, html });
     console.log(`[Mail] Gönderildi → ${to}`);
-  } catch(e) { console.error('[Mail]', e.message); }
+    return {ok:true};
+  } catch(e) { console.error('[Mail]', e.message); return {ok:false,error:e.message}; }
 }
 
 // ── Doğum günü ───────────────────────────────────────────────────────────
@@ -339,8 +343,13 @@ app.post('/api/settings', requireAdmin, (req,res) => {
 app.post('/api/settings/test-mail', requireAdmin, async (req,res) => {
   const to = getSetting('mailTo')||process.env.MAIL_TO;
   if (!to) return res.json({ok:false,error:'Alıcı mail girilmemiş'});
-  await sendMail(to,'✅ Test Maili','<h2>✅ Bağlantı başarılı!</h2>');
-  res.json({ok:true});
+  const user = getSetting('mailUser')||process.env.MAIL_USER;
+  const pass = getSetting('mailPass')||process.env.MAIL_PASS;
+  if (!user) return res.json({ok:false,error:'Gmail adresi girilmemiş'});
+  if (!pass) return res.json({ok:false,error:'Uygulama şifresi girilmemiş'});
+  const result = await sendMail(to,'✅ Nöbet Çizelgesi — Test Maili',
+    `<h2>✅ Bağlantı başarılı!</h2><p>Bu mesaj <b>${user}</b> adresinden gönderilmiştir.</p>`);
+  res.json(result || {ok:false,error:'Bilinmeyen hata'});
 });
 
 // ── VERİ YEDEK (JSON indirme) ─────────────────────────────────────────────
