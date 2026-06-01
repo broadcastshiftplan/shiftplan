@@ -348,13 +348,14 @@ app.get('/api/settings', requireAdmin, (req,res) => res.json({
   mailUser: getSetting('mailUser')||'',
   mailTo:   getSetting('mailTo')||'',
   mailPass: getSetting('mailPass')?'••••••••':'',
+  brevoKey: getSetting('brevoKey')||process.env.BREVO_API_KEY?'••••••••••••••••':'',
 }));
 app.post('/api/settings', requireAdmin, (req,res) => {
-  const { mailUser, mailTo, mailPass } = req.body;
+  const { mailUser, mailTo, mailPass, brevoKey } = req.body;
   if (mailUser!==undefined) setSetting('mailUser',mailUser);
   if (mailTo!==undefined)   setSetting('mailTo',mailTo);
   if (mailPass&&mailPass!=='••••••••') setSetting('mailPass',mailPass);
-  if (req.body.brevoKey&&req.body.brevoKey!=='••••••••••••••••') setSetting('brevoKey',req.body.brevoKey);
+  if (brevoKey&&brevoKey!=='••••••••••••••••') setSetting('brevoKey',brevoKey);
   res.json({ok:true});
 });
 app.post('/api/settings/test-mail', requireAdmin, async (req,res) => {
