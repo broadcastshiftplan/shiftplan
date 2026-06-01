@@ -33,24 +33,21 @@ process.on('unhandledRejection', e => console.error('[ERR]', e?.message||e));
 async function sendMail(to, subject, html) {
   if (!to) return {ok:false, error:'Alıcı adresi yok'};
   try {
-    const brevoKey = (process.env.BREVO_API_KEY || getSetting('brevoKey') || '').trim();
-    if(brevoKey) {
-      // Brevo (Sendinblue) API ile gönder
+    // Brevo SMTP
+    const brevoSmtpPass = (process.env.BREVO_SMTP_PASS || getSetting('brevoSmtpPass') || '').trim();
+    const brevoLogin    = (process.env.BREVO_LOGIN    || getSetting('brevoLogin')    || 'ad3a63001@smtp-brevo.com').trim();
+    if(brevoSmtpPass) {
       const senderMail = getSetting('mailUser') || process.env.MAIL_USER || 'broadcastshiftplan@gmail.com';
-      const resp = await fetch('https://api.brevo.com/v3/smtp/email', {
-        method: 'POST',
-        headers: { 'api-key': brevoKey, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sender: { name: 'Nöbet Çizelgesi', email: senderMail },
-          to: [{ email: to }],
-          subject,
-          htmlContent: html
-        })
+      const t = nodemailer.createTransport({
+        host: 'smtp-relay.brevo.com',
+        port: 587,
+        secure: false,
+        auth: { user: brevoLogin, pass: brevoSmtpPass },
+        tls: { rejectUnauthorized: false },
+        connectionTimeout: 15000
       });
-      const data = await resp.json();
-      console.log('[Brevo] status:', resp.status, 'response:', JSON.stringify(data));
-      if(!resp.ok) return {ok:false, error:data.message||data.error||JSON.stringify(data)};
-      console.log(`[Mail/Brevo] Gönderildi → ${to}`);
+      await t.sendMail({ from: `"Nöbet Çizelgesi" <${senderMail}>`, to, subject, html });
+      console.log(`[Mail/Brevo-SMTP] Gönderildi → ${to}`);
       return {ok:true};
     }
     // Fallback: nodemailer
@@ -356,14 +353,12 @@ app.post('/api/settings', requireAdmin, (req,res) => {
   if (mailUser!==undefined) setSetting('mailUser',mailUser);
   if (mailTo!==undefined)   setSetting('mailTo',mailTo);
   if (mailPass&&mailPass!=='••••••••') setSetting('mailPass',mailPass);
-  if (brevoKey&&brevoKey!=='••••••••••••••••') setSetting('brevoKey',brevoKey);
+  if (req.body.brevoSmtpPass&&req.body.brevoSmtpPass!=='••••••••') setSetting('brevoSmtpPass',req.body.brevoSmtpPass);
   res.json({ok:true});
 });
 app.post('/api/settings/test-mail', requireAdmin, async (req,res) => {
   const to = getSetting('mailTo')||process.env.MAIL_TO;
   if (!to) return res.json({ok:false,error:'Alıcı mail girilmemiş'});
-  const brevoKey = process.env.BREVO_API_KEY || getSetting('brevoKey');
-  console.log('[TestMail] brevoKey length:', brevoKey?.length, 'from env:', !!process.env.BREVO_API_KEY);
   const result = await sendMail(to,'✅ Nöbet Çizelgesi — Test Maili',
     '<h2>✅ Bağlantı başarılı!</h2><p>Nöbet Çizelgesi mail sistemi çalışıyor.</p>');
   res.json(result || {ok:false,error:'Bilinmeyen hata'});
