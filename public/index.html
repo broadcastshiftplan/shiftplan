@@ -1243,6 +1243,7 @@ function buildTable(){
     });
   });
 
+  let _prevCat=null;
   dynRows.forEach((row,idx)=>{
     if(row._s){h+=`<tr class="sr${row._bot?" bot":""}"><td colspan="9"><table style="width:100%;border-collapse:collapse"><tr><td style="color:#fff;font-size:11px;font-weight:600;letter-spacing:1px"><i class="ti ti-chevron-right" style="font-size:10px;margin-right:4px"></i>${row._s}</td><td style="text-align:right;padding:0 6px;white-space:nowrap"><img src="${LOGO1}" style="height:16px;object-fit:contain;opacity:.9;vertical-align:middle;margin-right:6px"><img src="${LOGO2}" style="height:12px;object-fit:contain;opacity:.9;vertical-align:middle"></td></tr></table></td></tr>`;return;}
     if(row._div){h+=`<tr class="sr div"><td colspan="9">─── HAFTALIK İZİN · DIŞ GÖREV · YILLIK · K.İ ───</td></tr>`;return;}
@@ -1261,6 +1262,10 @@ function buildTable(){
     const cl=SC[row.c]||SC.sabah;
     const alt=idx%2===0?"#fff":"var(--alt)";
     const rs=rowSpanMap[row.id]||{label:'',span:1,isFirst:true};
+    // Prime (12-20) ile Akşam (15-00) vardiyaları karışmasın diye kalın ayraç
+    const PRIME_AKSAM_PAIR=(row.c==="prime"&&_prevCat==="aksam")||(row.c==="aksam"&&_prevCat==="prime");
+    const thickTop=PRIME_AKSAM_PAIR?"border-top:3px solid #1A1A1A!important;":"";
+    _prevCat=row.c;
 
     // Saat hücresi
     const isDynShift=row._dyn_section==="tm";
@@ -1272,9 +1277,9 @@ function buildTable(){
       const inList=shiftList.some(s=>s.s===currentShift);
       if(!inList&&currentShift&&currentShift!=="Tam Gün"&&currentShift!=="+1 Gün")shiftList.unshift({s:currentShift,c:row.c});
       const opts=shiftList.map(s=>`<option value="${s.s}"${s.s===currentShift?" selected":""}>${s.s==="SERBEST"?"✏️ Serbest Gir...":s.s}</option>`).join("");
-      saatCell=`<td class="td-s" style="background:#${cl.bg};color:#${cl.fg};border-left-color:#${cl.bd};padding:2px 4px"><select class="shift-sel" data-rid="${row.id}" onchange="onShiftChange(this)" style="background:#${cl.bg};color:#${cl.fg};border:none;font-weight:600;width:100%;font-size:10px;cursor:pointer">${opts}</select></td>`;
+      saatCell=`<td class="td-s" style="background:#${cl.bg};color:#${cl.fg};border-left-color:#${cl.bd};padding:2px 4px;${thickTop}"><select class="shift-sel" data-rid="${row.id}" onchange="onShiftChange(this)" style="background:#${cl.bg};color:#${cl.fg};border:none;font-weight:600;width:100%;font-size:10px;cursor:pointer">${opts}</select></td>`;
     }else{
-      saatCell=`<td class="td-s" style="background:#${cl.bg};color:#${cl.fg};border-left-color:#${cl.bd}"><i class="ti ${cl.ico}" style="font-size:11px;margin-right:3px" aria-hidden="true"></i>${row.s}</td>`;
+      saatCell=`<td class="td-s" style="background:#${cl.bg};color:#${cl.fg};border-left-color:#${cl.bd};${thickTop}"><i class="ti ${cl.ico}" style="font-size:11px;margin-right:3px" aria-hidden="true"></i>${row.s}</td>`;
     }
 
     // Sol bölüm sütunu — rowspan ile birleştirilmiş
@@ -1299,13 +1304,13 @@ function buildTable(){
         const flashCls=is11h?"flash-warn":"";
         const finalStl=stl||"";
         const chgStyleA=chgA?`border:2px solid #E65100!important;`:`` ;
-        return `<td class="td-c" style="background:${alt};${chgA?'outline:2px solid #E65100;outline-offset:-2px;':''}"><select class="sel ${cls} ${flashCls}"${finalStl?` style="${finalStl}"`:""} data-rid="${row.id}" data-gi="${gi}" onchange="onSel(this)" title="${chgA?`Değişti: ${chgA.snapshot_person||'boş'} → ${chgA.current_person||'boş'}`:''}" ><option value="">—</option>${PERSONEL.map(pe=>`<option value="${pe}"${pe===p?" selected":""}>${pe}</option>`).join("")}</select></td>`;
+        return `<td class="td-c" style="background:${alt};${chgA?'outline:2px solid #E65100;outline-offset:-2px;':''}${thickTop}"><select class="sel ${cls} ${flashCls}"${finalStl?` style="${finalStl}"`:""} data-rid="${row.id}" data-gi="${gi}" onchange="onSel(this)" title="${chgA?`Değişti: ${chgA.snapshot_person||'boş'} → ${chgA.current_person||'boş'}`:''}" ><option value="">—</option>${PERSONEL.map(pe=>`<option value="${pe}"${pe===p?" selected":""}>${pe}</option>`).join("")}</select></td>`;
       }else{
         const bg=p?`#${cl.bg}`:alt;const fg=p?`#${cl.fg}`:"var(--txt3)";
         const chg=window._changes&&window._changes[`${row.id}-${gi}`];
         const chgBg=chg?(p?`#${cl.bg}`:`#FFF3E0`):bg;
         const chgBorder=chg?`outline:2px solid #E65100;outline-offset:-2px;`:``;
-        return `<td class="td-c" style="background:${chgBg};color:${fg};font-weight:${p?500:400};font-size:11px;padding:5px 4px;${chgBorder}" title="${chg?`Değişti: ${chg.snapshot_person||'boş'} → ${chg.current_person||'boş'}`:`${p||''}`}">${p||"—"}${chg?` <span style="font-size:9px;color:#E65100">●</span>`:``}</td>`;
+        return `<td class="td-c" style="background:${chgBg};color:${fg};font-weight:${p?500:400};font-size:11px;padding:5px 4px;${chgBorder}${thickTop}" title="${chg?`Değişti: ${chg.snapshot_person||'boş'} → ${chg.current_person||'boş'}`:`${p||''}`}">${p||"—"}${chg?` <span style="font-size:9px;color:#E65100">●</span>`:``}</td>`;
       }
     }).join("")}</tr>`;
   });
