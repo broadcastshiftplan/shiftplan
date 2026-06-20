@@ -1173,10 +1173,11 @@ function buildDynRows(){
 
   rows.push({_div:1});
 
-  // HAFTALIK İZİN — sabit 3
+  // HAFTALIK İZİN — dinamik
   rows.push({_s:"HAFTALIK İZİN",_bot:1});
   const hizCount=cnt.hafizin||3;
-  for(let i=0;i<hizCount;i++)rows.push({id:`hafizin_${i+1}`,b:"HAFTALIK İZİN",s:"Tam Gün",c:"izin"});
+  for(let i=0;i<hizCount;i++)rows.push({id:`hafizin_${i+1}`,b:"HAFTALIK İZİN",s:"Tam Gün",c:"izin",_dyn_section:"hafizin",_idx:i});
+  rows.push({_dyn_ctrl:"hafizin"});
 
   // DIŞ GÖREV — sabit 2
   rows.push({_s:"DIŞ GÖREV",_bot:1});
