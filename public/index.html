@@ -1151,7 +1151,7 @@ function buildDynRows(){
   const cnt=sectionCounts;
   const rows=[];
 
-  // PCR 1/2/3 birleşik — sabit 5 satır
+  // PCR 1/2/3 birleşik — dinamik +/-
   rows.push({_s:"PCR 1 / PCR 2 / PCR 3"});
   const pcrShifts=ALL_SHIFTS.filter(s=>s.s!=="00:00 – 06:30"); // gece yok
   const pcrCount=Math.min(cnt.pcr||5, pcrShifts.length);
@@ -1160,6 +1160,7 @@ function buildDynRows(){
     const meta=rowMeta[rid]||pcrShifts[i]?.s||pcrShifts[0].s;
     rows.push({id:rid,b:"PCR 1/2/3",s:meta,c:shiftCat(meta,'pcr'),_dyn_section:"pcr",_idx:i});
   }
+  rows.push({_dyn_ctrl:"pcr"});
 
   // TEK.MON — dinamik +/-
   rows.push({_s:"TEKNİK MONİTÖRİNG"});
@@ -1262,7 +1263,9 @@ function buildTable(){
     if(row._s){h+=`<tr class="sr${row._bot?" bot":""}"><td colspan="9"><table style="width:100%;border-collapse:collapse"><tr><td style="color:#fff;font-size:11px;font-weight:600;letter-spacing:1px"><i class="ti ti-chevron-right" style="font-size:10px;margin-right:4px"></i>${row._s}</td><td style="text-align:right;padding:0 6px;white-space:nowrap"><img src="${LOGO1}" style="height:16px;object-fit:contain;opacity:.9;vertical-align:middle;margin-right:6px"><img src="${LOGO2}" style="height:12px;object-fit:contain;opacity:.9;vertical-align:middle"></td></tr></table></td></tr>`;return;}
     if(row._div){h+=`<tr class="sr div"><td colspan="9">─── HAFTALIK İZİN · DIŞ GÖREV · YILLIK · K.İ ───</td></tr>`;return;}
     if(row._dyn_ctrl&&isAdmin&&!locked){
-      const sec=row._dyn_ctrl;const cnt=sectionCounts[sec]||2;
+      const sec=row._dyn_ctrl;
+      const DEFAULTS={pcr:5,tm:3,hafizin:3,yl:3,ki:2};
+      const cnt=sectionCounts[sec]||DEFAULTS[sec]||2;
       h+=`<tr class="sr dyn"><td colspan="9" style="padding:3px 8px">
         <button class="dyn-add" onclick="changeSectionCount('${sec}',1)" title="Satır ekle">+</button>
         <span style="margin:0 6px;font-size:11px;color:#aaa">${cnt} satır</span>
