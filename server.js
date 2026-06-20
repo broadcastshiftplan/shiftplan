@@ -566,6 +566,26 @@ app.get('/api/request-stats', requireAdmin, (req,res) => {
 });
 
 
+app.get('/api/request-stats/detail', requireAdmin, (req,res) => {
+  const year  = req.query.year  ? parseInt(req.query.year)  : null;
+  const month = req.query.month ? parseInt(req.query.month) : null;
+  const person = req.query.person || null;
+
+  let where = "WHERE 1=1";
+  const params = [];
+  if(year){ where += " AND strftime('%Y', created_at) = ?"; params.push(String(year)); }
+  if(month){ where += " AND strftime('%m', created_at) = ?"; params.push(String(month).padStart(2,'0')); }
+  if(person){ where += " AND person = ?"; params.push(person); }
+
+  const rows = db.prepare(`
+    SELECT id, person, day_text, shift_text, note, status, reject_reason, created_at
+    FROM shift_requests ${where}
+    ORDER BY created_at DESC
+  `).all(...params);
+
+  res.json(rows);
+});
+
 // ── GÖREV YÖNETİMİ ────────────────────────────────────────────────────────
 app.get('/api/tasks', requireAuth, (req,res) => {
   const tasks = getTasks(req.user.username, req.user.role);
