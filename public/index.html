@@ -1272,9 +1272,11 @@ function buildTable(){
     const alt=idx%2===0?"#fff":"var(--alt)";
     const rs=rowSpanMap[row.id]||{label:'',span:1,isFirst:true};
     // Prime (12-20) ile Akşam (15-00) vardiyaları karışmasın diye kalın ayraç
-    const PRIME_AKSAM_PAIR=(row.c==="prime"&&_prevCat==="aksam")||(row.c==="aksam"&&_prevCat==="prime");
-    const thickTop=PRIME_AKSAM_PAIR?"border-top:3px solid #1A1A1A!important;":"";
-    _prevCat=row.c;
+    // Saat metnine göre kategori (TM satırlarında row.c hep "tekmon" olduğu için saat string'ine bakıyoruz)
+    const _curCat = row.s&&row.s.startsWith("12:00")?"prime12":row.s&&row.s.startsWith("15:00")?"aksam15":(row.c||"");
+    const PRIME_AKSAM_PAIR=(_curCat==="prime12"&&_prevCat==="aksam15")||(_curCat==="aksam15"&&_prevCat==="prime12");
+    const thickTop=PRIME_AKSAM_PAIR?"border-top:4px solid #1A1A1A!important;":"";
+    _prevCat=_curCat;
 
     // Saat hücresi
     const isDynShift=row._dyn_section==="tm";
