@@ -1275,7 +1275,7 @@ function buildTable(){
     // Saat metnine göre kategori (TM satırlarında row.c hep "tekmon" olduğu için saat string'ine bakıyoruz)
     const _curCat = row.s&&row.s.startsWith("12:00")?"prime12":row.s&&row.s.startsWith("15:00")?"aksam15":(row.c||"");
     const PRIME_AKSAM_PAIR=(_curCat==="prime12"&&_prevCat==="aksam15")||(_curCat==="aksam15"&&_prevCat==="prime12");
-    const thickTop=PRIME_AKSAM_PAIR?"border-top:4px solid #1A1A1A!important;":"";
+    const thickTop=PRIME_AKSAM_PAIR?"box-shadow:inset 0 4px 0 0 #1A1A1A;position:relative;z-index:2;":"";
     _prevCat=_curCat;
 
     // Saat hücresi
