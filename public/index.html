@@ -738,11 +738,15 @@ const SC={
 // Shift zamanı → kategori
 function shiftCat(s){
   if(!s)return'sabah';
-  if(s.includes('00:00'))return'gece';
-  if(s.includes('15:15'))return'sabah';
-  if(s.includes('17:00')&&s.includes('08'))return'sabah';
-  if(s.includes('10:00'))return'prime';
-  if(s.includes('15:00')||s.includes('Yayın'))return'aksam';
+  // Önce ALL_SHIFTS listesinde tam eşleşme ara (en doğru kategori)
+  const exact = ALL_SHIFTS.find(x=>x.s===s);
+  if(exact) return exact.c;
+  // Eşleşme yoksa (özel/serbest saat) sezgisel tahmin
+  if(s.includes('00:00 –')||s.includes('00:00–'))return'gece';
+  if(s.startsWith('06:')||s.startsWith('07:')||s.startsWith('08:')||s.startsWith('09:'))return'sabah';
+  if(s.startsWith('10:')||s.startsWith('11:')||s.startsWith('12:')||s.startsWith('13:')||s.startsWith('14:'))return'prime';
+  if(s.startsWith('15:')||s.startsWith('16:')||s.startsWith('17:')||s.startsWith('18:')||s.startsWith('19:'))return'aksam';
+  if(s.startsWith('00:')||s.startsWith('20:')||s.startsWith('21:')||s.startsWith('22:')||s.startsWith('23:'))return'gece';
   return'sabah';
 }
 
@@ -1163,7 +1167,7 @@ function buildDynRows(){
   for(let i=0;i<tmCount;i++){
     const rid=`tm_${i+1}`;
     const meta=rowMeta[rid]||ALL_SHIFTS[i%ALL_SHIFTS.length].s;
-    rows.push({id:rid,b:"TEK.MON.",s:meta,c:"tekmon",_dyn_section:"tm",_idx:i});
+    rows.push({id:rid,b:"TEK.MON.",s:meta,c:shiftCat(meta),_dyn_section:"tm",_idx:i});
   }
   rows.push({_dyn_ctrl:"tm"});
 
@@ -1273,11 +1277,10 @@ function buildTable(){
     const alt=idx%2===0?"#fff":"var(--alt)";
     const rs=rowSpanMap[row.id]||{label:'',span:1,isFirst:true};
     // Prime (12-20) ile Akşam (15-00) vardiyaları karışmasın diye kalın ayraç
-    // Saat metnine göre kategori (TM satırlarında row.c hep "tekmon" olduğu için saat string'ine bakıyoruz)
-    const _curCat = row.s&&row.s.startsWith("12:00")?"prime12":row.s&&row.s.startsWith("15:00")?"aksam15":(row.c||"");
-    const PRIME_AKSAM_PAIR=(_curCat==="prime12"&&_prevCat==="aksam15")||(_curCat==="aksam15"&&_prevCat==="prime12");
+    // row.c artık doğru kategori (prime/aksam) — direkt kullan
+    const PRIME_AKSAM_PAIR=(row.c==="prime"&&_prevCat==="aksam")||(row.c==="aksam"&&_prevCat==="prime");
     const thickTop=PRIME_AKSAM_PAIR?"box-shadow:inset 0 4px 0 0 #1A1A1A;position:relative;z-index:2;":"";
-    _prevCat=_curCat;
+    _prevCat=row.c;
 
     // Saat hücresi
     const isDynShift=row._dyn_section==="tm";
@@ -1311,7 +1314,7 @@ function buildTable(){
       })();
       if(isAdmin&&!locked){
         const chgA=window._changes&&window._changes[`${row.id}-${gi}`];
-        const cls=p?(dup||is11h?"s-dup":row.c==="tekmon"?"s-tekmon":`s-${row.c}`):"s-empty";
+        const cls=p?(dup||is11h?"s-dup":`s-${row.c}`):"s-empty";
         const stl=dup||is11h?"":p?`background:#${cl.bg};color:#${cl.fg};border:1px solid #${cl.bd}`:"";
         const flashCls=is11h?"flash-warn":"";
         const finalStl=stl||"";
