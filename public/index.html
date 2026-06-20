@@ -381,6 +381,15 @@ textarea.nt{width:100%;box-sizing:border-box;border:1px solid #e0e0e0;border-rad
       </div>
     </div>
 
+    <!-- Detaylı talep listesi -->
+    <div class="card" id="req-detail-card" style="display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div class="card-title" style="margin-bottom:0" id="req-detail-title"><i class="ti ti-list-details" aria-hidden="true"></i> Detay</div>
+        <button class="btn btn-ghost btn-sm" onclick="document.getElementById('req-detail-card').style.display='none'"><i class="ti ti-x"></i></button>
+      </div>
+      <div id="req-detail-body" style="overflow-x:auto"></div>
+    </div>
+
     <!-- Aylık trend -->
     <div class="card">
       <div class="card-title"><i class="ti ti-trending-up" aria-hidden="true"></i> Aylık Trend</div>
@@ -2763,8 +2772,8 @@ async function loadReqStats(){
   const pBody = byPerson.length ? byPerson.map((p,i)=>{
     const rate = p.total>0 ? Math.round((p.approved/p.total)*100) : 0;
     const alt = i%2===0?'#fff':'var(--alt)';
-    return `<tr>
-      <td style="padding:5px 10px;font-weight:500;background:${alt}">${p.person}</td>
+    return `<tr onclick="showReqDetail('${p.person.replace(/'/g,"\'")}')" style="cursor:pointer" title="Detayları görmek için tıkla">
+      <td style="padding:5px 10px;font-weight:500;background:${alt}"><i class="ti ti-list-details" style="font-size:11px;margin-right:4px;color:var(--txt3)"></i>${p.person}</td>
       <td style="text-align:center;background:${alt}">${p.total}</td>
       <td style="text-align:center;background:${alt};color:#2E7D32;font-weight:600">${p.approved}</td>
       <td style="text-align:center;background:${alt};color:#A32D2D;font-weight:600">${p.rejected}</td>
@@ -2843,6 +2852,50 @@ const STATUS={
   overdue:  {lbl:'Süresi Dolmuş',  bg:'#FFEBEE',fg:'#C62828'},
   completed:{lbl:'Tamamlandı',     bg:'#F3E5F5',fg:'#6A1B9A'},
 };
+
+async function showReqDetail(person){
+  const yr = document.getElementById('req-yr-sel').value;
+  const mo = document.getElementById('req-mo-sel').value;
+  let url = `/api/request-stats/detail?person=${encodeURIComponent(person)}`;
+  if(yr) url += `&year=${yr}`;
+  if(mo) url += `&month=${mo}`;
+  const rows = await api('GET', url);
+
+  document.getElementById('req-detail-title').innerHTML = `<i class="ti ti-list-details" aria-hidden="true"></i> ${person} — Talep Detayı (${rows.length})`;
+
+  const STATUS_BADGE = {
+    approved: '<span class="sp sp-a">✓ Onaylı</span>',
+    rejected: '<span class="sp sp-r">✗ Red</span>',
+    pending:  '<span class="sp sp-p">⏳ Bekliyor</span>',
+  };
+
+  document.getElementById('req-detail-body').innerHTML = rows.length ? `
+    <table style="border-collapse:collapse;width:100%;font-size:12px">
+      <thead><tr>
+        <th style="background:var(--blue2);color:#fff;padding:6px 8px;text-align:left">Talep Tarihi</th>
+        <th style="background:var(--blue2);color:#fff;padding:6px 8px;text-align:left">İstenen Gün</th>
+        <th style="background:var(--blue2);color:#fff;padding:6px 8px;text-align:left">Vardiya</th>
+        <th style="background:var(--blue2);color:#fff;padding:6px 8px;text-align:left">Not</th>
+        <th style="background:var(--blue2);color:#fff;padding:6px 8px;text-align:center">Durum</th>
+      </tr></thead>
+      <tbody>
+      ${rows.map((r,i)=>{
+        const alt = i%2===0?'#fff':'var(--alt)';
+        return `<tr>
+          <td style="padding:5px 8px;background:${alt};white-space:nowrap;color:var(--txt2)">${r.created_at.slice(0,16)}</td>
+          <td style="padding:5px 8px;background:${alt};font-weight:500">${r.day_text||'-'}</td>
+          <td style="padding:5px 8px;background:${alt}">${r.shift_text||'-'}</td>
+          <td style="padding:5px 8px;background:${alt};color:var(--txt2);font-size:11px;max-width:220px">${r.note||'<span style="color:var(--txt3)">—</span>'}${r.reject_reason?`<br><span style="color:#A32D2D">Red: ${r.reject_reason}</span>`:''}</td>
+          <td style="padding:5px 8px;background:${alt};text-align:center">${STATUS_BADGE[r.status]||r.status}</td>
+        </tr>`;
+      }).join('')}
+      </tbody>
+    </table>
+  ` : '<div style="color:var(--txt3);font-size:13px;padding:12px">Bu personelin talebi bulunamadı.</div>';
+
+  document.getElementById('req-detail-card').style.display = 'block';
+  document.getElementById('req-detail-card').scrollIntoView({behavior:'smooth', block:'nearest'});
+}
 
 async function loadTasks(){
   const tasks = await api('GET','/api/tasks');
